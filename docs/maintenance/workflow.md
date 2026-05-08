@@ -1,16 +1,18 @@
-# Releasing
+# Workflow
 
-Use this checklist to keep releases consistent and shippable.
+This repository uses **semantic-release** on the `main` branch. Releases, tags, and the changelog are generated from Conventional Commits.
 
-- [ ] Confirm license is correct (run `php tools/switch-license.php --license=mit|commercial` if needed)
-- [ ] Generate/update third-party notices (`php tools/generate-third-party-notices.php`, append JS notices when bundling assets)
-- [ ] Build Panel assets and ensure compiled `index.js` / `index.css` are committed (`pnpm build`, runs inside `pnpm run verify`)
-- [ ] Verify checks: `composer run verify` (php-cs-fixer dry run, Psalm, PHPUnit) and `pnpm run verify` (build, eslint, Playwright)
-- [ ] Produce a clean distributable archive without dev aides (`composer package:clean`, respects `.gitattributes` export rules to drop tools, AI guides, and docs-only files)
-- [ ] Remove template-only helpers with `php tools/cleanup-template.php --apply` if they are no longer useful for local maintenance, then update docs to match
-- [ ] Check versioning/changelog as your release process requires
-- [ ] Keep ZIP/submodule installs clean: no local runtime artifacts or playground data in Git
-- [ ] CI alignment: GitHub Actions runs the same PHP/JS checks and triggers semantic-release on `main`. Ensure conventional commits and required tokens are in place
+> [!IMPORTANT]
+> Don’t bump versions by hand. Merge Conventional Commits to `main` and let CI publish the release.
+
+---
+
+## Pre-flight checklist
+
+- [ ] Panel assets built and committed via `pnpm build`
+- [ ] All checks pass on `composer run verify` and `pnpm run verify`
+- [ ] No local runtime data or playground content is committed
+- [ ] Third‑party notices are regenerated via `composer run notices:generate` if required
 
 ---
 

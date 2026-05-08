@@ -11,17 +11,14 @@ Kirby Proofreader adds a Panel button on Kirby CMS for reviewing typographic co
 
 ## Installation
 
-Download or clone this repository into `site/plugins/kirby-proofreader`, or
-install it with Composer:
-
-```shell
+```bash
 composer require grommasdietz/kirby-proofreader
 ```
 
-The plugin ships with built Panel assets, so no build step is required for
-installation.
+> [!TIP]
+> If you don’t use Composer, you can download this repository and copy it to `site/plugins/kirby-proofreader`.
 
-## Usage
+## Quickstart
 
 Add the button to a page or site blueprint:
 
@@ -33,49 +30,62 @@ buttons:
   settings: true
 ```
 
-The default rule order is `unicode`, `ellipsis`, `quotes`, `dashes`, `spaces`.
-Rules can be reordered, disabled or extended in `site/config/config.php`.
-`dimensions` is a predefined optional rule for values such as `5 x 5 cm`:
+### Options
+
+The default rule order is `unicode`, `ellipsis`, `quotes`, `dashes`, `spaces`. `dimensions` is a predefined optional rule for values such as `5 x 5 cm`. Rules can be reordered, disabled or extended. Configure via `site/config/config.php`:
 
 ```php
 return [
     'grommasdietz.proofreader.rules' => [
         'unicode',
         'ellipsis',
-        'quotes',
+        'quotes' => false,
         'dashes',
         'spaces',
         'dimensions',
+        'trademark' => [
+            'label' => 'Trademark',
+            'callback' => static fn (string $text): string => str_replace(
+                'Label TM',
+                'Label™',
+                $text
+            ),
+        ],
     ],
 ];
 ```
 
+> [!NOTE]
+> The keyed `false` entry disables the built-in `quotes` rule. The keyed
+> `trademark` array adds a custom callback rule.
+
 Quote characters, dash characters and dash spacing follow Kirby's native
 SmartyPants options when configured globally or per language. Single-language
-installs need configured quote marks before the `quotes` rule changes quotes.
-See [docs/usage/index.md](docs/usage/index.md) for details.
+installs need SmartyPants configuration to enable quote rule.
 
-## Development
+### Documentation
 
-```shell
-composer run setup
-pnpm run setup
-composer run verify
-pnpm run verify
-```
+Full reference for [usage](docs/usage/index.md), [contributions](docs/contributions/index.md) and [maintenance](docs/maintenance/index.md) lives in [documentation](docs/index.md).
 
-Panel source lives in `src/` and builds to the committed `index.js` and
-`index.css` files with `pnpm build`.
+---
 
-## Documentation
+## Changelog
 
-- [Usage](docs/usage/index.md)
-- [Architecture](docs/usage/architecture.md)
-- [Contributing](docs/contributions/index.md)
+See [CHANGELOG.md](CHANGELOG.md) for version history and changes.
+
+---
 
 ## Security
 
-See [SECURITY.md](SECURITY.md) for the disclosure policy.
+See [SECURITY.md](SECURITY.md) for security policies and reporting vulnerabilities.
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidance and expectations.
+
+---
 
 ## License
 

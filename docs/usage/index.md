@@ -8,7 +8,11 @@ unpublished changes.
 Title fixes are shown as their own scope, selected by default and saved
 immediately via Kirby's native title action when applied.
 
-## Rules
+## Options for Kirby Proofreader
+
+Set plugin options in `site/config/config.php`.
+
+### Rules
 
 The default rule order is:
 
@@ -118,6 +122,17 @@ return [
 
 Only the Proofreader's configured rules are applied; this does not enable
 Kirby's full SmartyPants parser for content.
+
+### Button label
+
+Set `grommasdietz.proofreader.button.text` to `true` to show a text label next
+to the Panel button icon:
+
+```php
+return [
+    'grommasdietz.proofreader.button.text' => true,
+];
+```
 
 HTML-backed fields are fixed only in text nodes. Code-like elements such as
 `pre`, `code`, `kbd`, `samp`, `script`, `style` and `math` are left unchanged.
