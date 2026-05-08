@@ -1,0 +1,20 @@
+title: Playground
+
+buttons:
+  open: true
+  preview: true
+  proofreader: true
+  languages: true
+
+options:
+  changeStatus: true
+
+sections:
+  content:
+    type: fields
+    fields:
+      description:
+        label: Description
+        type: textarea
+  pages:
+    type: pages

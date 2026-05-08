@@ -1,0 +1,5 @@
+Title: Kirby Playground
+
+----
+
+Description: Proofreader-Hinweise auf Site-Ebene werden hier geprüft. Eine kurze Panel-Prüfung - Review hält "Änderungsvorschläge" bereit.

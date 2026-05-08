@@ -1,0 +1,18 @@
+title: Home
+
+buttons:
+  languages: true
+  proofreader: true
+  status: true
+  settings: true
+
+sections:
+  content:
+    type: fields
+    fields:
+      subtitle:
+        label: Subtitle
+        type: text
+      text:
+        label: Text
+        type: textarea

@@ -1,0 +1,13 @@
+Title: Startseite
+
+----
+
+Subtitle: Review-Übersicht
+
+----
+
+Text: Der Proofreader Playground zeigt einen kompakten Review-Ablauf für Kirby Inhalte. Er hält "Änderungsvorschläge" sichtbar, markiert 3. April Beispiele und lässt kurze Wörter am Zeilenende.
+
+----
+
+Uuid: 4kjvlfqv62y3e9s6

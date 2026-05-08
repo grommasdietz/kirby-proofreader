@@ -1,0 +1,58 @@
+Title: Redaktionelle Prüfung...
+
+----
+
+Subtitle: Prüfungsumfang
+
+----
+
+Summary: Diese Prüfseite hält kompakte Beispiele für den Proofreader bereit, einen Bereich 2025 - 2026 und einen Rahmen mit 5 x 5 cm. Sie nutzt neutrale "Review-Notizen", 3. April Hinweise und kurze Wörter am Zeilenende.
+
+----
+
+Body: <p>Der Playground begleitet einen Proofreader-Durchlauf. Er hält "Review-Notizen" knapp, praktisch und vergleichbar, bevor eine Seite gespeichert wird; eine kompakte Notiz nennt 2025-2026.</p><p>Die lokale Referenz liegt auf <a href="https://kirby-proofreader.test">kirby-proofreader.test</a>.</p>
+
+----
+
+Checklist: <ul><li>Die vorgemerkte Notiz prüfen...</li><li>Panel-Text - Vorschau-Text vergleichen</li></ul>
+
+----
+
+Notes:
+
+-
+  label: Feldvorschau
+  scope: Panel-Durchlauf - Review
+  note: '<p>Die Notiz hält "Änderungsvorschläge" sichtbar und dokumentiert den Check am 3. April.</p>'
+  contact: proof@kirby-proofreader.test
+  reference: https://kirby-proofreader.test
+  checked: 2026-05-08
+  mode: focused
+-
+  label: Gespeicherte Vorschau
+  scope: Inhaltsdurchlauf - Übergabe
+  note: '<p>Die Notiz bereitet "Vorher und Nachher" Auszüge für eine kompakte Prüfung vor.</p>'
+  contact: proof@kirby-proofreader.test
+  reference: https://kirby-proofreader.test
+  checked: 2026-05-08
+  mode: baseline
+
+----
+
+Blocks: [{"type":"text","id":"block-001","content":{"text":"<p>Das Panel verglich \"vorgemerkte Änderungen\" für 2025 — 2026 und hielt die öffentliche Notiz kurz.</p>"}},{"type":"quote","id":"block-002","content":{"text":"Der Vorschlag ist klein - aber die Vorschau sollte klar bleiben.","attribution":"Proofreader-Panel - Review-Notiz"}}]
+
+----
+
+Email: proof@kirby-proofreader.test
+
+----
+
+Url: https://kirby-proofreader.test
+
+----
+
+Date: 2026-05-08
+
+----
+
+Reviewmode: focused

@@ -1,0 +1,86 @@
+title: About
+
+buttons:
+  languages: true
+  proofreader: true
+  status: true
+  settings: true
+
+sections:
+  content:
+    type: fields
+    fields:
+      subtitle:
+        label: Subtitle
+        type: text
+      summary:
+        label: Summary
+        type: textarea
+      body:
+        label: Body
+        type: writer
+      checklist:
+        label: Checklist
+        type: list
+      notes:
+        label: Review notes
+        type: structure
+        fields:
+          label:
+            label: Label
+            type: text
+          scope:
+            label: Scope
+            type: text
+          note:
+            label: Note
+            type: writer
+          contact:
+            label: Contact
+            type: email
+          reference:
+            label: Reference
+            type: url
+          checked:
+            label: Checked
+            type: date
+          mode:
+            label: Mode
+            type: select
+            options:
+              - value: baseline
+                text: Baseline pass
+              - value: focused
+                text: Focused pass
+      blocks:
+        label: Review blocks
+        type: blocks
+        fieldsets:
+          text:
+            name: Text
+            fields:
+              text:
+                type: writer
+          quote:
+            name: Quote
+            fields:
+              text:
+                type: textarea
+              attribution:
+                type: text
+      # Non-eligible fields (should not be touched)
+      email:
+        type: email
+      url:
+        type: url
+      date:
+        label: Review date
+        type: date
+      reviewmode:
+        label: Review mode
+        type: select
+        options:
+          - value: baseline
+            text: Baseline pass
+          - value: focused
+            text: Focused pass

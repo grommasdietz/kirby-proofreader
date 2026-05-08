@@ -1,0 +1,62 @@
+Title: Editorial Review...
+
+----
+
+Subtitle: Review scope
+
+----
+
+Summary: This review keeps compact samples for the proofreader panel, a 2025 - 2026 range and a 5 x 5 cm frame. It uses neutral "review notes", 3. April references and short words at the end.
+
+----
+
+Body: <p>The playground follows one proofreader pass. It keeps "candidate changes" small, practical and easy to compare before a page is saved; one compact note says 2025-2026.</p><p>Open <a href="https://kirby-proofreader.test">kirby-proofreader.test</a> for a local reference.</p>
+
+----
+
+Checklist: <ul><li>Review the queued note...</li><li>Compare panel copy - preview copy</li></ul>
+
+----
+
+Notes:
+
+- 
+  label: Field preview
+  scope: 'Panel pass - review'
+  note: '<p>The note keeps "candidate changes" visible and records a 3. April check.</p>'
+  contact: proof@kirby-proofreader.test
+  reference: https://kirby-proofreader.test
+  checked: 2026-05-08
+  mode: focused
+- 
+  label: Saved preview
+  scope: 'Content pass - handoff'
+  note: '<p>The note prepares "before and after" excerpts for a compact review.</p>'
+  contact: proof@kirby-proofreader.test
+  reference: https://kirby-proofreader.test
+  checked: 2026-05-08
+  mode: baseline
+
+----
+
+Blocks: [{"content":{"text":"<p>The panel compared \"queued edits\" for 2025 — 2026 and kept the public note short.</p>"},"id":"block-001","isHidden":false,"type":"text"},{"content":{"text":"The suggestion is small - but the preview should stay clear.","attribution":"Proofreader panel - review note","citation":""},"id":"block-002","isHidden":false,"type":"quote"}]
+
+----
+
+Email: proof@kirby-proofreader.test
+
+----
+
+Url: https://kirby-proofreader.test
+
+----
+
+Date: 2026-05-08
+
+----
+
+Reviewmode: focused
+
+----
+
+Uuid: j1c6f1f2dlm5d9fa

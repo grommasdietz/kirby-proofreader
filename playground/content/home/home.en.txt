@@ -1,0 +1,13 @@
+Title: Home
+
+----
+
+Subtitle: Review overview
+
+----
+
+Text: The proofreader playground presents a compact review flow for Kirby content. It keeps "candidate changes" visible, marks 3. April samples and leaves short words at the end.
+
+----
+
+Uuid: 4kjvlfqv62y3e9s6
