@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/grommasdietz/kirby-proofreader/compare/v1.0.1...v1.1.0) (2026-05-09)
+
+
+### Features
+
+* **proofreader:** add apostrophe handling and update rules ([c565479](https://github.com/grommasdietz/kirby-proofreader/commit/c565479ca124fd648847ca695a6b61ccbf5c5324))
+
 ## [1.0.1](https://github.com/grommasdietz/kirby-proofreader/compare/v1.0.0...v1.0.1) (2026-05-09)
 
 
