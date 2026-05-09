@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/grommasdietz/kirby-proofreader/compare/v1.1.1...v1.2.0) (2026-05-09)
+
+
+### Features
+
+* **proofreader:** add support for custom field inclusion/exclusion ([1a9096c](https://github.com/grommasdietz/kirby-proofreader/commit/1a9096c54f1afbf6d224526ebc1b82f136769970))
+
 ## [1.1.1](https://github.com/grommasdietz/kirby-proofreader/compare/v1.1.0...v1.1.1) (2026-05-09)
 
 
