@@ -26,9 +26,10 @@ exists and falls back to the latest version.
 1. Unicode composition
 2. Ellipsis
 3. Quotes
-4. Dash characters
-5. Spacing
-6. Optional dimensions, when enabled
+4. Apostrophes
+5. Dash characters
+6. Spacing
+7. Optional dimensions, when enabled
 
 The dash character and spacing steps are intentionally separate. This lets the
 review dialog show a clear first suggestion for the dash glyph and a later
@@ -53,9 +54,10 @@ unchanged.
 The built-in rules work without configuration. Quote characters, dash
 characters and dash spacing can also follow Kirby's native SmartyPants options,
 globally or from language definitions. Single-language installs only change
-quotes when global quote marks are configured. Custom editorial rules belong in
-`grommasdietz.proofreader.rules`, where they can be ordered alongside built-in
-rules.
+quotes when global quote marks are configured. Apostrophe cleanup is a separate
+built-in rule so projects can keep it while disabling quote-pair conversion.
+Custom editorial rules belong in `grommasdietz.proofreader.rules`, where they
+can be ordered alongside built-in rules.
 
 ---
 

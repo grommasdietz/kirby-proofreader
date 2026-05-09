@@ -169,6 +169,55 @@ final class ProofreaderTest extends TestCase
         $this->assertSame('l’éditeur', Proofreader::fixQuotes("l'éditeur", 'fr'));
     }
 
+    public function testFixQuotePairsDoesNotTreatApostrophesAsOpeningQuotes(): void
+    {
+        $this->assertSame(
+            "It's ‘quoted’ here",
+            Proofreader::fixQuotePairs("It's 'quoted' here", 'en')
+        );
+    }
+
+    // -------------------------------------------------------------------------
+    // fixApostrophes
+    // -------------------------------------------------------------------------
+
+    public function testFixApostrophesNormalisesApostrophes(): void
+    {
+        $this->assertSame('It’s ready', Proofreader::fixApostrophes("It's ready"));
+        $this->assertSame('It’s ready', Proofreader::fixApostrophes('It‘s ready'));
+        $this->assertSame('James’ notes', Proofreader::fixApostrophes("James' notes"));
+        $this->assertSame('Hans’ Notiz', Proofreader::fixApostrophes("Hans' Notiz"));
+        $this->assertSame('l’éditeur', Proofreader::fixApostrophes("l'éditeur"));
+    }
+
+    public function testFixApostrophesSkipsSingleQuotePairs(): void
+    {
+        $this->assertSame(
+            "It’s 'quoted' here",
+            Proofreader::fixApostrophes("It's 'quoted' here")
+        );
+        $this->assertSame(
+            "Text 'James' here",
+            Proofreader::fixApostrophes("Text 'James' here")
+        );
+    }
+
+    public function testApostrophesRuleCanRunSeparatelyFromQuotes(): void
+    {
+        $this->assertSame(
+            'It’s "quoted" here',
+            Proofreader::fix('It\'s "quoted" here', ['apostrophes'], 'en')
+        );
+        $this->assertSame(
+            'It\'s “quoted” here',
+            Proofreader::fix('It\'s "quoted" here', ['quotes'], 'en')
+        );
+        $this->assertSame(
+            'It’s “quoted” here',
+            Proofreader::fix('It\'s "quoted" here', ['quotes', 'apostrophes'], 'en')
+        );
+    }
+
     // -------------------------------------------------------------------------
     // fixLeadingNbsp
     // -------------------------------------------------------------------------
@@ -352,7 +401,7 @@ final class ProofreaderTest extends TestCase
     public function testRulesForPanelReturnsDefaultRuleOrder(): void
     {
         $this->assertSame(
-            ['unicode', 'ellipsis', 'quotes', 'dashes', 'spaces'],
+            ['unicode', 'ellipsis', 'quotes', 'apostrophes', 'dashes', 'spaces'],
             array_column(Proofreader::rulesForPanel(), 'name')
         );
     }

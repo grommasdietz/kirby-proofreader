@@ -22,24 +22,24 @@ test.describe("Proofreader review dialog", () => {
         body: JSON.stringify({
           status: "ok",
           preview: true,
-          rules: ["ellipsis"],
-          availableRules: [{ name: "ellipsis", label: "Ellipsis" }],
+          rules: ["dashes"],
+          availableRules: [{ name: "dashes", label: "Dashes" }],
           suggestions: [
             {
-              id: "description:ellipsis:0",
+              id: "description:dashes:0",
               field: "description",
               fieldLabel: "Description",
-              rule: "ellipsis",
+              rule: "dashes",
               pathLabel: "Description",
-              previewBefore: "Wait...",
-              previewAfter: "Wait…",
+              previewBefore: "Range 2022 - 2026",
+              previewAfter: "Range 2022 – 2026",
             },
           ],
           changedFields: ["description"],
           diffs: {
             description: {
-              from: "Wait...",
-              to: "Wait…",
+              from: "Range 2022 - 2026",
+              to: "Range 2022 – 2026",
             },
           },
         }),
@@ -57,6 +57,11 @@ test.describe("Proofreader review dialog", () => {
     await expect(
       page.locator(".proofreader-review-field").filter({ hasText: "Description" })
     ).toBeVisible();
+    await expect(
+      page
+        .locator('.proofreader-review-preview-row[data-side="after"]')
+        .locator('.proofreader-review-hidden-char[title="Six-per-em space"]')
+    ).toHaveCount(2);
   });
 
   test("opens the page review dialog without post-apply field overlays", async ({ page }) => {

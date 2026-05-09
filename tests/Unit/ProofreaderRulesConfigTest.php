@@ -73,6 +73,7 @@ final class ProofreaderRulesConfigTest extends TestCase
                         'unicode',
                         'ellipsis',
                         'quotes',
+                        'apostrophes',
                         'dashes',
                         'spaces',
                         'dimensions',
@@ -85,7 +86,7 @@ final class ProofreaderRulesConfigTest extends TestCase
         $nbsp = "\u{00A0}";
 
         $this->assertSame(
-            ['unicode', 'ellipsis', 'quotes', 'dashes', 'spaces', 'dimensions'],
+            ['unicode', 'ellipsis', 'quotes', 'apostrophes', 'dashes', 'spaces', 'dimensions'],
             array_column(Proofreader::rulesForPanel(), 'name')
         );
         $this->assertSame(
@@ -141,5 +142,26 @@ final class ProofreaderRulesConfigTest extends TestCase
             array_column($review['suggestions'], 'rule')
         );
         $this->assertSame('Label™ ©', $review['fixed']['subtitle']);
+    }
+
+    public function testReviewFieldsTranslatesBlueprintLabelKeys(): void
+    {
+        $this->bootKirby([
+            'translations' => [
+                'en' => [
+                    'project.client' => 'Client',
+                ],
+            ],
+        ]);
+        $this->kirby->setCurrentTranslation('en');
+
+        $review = Proofreader::reviewFields(
+            ['client' => 'Client...'],
+            ['client' => ['label' => 'project.client', 'type' => 'text']],
+            ['ellipsis']
+        );
+
+        $this->assertSame('Client', $review['suggestions'][0]['fieldLabel']);
+        $this->assertSame('Client', $review['suggestions'][0]['pathLabel']);
     }
 }

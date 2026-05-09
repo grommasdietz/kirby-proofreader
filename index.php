@@ -16,7 +16,7 @@ App::plugin('grommasdietz/proofreader', [
         // Controls the enabled rules and their execution order. String entries
         // use built-in rules; keyed arrays can disable, relabel or override.
         // Optional built-ins such as "dimensions" can be added here.
-        'rules' => ['unicode', 'ellipsis', 'quotes', 'dashes', 'spaces'],
+        'rules' => ['unicode', 'ellipsis', 'quotes', 'apostrophes', 'dashes', 'spaces'],
     ],
     'panel' => [
         'viewButtons' => [

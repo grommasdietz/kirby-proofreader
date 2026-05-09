@@ -33,6 +33,7 @@ $en = [
     'panel.button.proofreader.rule.dashes'       => 'Dashes',
     'panel.button.proofreader.rule.ellipsis'     => 'Ellipsis',
     'panel.button.proofreader.rule.quotes'       => 'Quotes',
+    'panel.button.proofreader.rule.apostrophes'  => 'Apostrophes',
     'panel.button.proofreader.rule.spaces'       => 'Spaces',
     'panel.button.proofreader.rule.dimensions'   => 'Dimensions',
 ];
@@ -68,6 +69,7 @@ $de = [
     'panel.button.proofreader.rule.dashes'       => 'Gedankenstriche',
     'panel.button.proofreader.rule.ellipsis'     => 'Auslassungspunkte',
     'panel.button.proofreader.rule.quotes'       => 'Anführungszeichen',
+    'panel.button.proofreader.rule.apostrophes'  => 'Apostrophe',
     'panel.button.proofreader.rule.spaces'       => 'Abstände',
     'panel.button.proofreader.rule.dimensions'   => 'Maße',
 ];
@@ -103,6 +105,7 @@ $fr = [
     'panel.button.proofreader.rule.dashes'       => 'Tirets',
     'panel.button.proofreader.rule.ellipsis'     => 'Points de suspension',
     'panel.button.proofreader.rule.quotes'       => 'Guillemets',
+    'panel.button.proofreader.rule.apostrophes'  => 'Apostrophes',
     'panel.button.proofreader.rule.spaces'       => 'Espaces',
     'panel.button.proofreader.rule.dimensions'   => 'Dimensions',
 ];
@@ -138,6 +141,7 @@ $es = [
     'panel.button.proofreader.rule.dashes'       => 'Guiones',
     'panel.button.proofreader.rule.ellipsis'     => 'Puntos suspensivos',
     'panel.button.proofreader.rule.quotes'       => 'Comillas',
+    'panel.button.proofreader.rule.apostrophes'  => 'Apóstrofes',
     'panel.button.proofreader.rule.spaces'       => 'Espacios',
     'panel.button.proofreader.rule.dimensions'   => 'Dimensiones',
 ];

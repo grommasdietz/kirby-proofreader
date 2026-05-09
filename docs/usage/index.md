@@ -21,6 +21,7 @@ The default rule order is:
     'unicode',
     'ellipsis',
     'quotes',
+    'apostrophes',
     'dashes',
     'spaces',
 ]
@@ -38,6 +39,7 @@ return [
     'grommasdietz.proofreader.rules' => [
         'unicode',
         'ellipsis',
+        'apostrophes',
         'dashes',
         'spaces',
     ],
@@ -53,6 +55,7 @@ return [
         'unicode',
         'ellipsis',
         'quotes' => false,
+        'apostrophes',
         'dashes',
         'spaces',
     ],
@@ -82,6 +85,7 @@ return [
         ],
         'ellipsis',
         'quotes',
+        'apostrophes',
         'dashes',
         'spaces',
         'dimensions',
@@ -102,8 +106,8 @@ Quote characters, dash characters and dash spacing can also come from Kirby's
 native SmartyPants options. In multi-language installations, language-level
 `smartypants` options win over global options. In single-language
 installations, quote fixes are skipped unless global `smartypants` quote marks
-are configured. When quote marks are known, the `quotes` rule also normalizes
-straight apostrophes in words to `’`:
+are configured. The `apostrophes` rule normalizes straight apostrophes in words
+to `’` and can stay enabled when quote-pair conversion is disabled:
 
 ```php
 return [

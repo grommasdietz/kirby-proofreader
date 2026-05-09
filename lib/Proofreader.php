@@ -15,8 +15,8 @@ final class Proofreader
      *
      * @var list<string>
      */
-    private const BUILTIN_RULES = ['unicode', 'ellipsis', 'quotes', 'dashes', 'spaces', 'dimensions'];
-    private const DEFAULT_RULES = ['unicode', 'ellipsis', 'quotes', 'dashes', 'spaces'];
+    private const BUILTIN_RULES = ['unicode', 'ellipsis', 'quotes', 'apostrophes', 'dashes', 'spaces', 'dimensions'];
+    private const DEFAULT_RULES = ['unicode', 'ellipsis', 'quotes', 'apostrophes', 'dashes', 'spaces'];
     private const EN_DASH_SPACE = "\u{2006}";
     private const EM_DASH_SPACE = "\u{200A}";
     private const MULTIPLICATION_SPACE = "\u{2006}";
@@ -239,17 +239,19 @@ final class Proofreader
      */
     public static function fixQuotes(string $text, ?string $language = null): string
     {
+        return self::fixApostrophes(self::fixQuotePairs($text, $language));
+    }
+
+    /**
+     * Replaces straight quote pairs with language-aware marks.
+     */
+    public static function fixQuotePairs(string $text, ?string $language = null): string
+    {
         $quotes = self::quotesForLanguage($language);
 
         if ($quotes === null) {
             return $text;
         }
-
-        $text = preg_replace(
-            "/(?<=\p{L})[‘ʼ](?=\p{L}|[\p{Zs}\t\r\n.,;:!?)]|$)/u",
-            self::APOSTROPHE,
-            $text
-        ) ?? $text;
 
         $result = preg_replace_callback(
             '/"([^"\r\n]+)"/u',
@@ -260,20 +262,46 @@ final class Proofreader
         $text = $result ?? $text;
 
         $result = preg_replace_callback(
-            "/'([^'\r\n]+)'/u",
+            "/(?<![\p{L}\p{N}])'([^'\r\n]+)'(?![\p{L}\p{N}])/u",
             static fn (array $m): string => $quotes[2] . $m[1] . $quotes[3],
+            $text
+        );
+
+        return $result ?? $text;
+    }
+
+    /**
+     * Replaces apostrophes in words with the typographic apostrophe.
+     */
+    public static function fixApostrophes(string $text): string
+    {
+        $protectedClosers = [];
+        $text = preg_replace_callback(
+            "/(?<![\p{L}\p{N}])'([^'\r\n]+)'(?![\p{L}\p{N}])/u",
+            static function (array $m) use (&$protectedClosers): string {
+                $token = "\u{E000}proofreader-apostrophe-" . count($protectedClosers) . "\u{E001}";
+                $protectedClosers[$token] = "'";
+
+                return "'" . $m[1] . $token;
+            },
+            $text
+        ) ?? $text;
+
+        $result = preg_replace(
+            "/(?<=\p{L})['´‘ʼ](?=\p{L})/u",
+            self::APOSTROPHE,
             $text
         );
 
         $text = $result ?? $text;
 
         $result = preg_replace(
-            "/(?<=\p{L})['´ʼ](?=\p{L}|[\p{Zs}\t\r\n.,;:!?)]|$)/u",
+            "/(?<=\p{L}[sS])['´‘ʼ](?=[\p{Zs}\t\r\n.,;:!?)]|$)/u",
             self::APOSTROPHE,
             $text
         );
 
-        return $result ?? $text;
+        return strtr($result ?? $text, $protectedClosers);
     }
 
     /**
@@ -693,11 +721,12 @@ final class Proofreader
         }
 
         return match ($rule) {
-            'unicode'  => self::fixUnicodeComposition($text),
-            'ellipsis' => self::fixEllipsis($text),
-            'quotes'   => self::fixQuotes($text, $language),
-            'dashes'   => self::fixDashCharacters($text, $language),
-            'spaces'   => self::fixOrdinalSpacing(
+            'unicode'     => self::fixUnicodeComposition($text),
+            'ellipsis'    => self::fixEllipsis($text),
+            'quotes'      => self::fixQuotePairs($text, $language),
+            'apostrophes' => self::fixApostrophes($text),
+            'dashes'      => self::fixDashCharacters($text, $language),
+            'spaces'      => self::fixOrdinalSpacing(
                 self::fixDashSpacing(
                     self::fixTrailingNbsp(
                         self::fixLeadingNbsp(
@@ -710,8 +739,8 @@ final class Proofreader
                     $language
                 )
             ),
-            'dimensions' => self::fixDimensions($text),
-            default    => $text,
+            'dimensions'  => self::fixDimensions($text),
+            default       => $text,
         };
     }
 
@@ -1336,12 +1365,13 @@ final class Proofreader
     private static function fieldLabel(string $fallback, array $blueprint): string
     {
         $label = $blueprint['label'] ?? $blueprint['name'] ?? null;
+        $fallbackLabel = ucfirst((string) preg_replace('/[-_]+/', ' ', $fallback));
 
-        if (is_string($label) && $label !== '') {
-            return $label;
+        if ($label !== null) {
+            return self::translatedLabel($label, $fallbackLabel);
         }
 
-        return ucfirst((string) preg_replace('/[-_]+/', ' ', $fallback));
+        return $fallbackLabel;
     }
 
     /**
@@ -1351,11 +1381,34 @@ final class Proofreader
     {
         $label = $fieldset['name'] ?? $fieldset['label'] ?? null;
 
-        if (is_string($label) && $label !== '') {
-            return $label;
+        if ($label !== null) {
+            return self::translatedLabel($label, ucfirst((string) preg_replace('/[-_]+/', ' ', $type)));
         }
 
         return ucfirst((string) preg_replace('/[-_]+/', ' ', $type));
+    }
+
+    private static function translatedLabel(mixed $label, string $fallback): string
+    {
+        if (is_string($label) === false && is_array($label) === false) {
+            return $fallback;
+        }
+
+        $translated = I18n::translate($label, $label);
+
+        if (is_string($translated) && $translated !== '') {
+            return $translated;
+        }
+
+        if (is_array($translated)) {
+            $translated = I18n::translate($translated, $fallback);
+
+            if (is_string($translated) && $translated !== '') {
+                return $translated;
+            }
+        }
+
+        return $fallback;
     }
 
     private static function previewText(string $value, string $format): string

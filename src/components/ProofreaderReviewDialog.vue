@@ -192,6 +192,7 @@ const RULE_LABELS = {
   dashes: "panel.button.proofreader.rule.dashes",
   ellipsis: "panel.button.proofreader.rule.ellipsis",
   quotes: "panel.button.proofreader.rule.quotes",
+  apostrophes: "panel.button.proofreader.rule.apostrophes",
   spaces: "panel.button.proofreader.rule.spaces",
   dimensions: "panel.button.proofreader.rule.dimensions",
 };
@@ -514,10 +515,14 @@ export default {
 
       return windows;
     },
-    renderVisibleSegment(text) {
+    renderVisibleSegment(text, showPlainSpaces = true) {
       return [...String(text ?? "")]
         .map((char) => {
           if (char === " ") {
+            if (showPlainSpaces === false) {
+              return " ";
+            }
+
             return '<span class="proofreader-review-hidden-char" title="Space"> </span>';
           }
 
@@ -564,7 +569,7 @@ export default {
             ? `<${tag} class="${className}">${this.renderVisibleSegment(
                 segment
               )}</${tag}>`
-            : this.escapeHtml(segment)
+            : this.renderVisibleSegment(segment, false)
         );
 
         index = next;
