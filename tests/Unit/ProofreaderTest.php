@@ -366,6 +366,18 @@ final class ProofreaderTest extends TestCase
             'Proofreader note!',
             Proofreader::fixPunctuationSpacing('Proofreader note !')
         );
+        $this->assertSame(
+            'Proofreader note: ready',
+            Proofreader::fixPunctuationSpacing('Proofreader note : ready')
+        );
+    }
+
+    public function testFixPunctuationSpacingKeepsColonPrefixedWords(): void
+    {
+        $this->assertSame(
+            'von :mlzd',
+            Proofreader::fixPunctuationSpacing('von :mlzd')
+        );
     }
 
     public function testFixPunctuationSpacingKeepsFrenchHighPunctuationSpacing(): void

@@ -164,4 +164,24 @@ final class ProofreaderRulesConfigTest extends TestCase
         $this->assertSame('Client', $review['suggestions'][0]['fieldLabel']);
         $this->assertSame('Client', $review['suggestions'][0]['pathLabel']);
     }
+
+    public function testBlocksFieldsResolveKirbyFieldsetShorthand(): void
+    {
+        $this->bootKirby();
+
+        $blocks = json_encode([
+            ['type' => 'text', 'id' => 'text-a', 'content' => ['text' => '<p>Hello...</p>']],
+        ]);
+
+        $this->assertIsString($blocks);
+
+        $review = Proofreader::reviewFields(
+            ['blocks' => $blocks],
+            ['blocks' => ['type' => 'blocks', 'fieldsets' => ['text']]],
+            ['ellipsis']
+        );
+
+        $this->assertSame(['ellipsis'], array_column($review['suggestions'], 'rule'));
+        $this->assertSame('<p>Hello…</p>', json_decode($review['fixed']['blocks'], true)[0]['content']['text']);
+    }
 }

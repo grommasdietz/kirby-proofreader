@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace GrommasDietz\Proofreader;
 
 use Kirby\Cms\App;
+use Kirby\Cms\Blueprint;
 use Kirby\Data\Yaml;
 use Kirby\Toolkit\I18n;
 
@@ -372,11 +373,17 @@ final class Proofreader
      */
     public static function fixPunctuationSpacing(string $text, ?string $language = null): string
     {
-        $pattern = self::isFrenchLanguage($language)
-            ? '/[ \t]+([,.])/u'
-            : '/[ \t]+([,.;:!?])/u';
+        $result = preg_replace('/[ \t]+([,.])/u', '$1', $text) ?? $text;
 
-        $result = preg_replace($pattern, '$1', $text);
+        if (self::isFrenchLanguage($language) === true) {
+            return $result;
+        }
+
+        $result = preg_replace(
+            '/[ \t]+([;:!?])(?=$|[\p{Zs}\t\r\n\p{P}])/u',
+            '$1',
+            $result
+        );
 
         return $result ?? $text;
     }
@@ -1319,15 +1326,16 @@ final class Proofreader
     }
 
     /**
-     * @param  array<string, array<string, mixed>> $fieldsets
+     * @param  array<string|int, mixed> $fieldsets
      * @return array<string, array<string, mixed>>
      */
     private static function fieldsetFields(array $fieldsets, string $type): array
     {
-        $fieldDefs = $fieldsets[$type]['fields'] ?? [];
+        $fieldset = self::fieldsetDefinition($fieldsets, $type);
+        $fieldDefs = $fieldset['fields'] ?? [];
 
         if ($fieldDefs === []) {
-            foreach ($fieldsets[$type]['tabs'] ?? [] as $tab) {
+            foreach ($fieldset['tabs'] ?? [] as $tab) {
                 $fieldDefs = array_merge($fieldDefs, $tab['fields'] ?? []);
             }
         }
@@ -1336,7 +1344,32 @@ final class Proofreader
     }
 
     /**
-     * @param  array<string, array<string, mixed>> $fields
+     * @param  array<string|int, mixed> $fieldsets
+     * @return array<string, mixed>
+     */
+    private static function fieldsetDefinition(array $fieldsets, string $type): array
+    {
+        $definition = $fieldsets[$type] ?? null;
+
+        if (is_string($definition)) {
+            return self::resolveBlueprintDefinition(['extends' => $definition]);
+        }
+
+        if (is_array($definition)) {
+            return self::resolveBlueprintDefinition($definition);
+        }
+
+        foreach ($fieldsets as $fieldset) {
+            if ($fieldset === $type) {
+                return self::resolveBlueprintDefinition(['extends' => 'blocks/' . $type]);
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * @param  array<string, mixed> $fields
      * @return array<string, array<string, mixed>>
      */
     private static function normaliseBlueprintFields(array $fields, bool $includePageTitle = false): array
@@ -1344,7 +1377,15 @@ final class Proofreader
         $normalised = [];
 
         foreach ($fields as $key => $definition) {
-            $normalised[strtolower((string) $key)] = $definition;
+            if (is_string($definition)) {
+                $definition = ['extends' => $definition];
+            }
+
+            if (is_array($definition) === false) {
+                continue;
+            }
+
+            $normalised[strtolower((string) $key)] = self::resolveBlueprintDefinition($definition);
         }
 
         if ($includePageTitle === true && !isset($normalised['title'])) {
@@ -1357,6 +1398,23 @@ final class Proofreader
         }
 
         return $normalised;
+    }
+
+    /**
+     * @param  array<string, mixed> $definition
+     * @return array<string, mixed>
+     */
+    private static function resolveBlueprintDefinition(array $definition): array
+    {
+        if (isset($definition['extends']) === false) {
+            return $definition;
+        }
+
+        try {
+            return Blueprint::extend($definition);
+        } catch (\Throwable) {
+            return $definition;
+        }
     }
 
     /**
@@ -1545,7 +1603,7 @@ final class Proofreader
      * tabbed `tabs[*].fields` layouts).
      *
      * @param  list<array<string, mixed>>          $blocks
-     * @param  array<string, array<string, mixed>> $fieldsets
+     * @param  array<string|int, mixed>            $fieldsets
      * @param  list<string>|null                   $rules
      * @return list<array<string, mixed>>
      */
@@ -1557,14 +1615,7 @@ final class Proofreader
     ): array {
         return array_map(function (array $block) use ($fieldsets, $rules, $language): array {
             $type = $block['type'] ?? '';
-
-            // Collect field definitions from the fieldset (direct or tabbed)
-            $fieldDefs = $fieldsets[$type]['fields'] ?? [];
-            if ($fieldDefs === []) {
-                foreach ($fieldsets[$type]['tabs'] ?? [] as $tab) {
-                    $fieldDefs = array_merge($fieldDefs, $tab['fields'] ?? []);
-                }
-            }
+            $fieldDefs = self::fieldsetFields($fieldsets, (string) $type);
 
             if ($fieldDefs !== [] && isset($block['content'])) {
                 $block['content'] = self::fixFields((array) $block['content'], $fieldDefs, $rules, $language);
