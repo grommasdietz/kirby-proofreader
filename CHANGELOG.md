@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/grommasdietz/kirby-proofreader/compare/v1.1.0...v1.1.1) (2026-05-09)
+
+
+### Bug Fixes
+
+* **proofreader:** improve punctuation spacing handling ([28011eb](https://github.com/grommasdietz/kirby-proofreader/commit/28011eb9555ed8a7b45e902cabf77858f4918ad2))
+
 # [1.1.0](https://github.com/grommasdietz/kirby-proofreader/compare/v1.0.1...v1.1.0) (2026-05-09)
 
 
