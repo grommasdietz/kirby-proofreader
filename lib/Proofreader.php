@@ -67,18 +67,35 @@ final class Proofreader
     ];
 
     /**
-     * Field types eligible for plain-text typography fixes.
+     * Field type formats used by the default traversal. Configured includes
+     * can reuse these formats for custom field names and field types.
      *
-     * @var list<string>
+     * @var array<string, string>
      */
-    private const TEXT_FIELD_TYPES = ['text', 'textarea'];
+    private const FIELD_FORMATS = [
+        'text'      => 'plain',
+        'textarea'  => 'plain',
+        'writer'    => 'html',
+        'list'      => 'html',
+        'structure' => 'structure',
+        'blocks'    => 'blocks',
+        'layout'    => 'layout',
+    ];
 
     /**
-     * Field types eligible for HTML typography fixes (text nodes only).
-     *
-     * @var list<string>
+     * @var array<string, string>
      */
-    private const HTML_FIELD_TYPES = ['writer', 'list'];
+    private const FIELD_FORMAT_ALIASES = [
+        'plain'     => 'plain',
+        'text'      => 'plain',
+        'textarea'  => 'plain',
+        'html'      => 'html',
+        'writer'    => 'html',
+        'list'      => 'html',
+        'structure' => 'structure',
+        'blocks'    => 'blocks',
+        'layout'    => 'layout',
+    ];
     private const PROTECTED_HTML_TAG_PATTERN = 'code|pre|kbd|samp|script|style|math';
 
     /**
@@ -881,6 +898,142 @@ final class Proofreader
     }
 
     /**
+     * @param array<string, mixed> $blueprint
+     */
+    private static function fieldFormatFor(string $field, array $blueprint): ?string
+    {
+        $type = self::fieldType($blueprint);
+        $defaultFormat = $type !== null ? (self::FIELD_FORMATS[$type] ?? null) : null;
+        $config = self::fieldConfig();
+
+        if (self::fieldMatchesConfig($field, $type, $config['exclude'] ?? []) === true) {
+            return null;
+        }
+
+        return self::fieldFormatFromConfig($field, $type, $defaultFormat, $config['include'] ?? [])
+            ?? $defaultFormat;
+    }
+
+    /**
+     * @param array<string, mixed> $blueprint
+     */
+    private static function fieldType(array $blueprint): ?string
+    {
+        $type = $blueprint['type'] ?? null;
+
+        if (!is_string($type) || $type === '') {
+            return null;
+        }
+
+        return strtolower($type);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function fieldConfig(): array
+    {
+        $config = self::optionValue('grommasdietz.proofreader.fields', []);
+
+        return is_array($config) ? $config : [];
+    }
+
+    private static function fieldMatchesConfig(string $field, ?string $type, mixed $config): bool
+    {
+        if (is_array($config) === false) {
+            return false;
+        }
+
+        return self::configListContains(strtolower($field), $config['names'] ?? [])
+            || ($type !== null && self::configListContains($type, $config['types'] ?? []));
+    }
+
+    private static function fieldFormatFromConfig(
+        string $field,
+        ?string $type,
+        ?string $defaultFormat,
+        mixed $config
+    ): ?string {
+        if (is_array($config) === false) {
+            return null;
+        }
+
+        $nameFormat = self::fieldFormatFromConfigList(strtolower($field), $config['names'] ?? [], $defaultFormat);
+
+        if ($nameFormat !== null) {
+            return $nameFormat;
+        }
+
+        if ($type === null) {
+            return null;
+        }
+
+        return self::fieldFormatFromConfigList($type, $config['types'] ?? [], $defaultFormat);
+    }
+
+    private static function configListContains(string $needle, mixed $entries): bool
+    {
+        if (is_array($entries) === false) {
+            return false;
+        }
+
+        foreach ($entries as $key => $value) {
+            if (is_int($key)) {
+                if (is_string($value) && strtolower($value) === $needle) {
+                    return true;
+                }
+
+                continue;
+            }
+
+            if (strtolower((string) $key) === $needle && $value !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static function fieldFormatFromConfigList(
+        string $needle,
+        mixed $entries,
+        ?string $defaultFormat
+    ): ?string {
+        if (is_array($entries) === false) {
+            return null;
+        }
+
+        foreach ($entries as $key => $value) {
+            if (is_int($key)) {
+                if (is_string($value) && strtolower($value) === $needle) {
+                    return self::normaliseFieldFormat(true, $defaultFormat);
+                }
+
+                continue;
+            }
+
+            if (strtolower((string) $key) === $needle) {
+                return self::normaliseFieldFormat($value, $defaultFormat);
+            }
+        }
+
+        return null;
+    }
+
+    private static function normaliseFieldFormat(mixed $value, ?string $defaultFormat): ?string
+    {
+        if ($value === true) {
+            return $defaultFormat ?? 'plain';
+        }
+
+        if (!is_string($value) || $value === '') {
+            return null;
+        }
+
+        return self::FIELD_FORMAT_ALIASES[strtolower($value)] ?? null;
+    }
+
+    /**
      * Applies typography fixes to eligible fields in a content array.
      *
      * Supported field types and how they are processed:
@@ -890,8 +1043,11 @@ final class Proofreader
      * - blocks          → JSON decoded, each block's content processed recursively
      * - layout          → JSON decoded, blocks in each column processed recursively
      *
-     * All other field types (url, email, date, select, toggle, …) are returned
-     * unchanged. Fields absent from the blueprint are also passed through.
+     * Custom field names and field types can opt into one of the same formats
+     * through the `grommasdietz.proofreader.fields.include` option. Excludes
+     * always win. All other field types (url, email, date, select, toggle, …)
+     * are returned unchanged. Fields absent from the blueprint are also passed
+     * through unless included by name.
      *
      * @param  array<string, mixed>                $fields          Content key-value pairs
      * @param  array<string, array<string, mixed>> $blueprintFields Blueprint field definitions indexed by field name
@@ -914,23 +1070,17 @@ final class Proofreader
 
         foreach ($fields as $key => $value) {
             $lkey = strtolower((string) $key);
-            $type = $blueprintFields[$lkey]['type'] ?? null;
+            $bp = $blueprintFields[$lkey] ?? [];
 
             if ($selectedFields !== null && !in_array($lkey, $selectedFields, true)) {
                 $fixed[$key] = $value;
                 continue;
             }
 
-            if (is_string($value) && in_array($type, self::TEXT_FIELD_TYPES, true)) {
-                $fixed[$key] = self::fix($value, $rules, $language);
-            } elseif (is_string($value) && in_array($type, self::HTML_FIELD_TYPES, true)) {
-                $fixed[$key] = self::fixHtml($value, $rules, $language);
-            } elseif (is_string($value) && $type === 'structure') {
-                $fixed[$key] = self::fixStructureField($value, $blueprintFields[$lkey], $rules, $language);
-            } elseif (is_string($value) && $type === 'blocks') {
-                $fixed[$key] = self::fixBlocksField($value, $blueprintFields[$lkey], $rules, $language);
-            } elseif (is_string($value) && $type === 'layout') {
-                $fixed[$key] = self::fixLayoutField($value, $blueprintFields[$lkey], $rules, $language);
+            $format = self::fieldFormatFor((string) $key, $bp);
+
+            if (is_string($value) && $format !== null) {
+                $fixed[$key] = self::fixFieldValue($value, $format, $bp, $rules, $language);
             } else {
                 $fixed[$key] = $value;
             }
@@ -1000,43 +1150,76 @@ final class Proofreader
             $field = (string) $key;
             $lkey  = strtolower($field);
             $bp    = $blueprintFields[$lkey] ?? [];
-            $type  = $bp['type'] ?? null;
 
             if ($selectedFields !== null && !in_array($lkey, $selectedFields, true)) {
                 continue;
             }
 
+            $format = self::fieldFormatFor($field, $bp);
             $label = self::fieldLabel($field, $bp);
 
-            if (is_string($value) && in_array($type, self::TEXT_FIELD_TYPES, true)) {
+            if (is_string($value) && $format !== null) {
                 array_push(
                     $suggestions,
-                    ...self::buildRuleSuggestions($value, 'plain', $field, $label, $field, $label, $rules, $language)
-                );
-            } elseif (is_string($value) && in_array($type, self::HTML_FIELD_TYPES, true)) {
-                array_push(
-                    $suggestions,
-                    ...self::buildRuleSuggestions($value, 'html', $field, $label, $field, $label, $rules, $language)
-                );
-            } elseif (is_string($value) && $type === 'structure') {
-                array_push(
-                    $suggestions,
-                    ...self::collectStructureSuggestions($value, $bp, $field, $label, $rules, $language)
-                );
-            } elseif (is_string($value) && $type === 'blocks') {
-                array_push(
-                    $suggestions,
-                    ...self::collectBlocksSuggestions($value, $bp, $field, $label, $rules, $language)
-                );
-            } elseif (is_string($value) && $type === 'layout') {
-                array_push(
-                    $suggestions,
-                    ...self::collectLayoutSuggestions($value, $bp, $field, $label, $rules, $language)
+                    ...self::collectFieldValueSuggestions($value, $format, $bp, $field, $label, $rules, $language)
                 );
             }
         }
 
         return $suggestions;
+    }
+
+    /**
+     * @param array<string, mixed> $fieldBlueprint
+     * @param list<string>|null $rules
+     */
+    private static function fixFieldValue(
+        string $value,
+        string $format,
+        array $fieldBlueprint,
+        ?array $rules,
+        ?string $language
+    ): string {
+        return match ($format) {
+            'plain'     => self::fix($value, $rules, $language),
+            'html'      => self::fixHtml($value, $rules, $language),
+            'structure' => self::fixStructureField($value, $fieldBlueprint, $rules, $language),
+            'blocks'    => self::fixBlocksField($value, $fieldBlueprint, $rules, $language),
+            'layout'    => self::fixLayoutField($value, $fieldBlueprint, $rules, $language),
+            default     => $value,
+        };
+    }
+
+    /**
+     * @param array<string, mixed> $fieldBlueprint
+     * @param list<string> $rules
+     * @return list<array<string, string>>
+     */
+    private static function collectFieldValueSuggestions(
+        string $value,
+        string $format,
+        array $fieldBlueprint,
+        string $field,
+        string $fieldLabel,
+        array $rules,
+        ?string $language
+    ): array {
+        return match ($format) {
+            'plain', 'html' => self::buildRuleSuggestions(
+                $value,
+                $format,
+                $field,
+                $fieldLabel,
+                $field,
+                $fieldLabel,
+                $rules,
+                $language
+            ),
+            'structure' => self::collectStructureSuggestions($value, $fieldBlueprint, $field, $fieldLabel, $rules, $language),
+            'blocks'    => self::collectBlocksSuggestions($value, $fieldBlueprint, $field, $fieldLabel, $rules, $language),
+            'layout'    => self::collectLayoutSuggestions($value, $fieldBlueprint, $field, $fieldLabel, $rules, $language),
+            default     => [],
+        };
     }
 
     /**
@@ -1107,9 +1290,13 @@ final class Proofreader
             foreach ((array) $row as $subKey => $subValue) {
                 $subField = (string) $subKey;
                 $subBp    = $subFields[strtolower($subField)] ?? [];
-                $type     = $subBp['type'] ?? null;
+                $format   = self::fieldFormatFor($subField, $subBp);
 
                 if (!is_string($subValue)) {
+                    continue;
+                }
+
+                if ($format !== 'plain' && $format !== 'html') {
                     continue;
                 }
 
@@ -1117,35 +1304,19 @@ final class Proofreader
                 $path = $field . '.' . $rowIndex . '.' . $subField;
                 $pathLabel = $fieldLabel . ' -> Row ' . ($rowIndex + 1) . ' -> ' . $subLabel;
 
-                if (in_array($type, self::TEXT_FIELD_TYPES, true)) {
-                    array_push(
-                        $suggestions,
-                        ...self::buildRuleSuggestions(
-                            $subValue,
-                            'plain',
-                            $field,
-                            $fieldLabel,
-                            $path,
-                            $pathLabel,
-                            $rules,
-                            $language
-                        )
-                    );
-                } elseif (in_array($type, self::HTML_FIELD_TYPES, true)) {
-                    array_push(
-                        $suggestions,
-                        ...self::buildRuleSuggestions(
-                            $subValue,
-                            'html',
-                            $field,
-                            $fieldLabel,
-                            $path,
-                            $pathLabel,
-                            $rules,
-                            $language
-                        )
-                    );
-                }
+                array_push(
+                    $suggestions,
+                    ...self::buildRuleSuggestions(
+                        $subValue,
+                        $format,
+                        $field,
+                        $fieldLabel,
+                        $path,
+                        $pathLabel,
+                        $rules,
+                        $language
+                    )
+                );
             }
         }
 
@@ -1280,9 +1451,13 @@ final class Proofreader
             foreach ((array) $block['content'] as $subKey => $subValue) {
                 $subField = (string) $subKey;
                 $subBp    = $fieldDefs[strtolower($subField)] ?? [];
-                $subType  = $subBp['type'] ?? null;
+                $format   = self::fieldFormatFor($subField, $subBp);
 
                 if (!is_string($subValue)) {
+                    continue;
+                }
+
+                if ($format !== 'plain' && $format !== 'html') {
                     continue;
                 }
 
@@ -1290,35 +1465,19 @@ final class Proofreader
                 $path = $basePath . '.' . $blockIndex . '.content.' . $subField;
                 $pathLabel = $baseLabel . ' -> ' . $blockLabel . ' ' . ($blockIndex + 1) . ' -> ' . $subLabel;
 
-                if (in_array($subType, self::TEXT_FIELD_TYPES, true)) {
-                    array_push(
-                        $suggestions,
-                        ...self::buildRuleSuggestions(
-                            $subValue,
-                            'plain',
-                            $field,
-                            $fieldLabel,
-                            $path,
-                            $pathLabel,
-                            $rules,
-                            $language
-                        )
-                    );
-                } elseif (in_array($subType, self::HTML_FIELD_TYPES, true)) {
-                    array_push(
-                        $suggestions,
-                        ...self::buildRuleSuggestions(
-                            $subValue,
-                            'html',
-                            $field,
-                            $fieldLabel,
-                            $path,
-                            $pathLabel,
-                            $rules,
-                            $language
-                        )
-                    );
-                }
+                array_push(
+                    $suggestions,
+                    ...self::buildRuleSuggestions(
+                        $subValue,
+                        $format,
+                        $field,
+                        $fieldLabel,
+                        $path,
+                        $pathLabel,
+                        $rules,
+                        $language
+                    )
+                );
             }
         }
 

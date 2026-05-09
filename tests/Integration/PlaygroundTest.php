@@ -117,6 +117,67 @@ final class PlaygroundTest extends TestCase
         $this->assertSame(['summary'], array_unique(array_column($data['suggestions'], 'field')));
     }
 
+    public function testProofreaderRouteCanIncludeConfiguredFieldNames(): void
+    {
+        $this->bootKirby([
+            'options' => [
+                'grommasdietz.proofreader' => [
+                    'fields' => [
+                        'include' => [
+                            'names' => [
+                                'date' => 'plain',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ])->impersonate('kirby');
+
+        $response = $this->callProofreaderRoute(
+            'kirby-proofreader/pages/editorial-review/optimize',
+            [
+                'preview' => true,
+                'rules'   => ['dashes'],
+                'fields'  => ['date'],
+            ]
+        );
+        $data = $this->jsonResponse($response);
+
+        $this->assertSame('ok', $data['status']);
+        $this->assertSame(['date'], array_unique(array_column($data['suggestions'], 'field')));
+        $this->assertSame(['date'], $data['changedFields']);
+    }
+
+    public function testProofreaderRouteHonorsConfiguredFieldExcludes(): void
+    {
+        $this->bootKirby([
+            'options' => [
+                'grommasdietz.proofreader' => [
+                    'fields' => [
+                        'exclude' => [
+                            'names' => ['summary'],
+                        ],
+                    ],
+                ],
+            ],
+        ])->impersonate('kirby');
+
+        $response = $this->callProofreaderRoute(
+            'kirby-proofreader/pages/editorial-review/optimize',
+            [
+                'preview' => true,
+                'rules'   => ['dashes', 'spaces', 'dimensions'],
+                'fields'  => ['summary'],
+            ]
+        );
+        $data = $this->jsonResponse($response);
+
+        $this->assertSame('ok', $data['status']);
+        $this->assertSame([], $data['suggestions']);
+        $this->assertSame([], $data['changedFields']);
+        $this->assertSame([], $data['diffs']);
+    }
+
     public function testListFieldCanReviewPlaygroundContent(): void
     {
         $response = $this->callProofreaderRoute(

@@ -184,4 +184,88 @@ final class ProofreaderRulesConfigTest extends TestCase
         $this->assertSame(['ellipsis'], array_column($review['suggestions'], 'rule'));
         $this->assertSame('<p>Hello…</p>', json_decode($review['fixed']['blocks'], true)[0]['content']['text']);
     }
+
+    public function testFieldsOptionCanIncludeCustomPlainFieldTypes(): void
+    {
+        $this->bootKirby([
+            'options' => [
+                'grommasdietz.proofreader' => [
+                    'fields' => [
+                        'include' => [
+                            'types' => [
+                                'custom-text' => 'plain',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $review = Proofreader::reviewFields(
+            ['summary' => 'Custom field...'],
+            ['summary' => ['type' => 'custom-text']],
+            ['ellipsis']
+        );
+
+        $this->assertSame(['ellipsis'], array_column($review['suggestions'], 'rule'));
+        $this->assertSame('Custom field…', $review['fixed']['summary']);
+    }
+
+    public function testFieldsOptionCanIncludeCustomHtmlFieldNames(): void
+    {
+        $this->bootKirby([
+            'options' => [
+                'grommasdietz.proofreader' => [
+                    'fields' => [
+                        'include' => [
+                            'names' => [
+                                'body' => 'html',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $review = Proofreader::reviewFields(
+            ['body' => '<p>Custom field...</p><code>Leave code...</code>'],
+            ['body' => ['type' => 'custom-writer']],
+            ['ellipsis']
+        );
+
+        $this->assertSame(['ellipsis'], array_column($review['suggestions'], 'rule'));
+        $this->assertSame('<p>Custom field…</p><code>Leave code...</code>', $review['fixed']['body']);
+    }
+
+    public function testFieldsOptionCanExcludeDefaultFieldNamesAndTypes(): void
+    {
+        $this->bootKirby([
+            'options' => [
+                'grommasdietz.proofreader' => [
+                    'fields' => [
+                        'exclude' => [
+                            'names' => ['summary'],
+                            'types' => ['writer'],
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $review = Proofreader::reviewFields(
+            [
+                'summary' => 'Default text...',
+                'body'    => '<p>Default writer...</p>',
+            ],
+            [
+                'summary' => ['type' => 'text'],
+                'body'    => ['type' => 'writer'],
+            ],
+            ['ellipsis']
+        );
+
+        $this->assertSame([], $review['suggestions']);
+        $this->assertSame('Default text...', $review['fixed']['summary']);
+        $this->assertSame('<p>Default writer...</p>', $review['fixed']['body']);
+    }
 }

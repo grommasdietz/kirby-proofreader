@@ -64,6 +64,30 @@ Quote characters, dash characters and dash spacing follow Kirby's native
 SmartyPants options when configured globally or per language. Single-language
 installs need SmartyPants configuration to enable quote rule.
 
+Default field coverage includes `text`, `textarea`, `writer`, `list`,
+`structure`, `blocks` and `layout` fields, including blueprint definitions that
+use `extends`. Custom field names or types can be included or default-covered
+fields can be excluded:
+
+```php
+return [
+    'grommasdietz.proofreader.fields' => [
+        'include' => [
+            'types' => [
+                'custom-writer' => 'html',
+                'custom-text' => 'plain',
+            ],
+            'names' => [
+                'intro' => 'plain',
+            ],
+        ],
+        'exclude' => [
+            'names' => ['embed_code'],
+        ],
+    ],
+];
+```
+
 ### Documentation
 
 Full reference for [usage](docs/usage/index.md), [contributions](docs/contributions/index.md) and [maintenance](docs/maintenance/index.md) lives in [documentation](docs/index.md).

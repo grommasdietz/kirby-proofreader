@@ -3,7 +3,8 @@
 Kirby Proofreader adds a Panel button for page and site views. It previews
 typography fixes for eligible `text`, `textarea`, `writer`, `list`,
 `structure`, `blocks`, and `layout` content before saving field changes as
-unpublished changes.
+unpublished changes. Blueprint definitions that use `extends` are resolved
+before field eligibility is checked.
 
 Title fixes are shown as their own scope, selected by default and saved
 immediately via Kirby's native title action when applied.
@@ -126,6 +127,45 @@ return [
 
 Only the Proofreader's configured rules are applied; this does not enable
 Kirby's full SmartyPants parser for content.
+
+### Fields
+
+By default, Kirby Proofreader handles `text` and `textarea` fields as plain
+text, `writer` and `list` fields as HTML text nodes, and `structure`, `blocks`
+and `layout` fields recursively. Other fields are ignored to avoid touching
+technical values such as URLs, dates, emails, slugs or select values.
+
+Custom field names or field types can be included with
+`grommasdietz.proofreader.fields.include`. Default-covered fields can be
+excluded with `grommasdietz.proofreader.fields.exclude`. Excludes always win
+over defaults and includes:
+
+```php
+return [
+    'grommasdietz.proofreader.fields' => [
+        'include' => [
+            'types' => [
+                'custom-writer' => 'html',
+                'custom-text' => 'plain',
+            ],
+            'names' => [
+                'intro' => 'plain',
+                'caption' => 'plain',
+            ],
+        ],
+        'exclude' => [
+            'types' => ['slug', 'url'],
+            'names' => ['embed_code'],
+        ],
+    ],
+];
+```
+
+Supported include formats are `plain`, `html`, `structure`, `blocks` and
+`layout`. Field-type aliases are accepted too: `text` and `textarea` map to
+`plain`, while `writer` and `list` map to `html`. List entries without a mapped
+format, for example `'names' => ['intro']`, are treated as `plain` unless the
+field already has a default format.
 
 ### Button label
 
