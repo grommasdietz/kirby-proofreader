@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/grommasdietz/kirby-proofreader/compare/v1.0.0...v1.0.1) (2026-05-09)
+
+
+### Bug Fixes
+
+* **dependencies:** update semantic-release packages ([95270a1](https://github.com/grommasdietz/kirby-proofreader/commit/95270a1b72b7ad0fb55b58f47ab215995c923bb7))
+
 # 1.0.0 (2026-05-08)
 
 
