@@ -56,7 +56,6 @@ return [
 ];
 ```
 
-> [!NOTE]
 > The keyed `false` entry disables the built-in `quotes` rule. The keyed
 > `trademark` array adds a custom callback rule.
 
@@ -65,9 +64,7 @@ SmartyPants options when configured globally or per language. Single-language
 installs need SmartyPants configuration to enable quote rule.
 
 Default field coverage includes `text`, `textarea`, `writer`, `list`,
-`structure`, `blocks` and `layout` fields, including blueprint definitions that
-use `extends`. Custom field names or types can be included or default-covered
-fields can be excluded:
+`structure`, `blocks` and `layout` fields. Custom field names or types can be included or excluded:
 
 ```php
 return [
@@ -76,13 +73,15 @@ return [
             'types' => [
                 'custom-writer' => 'html',
                 'custom-text' => 'plain',
+                'custom-structure' => 'structure',
             ],
             'names' => [
                 'intro' => 'plain',
             ],
         ],
         'exclude' => [
-            'names' => ['embed_code'],
+            'types' => ['text', 'textarea'],
+            'names' => ['intro'],
         ],
     ],
 ];

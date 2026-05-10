@@ -1079,7 +1079,7 @@ final class Proofreader
 
             $format = self::fieldFormatFor((string) $key, $bp);
 
-            if (is_string($value) && $format !== null) {
+            if ($format !== null) {
                 $fixed[$key] = self::fixFieldValue($value, $format, $bp, $rules, $language);
             } else {
                 $fixed[$key] = $value;
@@ -1158,10 +1158,20 @@ final class Proofreader
             $format = self::fieldFormatFor($field, $bp);
             $label = self::fieldLabel($field, $bp);
 
-            if (is_string($value) && $format !== null) {
+            if ($format !== null) {
                 array_push(
                     $suggestions,
-                    ...self::collectFieldValueSuggestions($value, $format, $bp, $field, $label, $rules, $language)
+                    ...self::collectFieldValueSuggestions(
+                        $value,
+                        $format,
+                        $bp,
+                        $field,
+                        $label,
+                        $field,
+                        $label,
+                        $rules,
+                        $language
+                    )
                 );
             }
         }
@@ -1174,18 +1184,18 @@ final class Proofreader
      * @param list<string>|null $rules
      */
     private static function fixFieldValue(
-        string $value,
+        mixed $value,
         string $format,
         array $fieldBlueprint,
         ?array $rules,
         ?string $language
-    ): string {
+    ): mixed {
         return match ($format) {
-            'plain'     => self::fix($value, $rules, $language),
-            'html'      => self::fixHtml($value, $rules, $language),
-            'structure' => self::fixStructureField($value, $fieldBlueprint, $rules, $language),
-            'blocks'    => self::fixBlocksField($value, $fieldBlueprint, $rules, $language),
-            'layout'    => self::fixLayoutField($value, $fieldBlueprint, $rules, $language),
+            'plain'     => is_string($value) ? self::fix($value, $rules, $language) : $value,
+            'html'      => is_string($value) ? self::fixHtml($value, $rules, $language) : $value,
+            'structure' => self::fixStructureValue($value, $fieldBlueprint, $rules, $language),
+            'blocks'    => self::fixBlocksValue($value, $fieldBlueprint, $rules, $language),
+            'layout'    => self::fixLayoutValue($value, $fieldBlueprint, $rules, $language),
             default     => $value,
         };
     }
@@ -1196,28 +1206,60 @@ final class Proofreader
      * @return list<array<string, string>>
      */
     private static function collectFieldValueSuggestions(
-        string $value,
+        mixed $value,
         string $format,
         array $fieldBlueprint,
         string $field,
         string $fieldLabel,
+        string $path,
+        string $pathLabel,
         array $rules,
         ?string $language
     ): array {
-        return match ($format) {
-            'plain', 'html' => self::buildRuleSuggestions(
+        if (($format === 'plain' || $format === 'html') && is_string($value)) {
+            return self::buildRuleSuggestions(
                 $value,
                 $format,
                 $field,
                 $fieldLabel,
+                $path,
+                $pathLabel,
+                $rules,
+                $language
+            );
+        }
+
+        return match ($format) {
+            'structure' => self::collectStructureSuggestions(
+                $value,
+                $fieldBlueprint,
                 $field,
                 $fieldLabel,
+                $path,
+                $pathLabel,
                 $rules,
                 $language
             ),
-            'structure' => self::collectStructureSuggestions($value, $fieldBlueprint, $field, $fieldLabel, $rules, $language),
-            'blocks'    => self::collectBlocksSuggestions($value, $fieldBlueprint, $field, $fieldLabel, $rules, $language),
-            'layout'    => self::collectLayoutSuggestions($value, $fieldBlueprint, $field, $fieldLabel, $rules, $language),
+            'blocks' => self::collectBlocksSuggestions(
+                $value,
+                $fieldBlueprint,
+                $field,
+                $fieldLabel,
+                $path,
+                $pathLabel,
+                $rules,
+                $language
+            ),
+            'layout' => self::collectLayoutSuggestions(
+                $value,
+                $fieldBlueprint,
+                $field,
+                $fieldLabel,
+                $path,
+                $pathLabel,
+                $rules,
+                $language
+            ),
             default     => [],
         };
     }
@@ -1270,14 +1312,16 @@ final class Proofreader
      * @return list<array<string, string>>
      */
     private static function collectStructureSuggestions(
-        string $value,
+        mixed $value,
         array $fieldBlueprint,
         string $field,
         string $fieldLabel,
+        string $basePath,
+        string $baseLabel,
         array $rules,
         ?string $language
     ): array {
-        $rows      = Yaml::decode($value);
+        $rows      = is_string($value) ? Yaml::decode($value) : $value;
         $subFields = self::normaliseBlueprintFields($fieldBlueprint['fields'] ?? []);
 
         if (!is_array($rows) || $subFields === []) {
@@ -1292,23 +1336,20 @@ final class Proofreader
                 $subBp    = $subFields[strtolower($subField)] ?? [];
                 $format   = self::fieldFormatFor($subField, $subBp);
 
-                if (!is_string($subValue)) {
-                    continue;
-                }
-
-                if ($format !== 'plain' && $format !== 'html') {
+                if ($format === null) {
                     continue;
                 }
 
                 $subLabel = self::fieldLabel($subField, $subBp);
-                $path = $field . '.' . $rowIndex . '.' . $subField;
-                $pathLabel = $fieldLabel . ' -> Row ' . ($rowIndex + 1) . ' -> ' . $subLabel;
+                $path = $basePath . '.' . $rowIndex . '.' . $subField;
+                $pathLabel = $baseLabel . ' -> Row ' . ($rowIndex + 1) . ' -> ' . $subLabel;
 
                 array_push(
                     $suggestions,
-                    ...self::buildRuleSuggestions(
+                    ...self::collectFieldValueSuggestions(
                         $subValue,
                         $format,
+                        $subBp,
                         $field,
                         $fieldLabel,
                         $path,
@@ -1329,14 +1370,16 @@ final class Proofreader
      * @return list<array<string, string>>
      */
     private static function collectBlocksSuggestions(
-        string $value,
+        mixed $value,
         array $fieldBlueprint,
         string $field,
         string $fieldLabel,
+        string $basePath,
+        string $baseLabel,
         array $rules,
         ?string $language
     ): array {
-        $blocks = json_decode($value, associative: true);
+        $blocks = is_string($value) ? json_decode($value, associative: true) : $value;
 
         if (!is_array($blocks)) {
             return [];
@@ -1350,8 +1393,8 @@ final class Proofreader
             $fieldBlueprint['fieldsets'] ?? [],
             $field,
             $fieldLabel,
-            $field,
-            $fieldLabel,
+            $basePath,
+            $baseLabel,
             $rules,
             $language
         );
@@ -1363,14 +1406,16 @@ final class Proofreader
      * @return list<array<string, string>>
      */
     private static function collectLayoutSuggestions(
-        string $value,
+        mixed $value,
         array $fieldBlueprint,
         string $field,
         string $fieldLabel,
+        string $basePath,
+        string $baseLabel,
         array $rules,
         ?string $language
     ): array {
-        $layout = json_decode($value, associative: true);
+        $layout = is_string($value) ? json_decode($value, associative: true) : $value;
 
         if (!is_array($layout)) {
             return [];
@@ -1408,8 +1453,8 @@ final class Proofreader
                         $fieldBlueprint['fieldsets'] ?? [],
                         $field,
                         $fieldLabel,
-                        $field . '.' . $rowIndex . '.columns.' . $colIndex . '.blocks',
-                        $fieldLabel . ' -> Layout ' . ($rowIndex + 1) . '.' . ($colIndex + 1),
+                        $basePath . '.' . $rowIndex . '.columns.' . $colIndex . '.blocks',
+                        $baseLabel . ' -> Layout ' . ($rowIndex + 1) . '.' . ($colIndex + 1),
                         $rules,
                         $language
                     )
@@ -1453,11 +1498,7 @@ final class Proofreader
                 $subBp    = $fieldDefs[strtolower($subField)] ?? [];
                 $format   = self::fieldFormatFor($subField, $subBp);
 
-                if (!is_string($subValue)) {
-                    continue;
-                }
-
-                if ($format !== 'plain' && $format !== 'html') {
+                if ($format === null) {
                     continue;
                 }
 
@@ -1467,9 +1508,10 @@ final class Proofreader
 
                 array_push(
                     $suggestions,
-                    ...self::buildRuleSuggestions(
+                    ...self::collectFieldValueSuggestions(
                         $subValue,
                         $format,
+                        $subBp,
                         $field,
                         $fieldLabel,
                         $path,
@@ -1648,6 +1690,77 @@ final class Proofreader
     }
 
     /**
+     * @param array<string, mixed> $fieldBlueprint
+     * @param list<string>|null $rules
+     */
+    private static function fixStructureValue(
+        mixed $value,
+        array $fieldBlueprint,
+        ?array $rules,
+        ?string $language
+    ): mixed {
+        if (is_string($value)) {
+            return self::fixStructureField($value, $fieldBlueprint, $rules, $language);
+        }
+
+        $subFields = $fieldBlueprint['fields'] ?? [];
+
+        if (!is_array($value) || $subFields === []) {
+            return $value;
+        }
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = array_values($value);
+
+        return self::processStructureRows($rows, $subFields, $rules, $language);
+    }
+
+    /**
+     * @param array<string, mixed> $fieldBlueprint
+     * @param list<string>|null $rules
+     */
+    private static function fixBlocksValue(
+        mixed $value,
+        array $fieldBlueprint,
+        ?array $rules,
+        ?string $language
+    ): mixed {
+        if (is_string($value)) {
+            return self::fixBlocksField($value, $fieldBlueprint, $rules, $language);
+        }
+
+        if (!is_array($value)) {
+            return $value;
+        }
+
+        /** @var list<array<string, mixed>> $blocks */
+        $blocks = array_values($value);
+
+        return self::processBlocks($blocks, $fieldBlueprint['fieldsets'] ?? [], $rules, $language);
+    }
+
+    /**
+     * @param array<string, mixed> $fieldBlueprint
+     * @param list<string>|null $rules
+     */
+    private static function fixLayoutValue(
+        mixed $value,
+        array $fieldBlueprint,
+        ?array $rules,
+        ?string $language
+    ): mixed {
+        if (is_string($value)) {
+            return self::fixLayoutField($value, $fieldBlueprint, $rules, $language);
+        }
+
+        if (!is_array($value)) {
+            return $value;
+        }
+
+        return self::processLayoutRows($value, $fieldBlueprint['fieldsets'] ?? [], $rules, $language);
+    }
+
+    /**
      * Decodes a YAML-encoded structure field, applies fixes to each row,
      * and re-encodes to YAML.
      *
@@ -1718,17 +1831,55 @@ final class Proofreader
             return $value;
         }
 
-        $layout = array_map(function (array $row) use ($fieldsets, $rules, $language): array {
-            $row['columns'] = array_map(function (array $col) use ($fieldsets, $rules, $language): array {
-                $col['blocks'] = self::processBlocks($col['blocks'] ?? [], $fieldsets, $rules, $language);
-                return $col;
-            }, $row['columns'] ?? []);
-            return $row;
-        }, $layout);
+        $layout = self::processLayoutRows($layout, $fieldsets, $rules, $language);
 
         $encoded = json_encode($layout);
 
         return $encoded !== false ? $encoded : $value;
+    }
+
+    /**
+     * @param  array<int|string, mixed> $layout
+     * @param  array<string|int, mixed> $fieldsets
+     * @param  list<string>|null        $rules
+     * @return array<int|string, mixed>
+     */
+    private static function processLayoutRows(
+        array $layout,
+        array $fieldsets,
+        ?array $rules,
+        ?string $language
+    ): array {
+        return array_map(function (mixed $row) use ($fieldsets, $rules, $language): mixed {
+            if (!is_array($row)) {
+                return $row;
+            }
+
+            $columns = $row['columns'] ?? [];
+
+            if (!is_array($columns)) {
+                return $row;
+            }
+
+            $row['columns'] = array_map(function (mixed $col) use ($fieldsets, $rules, $language): mixed {
+                if (!is_array($col)) {
+                    return $col;
+                }
+
+                $blocks = $col['blocks'] ?? [];
+
+                if (is_array($blocks)) {
+                    /** @var list<array<string, mixed>> $blockList */
+                    $blockList = array_values($blocks);
+
+                    $col['blocks'] = self::processBlocks($blockList, $fieldsets, $rules, $language);
+                }
+
+                return $col;
+            }, $columns);
+
+            return $row;
+        }, $layout);
     }
 
     /**

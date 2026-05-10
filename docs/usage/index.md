@@ -147,15 +147,15 @@ return [
             'types' => [
                 'custom-writer' => 'html',
                 'custom-text' => 'plain',
+                'custom-structure' => 'structure',
             ],
             'names' => [
                 'intro' => 'plain',
-                'caption' => 'plain',
             ],
         ],
         'exclude' => [
-            'types' => ['slug', 'url'],
-            'names' => ['embed_code'],
+            'types' => ['text', 'textarea'],
+            'names' => ['intro'],
         ],
     ],
 ];

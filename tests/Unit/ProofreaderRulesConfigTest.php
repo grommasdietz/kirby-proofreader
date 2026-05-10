@@ -103,7 +103,7 @@ final class ProofreaderRulesConfigTest extends TestCase
                     'rules' => [
                         'customTrademark' => [
                             'label' => 'Trademark',
-                            'callback' => static fn (string $text): string => str_replace(
+                            'callback' => static fn(string $text): string => str_replace(
                                 'Label TM',
                                 'Label™',
                                 $text
@@ -235,6 +235,74 @@ final class ProofreaderRulesConfigTest extends TestCase
 
         $this->assertSame(['ellipsis'], array_column($review['suggestions'], 'rule'));
         $this->assertSame('<p>Custom field…</p><code>Leave code...</code>', $review['fixed']['body']);
+    }
+
+    public function testFieldsOptionCanIncludeCustomDecodedStructureTypesInsideBlocks(): void
+    {
+        $this->bootKirby([
+            'options' => [
+                'grommasdietz.proofreader' => [
+                    'fields' => [
+                        'include' => [
+                            'types' => [
+                                'custom-decoded-entries' => 'structure',
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $blockPayload = json_encode([
+            [
+                'type'    => 'custom-review-block',
+                'id'      => 'custom-review-block-1',
+                'content' => [
+                    'customEntries' => [
+                        [
+                            'entryText' => 'Custom nested field...',
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+        $this->assertIsString($blockPayload);
+
+        $review = Proofreader::reviewFields(
+            ['blocks' => $blockPayload],
+            [
+                'blocks' => [
+                    'type'      => 'blocks',
+                    'fieldsets' => [
+                        'custom-review-block' => [
+                            'name'   => 'Custom review block',
+                            'fields' => [
+                                'customEntries' => [
+                                    'label'  => 'Custom entries',
+                                    'type'   => 'custom-decoded-entries',
+                                    'fields' => [
+                                        'entryText' => ['label' => 'Entry text', 'type' => 'text'],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            ['ellipsis'],
+        );
+
+        $this->assertSame(
+            [
+                'Blocks -> Custom review block 1 -> Custom entries -> Row 1 -> Entry text',
+            ],
+            array_column($review['suggestions'], 'pathLabel')
+        );
+
+        $fixed = json_decode($review['fixed']['blocks'], associative: true);
+
+        $this->assertIsArray($fixed);
+        $this->assertSame('Custom nested field…', $fixed[0]['content']['customEntries'][0]['entryText']);
     }
 
     public function testFieldsOptionCanExcludeDefaultFieldNamesAndTypes(): void
