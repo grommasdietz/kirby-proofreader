@@ -103,7 +103,7 @@ final class ProofreaderRulesConfigTest extends TestCase
                     'rules' => [
                         'customTrademark' => [
                             'label' => 'Trademark',
-                            'callback' => static fn(string $text): string => str_replace(
+                            'callback' => static fn (string $text): string => str_replace(
                                 'Label TM',
                                 'Label™',
                                 $text
