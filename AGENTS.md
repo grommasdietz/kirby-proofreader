@@ -1,6 +1,6 @@
 # Agent guide (AI + human)
 
-This is the canonical workflow guide for working on a plugin based on this **Kirby plugin starter template**.
+This is the canonical workflow guide for working on the Kirby Proofreader plugin.
 
 ---
 
@@ -14,7 +14,7 @@ This is the canonical workflow guide for working on a plugin based on this **Kir
 
 ## Repo essentials
 
-- Plugin entry: `index.php` registers `App::plugin('<vendor>/<handle>', ...)`; PHP code lives under `lib/` (`GrommasDietz\\Proofreader\\`).
+- Plugin entry: `index.php` registers `App::plugin('grommasdietz/proofreader', ...)`, PHP code lives under `lib/` (`GrommasDietz\\Proofreader\\`).
 - Panel source: `src/` (including `src/components/**`) built with `kirbyup` into `index.js`/`index.css`. Rebuild with `pnpm build` after UI changes and commit the outputs.
 - Playground: `playground/` is the self-contained Kirby site for integration and browser tests.
 - Conventions: use Conventional Commit messages (template in `.gitmessage`), keep diffs small, keep docs aligned with behavior, and never wrap imports in `try/catch`.
@@ -43,9 +43,9 @@ This is the canonical workflow guide for working on a plugin based on this **Kir
 
 ## Docs
 
-- Write docs in `docs` folder. Follow [STYLE_GUIDE.md](STYLE_GUIDE.md) and [docs/contributions/documentation.md](docs/contributions/documentation.md). Keep README/docs in sync with behavior; the starter text is meant to be rewritten after running `tools/init.php`.
+- Write docs in `docs` folder. Follow [STYLE_GUIDE.md](STYLE_GUIDE.md) and [docs/contributions/documentation.md](docs/contributions/documentation.md). Keep README/docs in sync with behavior.
 - The README is a quickstart; `docs/contributions/*` hold the detailed contributor guidance. Update both when you change commands or workflows.
-- Typography: add non-breaking spaces after short sentence starters (1–2 characters like “It” or “A”), before short words at the end of a sentence, and within short two-part names (e.g., “Grommas Dietz”). For em dashes, use a thin space on each side (` — `).
+- Typography: add non-breaking spaces after short sentence starters (1-2 characters like "It" or "A"), before short words at the end of a sentence, and within short two-part names (e.g. "Grommas Dietz"). For em dashes, use a thin space on each side (`—`).
 
 ---
 
