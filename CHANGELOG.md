@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/grommasdietz/kirby-proofreader/compare/v1.2.0...v1.3.0) (2026-05-10)
+
+
+### Features
+
+* **proofreader:** enhance custom field handling and suggestions ([5db2fe8](https://github.com/grommasdietz/kirby-proofreader/commit/5db2fe870a047fc01bf97f2fc338363dcf584d40))
+
 # [1.2.0](https://github.com/grommasdietz/kirby-proofreader/compare/v1.1.1...v1.2.0) (2026-05-09)
 
 
