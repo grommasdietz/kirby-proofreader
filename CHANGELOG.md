@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/grommasdietz/kirby-proofreader/compare/v1.3.1...v1.3.2) (2026-05-12)
+
+
+### Bug Fixes
+
+* **playground:** update panel site blueprint label to Kirby Playground ([5c619b2](https://github.com/grommasdietz/kirby-proofreader/commit/5c619b2ef3327bd2666c510566ba5d511d391762))
+
 ## [1.3.1](https://github.com/grommasdietz/kirby-proofreader/compare/v1.3.0...v1.3.1) (2026-05-12)
 
 
