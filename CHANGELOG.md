@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/grommasdietz/kirby-proofreader/compare/v1.3.0...v1.3.1) (2026-05-12)
+
+
+### Bug Fixes
+
+* **deps:** update config.platform to 8.3.16 and regenerate lock files ([0e44c7c](https://github.com/grommasdietz/kirby-proofreader/commit/0e44c7cfd7787df56fdc8b21587a8d5da430411a))
+
 # [1.3.0](https://github.com/grommasdietz/kirby-proofreader/compare/v1.2.0...v1.3.0) (2026-05-10)
 
 
