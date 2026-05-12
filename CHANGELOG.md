@@ -1,3 +1,10 @@
+## [1.3.3](https://github.com/grommasdietz/kirby-proofreader/compare/v1.3.2...v1.3.3) (2026-05-12)
+
+
+### Bug Fixes
+
+* **ci:** track plugins dir for psalm path resolution ([a9af7a0](https://github.com/grommasdietz/kirby-proofreader/commit/a9af7a0352cc76107eaec68f6b29f6bfc100e254))
+
 ## [1.3.2](https://github.com/grommasdietz/kirby-proofreader/compare/v1.3.1...v1.3.2) (2026-05-12)
 
 
