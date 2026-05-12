@@ -26,6 +26,7 @@ eslint.config.cjs export-ignore
 phpmd.xml.dist export-ignore
 phpunit.ci.xml export-ignore
 phpunit.dist.xml export-ignore
+kirbyup.config.js export-ignore
 playwright.config.ts export-ignore
 postcss.config.cjs export-ignore
 psalm.xml.dist export-ignore
