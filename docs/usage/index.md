@@ -272,7 +272,7 @@ kirby proofreader:fix projects/my-project --rules=ellipsis,dashes
 kirby proofreader:fix projects/my-project --language=de
 ```
 
-#### Available flags
+#### Available flags on fix
 
 | Flag                | Description                                       |
 | ------------------- | ------------------------------------------------- |
@@ -303,7 +303,7 @@ kirby proofreader:review projects/my-project --rules=dashes,spaces
 kirby proofreader:review projects/my-project --language=de
 ```
 
-#### Available flags
+#### Available flags on review
 
 | Flag                | Description                               |
 | ------------------- | ----------------------------------------- |
