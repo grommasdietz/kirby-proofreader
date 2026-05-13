@@ -19,229 +19,229 @@ use Kirby\Cms\Language;
  */
 final class CommandsTest extends TestCase
 {
-  protected function setUp(): void
-  {
-    parent::setUp();
+    protected function setUp(): void
+    {
+        parent::setUp();
 
-    $this->bootKirby()->impersonate('kirby');
-  }
-
-  // -------------------------------------------------------------------------
-  // Review logic (read-only — mirrors proofreader:review)
-  // -------------------------------------------------------------------------
-
-  public function testReviewLogicFindsSuggestionsForPageWithFixableContent(): void
-  {
-    $page = $this->kirby->page('editorial-review');
-    $this->assertNotNull($page);
-
-    $language = $this->kirby->language('en');
-    $content  = $page->version('latest')->content($language)->toArray();
-
-    $review = Proofreader::reviewFields(
-      $content,
-      $page->blueprint()->fields(),
-      ['ellipsis'],
-      null
-    );
-
-    $this->assertArrayHasKey('suggestions', $review);
-    $this->assertArrayHasKey('fixed', $review);
-    $this->assertNotEmpty($review['suggestions'], 'Editorial review page should have at least one ellipsis suggestion');
-  }
-
-  public function testReviewLogicReturnsSuggestionWithExpectedStructure(): void
-  {
-    $page = $this->kirby->page('editorial-review');
-    $this->assertNotNull($page);
-
-    $language = $this->kirby->language('en');
-    $content  = $page->version('latest')->content($language)->toArray();
-
-    $review = Proofreader::reviewFields(
-      $content,
-      $page->blueprint()->fields(),
-      ['ellipsis'],
-      null
-    );
-
-    $suggestion = $review['suggestions'][0] ?? null;
-    $this->assertNotNull($suggestion);
-    $this->assertArrayHasKey('field', $suggestion);
-    $this->assertArrayHasKey('rule', $suggestion);
-    $this->assertArrayHasKey('previewBefore', $suggestion);
-    $this->assertArrayHasKey('previewAfter', $suggestion);
-    $this->assertSame('ellipsis', $suggestion['rule']);
-  }
-
-  public function testReviewLogicForSiteModelReturnsSuggestions(): void
-  {
-    $site     = $this->kirby->site();
-    $language = $this->kirby->language('en');
-    $content  = $site->version('latest')->content($language)->toArray();
-
-    $review = Proofreader::reviewFields(
-      $content,
-      $site->blueprint()->fields(),
-      ['dashes'],
-      null
-    );
-
-    $this->assertArrayHasKey('suggestions', $review);
-    $this->assertArrayHasKey('fixed', $review);
-  }
-
-  // -------------------------------------------------------------------------
-  // Fix logic (write path — mirrors proofreader:fix)
-  // -------------------------------------------------------------------------
-
-  public function testFixLogicComputesDiffsFromPageContent(): void
-  {
-    $page = $this->kirby->page('editorial-review');
-    $this->assertNotNull($page);
-
-    $language = $this->kirby->language('en');
-    $content  = $page->version('latest')->content($language)->toArray();
-
-    $review = Proofreader::reviewFields(
-      $content,
-      $page->blueprint()->fields(),
-      ['ellipsis'],
-      null
-    );
-
-    $fixed = $review['fixed'];
-    $diffs = [];
-
-    foreach ($fixed as $key => $value) {
-      $origKey = (string) $key;
-      if (isset($content[$origKey]) && $value !== $content[$origKey]) {
-        $diffs[$origKey] = ['from' => $content[$origKey], 'to' => $value];
-      }
+        $this->bootKirby()->impersonate('kirby');
     }
 
-    $this->assertNotEmpty($diffs, 'At least one field should have a diff after applying the ellipsis rule');
-  }
+    // -------------------------------------------------------------------------
+    // Review logic (read-only — mirrors proofreader:review)
+    // -------------------------------------------------------------------------
 
-  public function testFixLogicSavesToChangesVersionAndCanBeCleanedUp(): void
-  {
-    $page = $this->kirby->page('editorial-review');
-    $this->assertNotNull($page);
+    public function testReviewLogicFindsSuggestionsForPageWithFixableContent(): void
+    {
+        $page = $this->kirby->page('editorial-review');
+        $this->assertNotNull($page);
 
-    $language       = $this->kirby->language('en');
-    $changesVersion = $page->version('changes');
-    $latestVersion  = $page->version('latest');
+        $language = $this->kirby->language('en');
+        $content  = $page->version('latest')->content($language)->toArray();
 
-    $this->assertFalse(
-      $changesVersion->exists($language),
-      'Precondition: changes version must not exist before the test'
-    );
+        $review = Proofreader::reviewFields(
+            $content,
+            $page->blueprint()->fields(),
+            ['ellipsis'],
+            null
+        );
 
-    try {
-      $content = $latestVersion->content($language)->toArray();
-
-      $review = Proofreader::reviewFields(
-        $content,
-        $page->blueprint()->fields(),
-        ['ellipsis'],
-        null
-      );
-
-      $changesVersion->save($review['fixed'], $language);
-
-      $this->assertTrue(
-        $changesVersion->exists($language),
-        'Changes version should exist after saving fixes'
-      );
-
-      $saved = $changesVersion->content($language)->toArray();
-      $this->assertStringContainsString('…', $saved['title'] ?? '');
-    } finally {
-      if ($changesVersion->exists($language)) {
-        $changesVersion->delete($language);
-      }
+        $this->assertArrayHasKey('suggestions', $review);
+        $this->assertArrayHasKey('fixed', $review);
+        $this->assertNotEmpty($review['suggestions'], 'Editorial review page should have at least one ellipsis suggestion');
     }
-  }
 
-  public function testDryRunLogicDoesNotWriteToAnyVersion(): void
-  {
-    $page = $this->kirby->page('editorial-review');
-    $this->assertNotNull($page);
+    public function testReviewLogicReturnsSuggestionWithExpectedStructure(): void
+    {
+        $page = $this->kirby->page('editorial-review');
+        $this->assertNotNull($page);
 
-    $language       = $this->kirby->language('en');
-    $changesVersion = $page->version('changes');
+        $language = $this->kirby->language('en');
+        $content  = $page->version('latest')->content($language)->toArray();
 
-    $this->assertFalse($changesVersion->exists($language));
+        $review = Proofreader::reviewFields(
+            $content,
+            $page->blueprint()->fields(),
+            ['ellipsis'],
+            null
+        );
 
-    $content = $page->version('latest')->content($language)->toArray();
-
-    // Compute review but intentionally skip the save step (dry-run behaviour)
-    $review = Proofreader::reviewFields(
-      $content,
-      $page->blueprint()->fields(),
-      ['ellipsis'],
-      null
-    );
-
-    $this->assertNotEmpty($review['suggestions']);
-
-    // No save — changes version must remain absent
-    $this->assertFalse(
-      $changesVersion->exists($language),
-      'Dry-run must not write to the changes version'
-    );
-  }
-
-  public function testFixLogicWritesToLatestVersionWhenPublishFlagIsSet(): void
-  {
-    $page = $this->kirby->page('editorial-review');
-    $this->assertNotNull($page);
-
-    $language      = $this->kirby->language('en');
-    $latestVersion = $page->version('latest');
-
-    $originalContent = $latestVersion->content($language)->toArray();
-
-    try {
-      $review = Proofreader::reviewFields(
-        $originalContent,
-        $page->blueprint()->fields(),
-        ['ellipsis'],
-        null
-      );
-
-      // Simulate --publish: write fixed content directly to latest
-      $latestVersion->save($review['fixed'], $language);
-
-      $saved = $latestVersion->content($language)->toArray();
-      $this->assertStringContainsString('…', $saved['title'] ?? '');
-    } finally {
-      // Restore original content to keep the playground in a known state
-      $latestVersion->save($originalContent, $language);
+        $suggestion = $review['suggestions'][0] ?? null;
+        $this->assertNotNull($suggestion);
+        $this->assertArrayHasKey('field', $suggestion);
+        $this->assertArrayHasKey('rule', $suggestion);
+        $this->assertArrayHasKey('previewBefore', $suggestion);
+        $this->assertArrayHasKey('previewAfter', $suggestion);
+        $this->assertSame('ellipsis', $suggestion['rule']);
     }
-  }
 
-  // -------------------------------------------------------------------------
-  // Language-resolution logic (mirrors $resolveCliLanguage)
-  // -------------------------------------------------------------------------
+    public function testReviewLogicForSiteModelReturnsSuggestions(): void
+    {
+        $site     = $this->kirby->site();
+        $language = $this->kirby->language('en');
+        $content  = $site->version('latest')->content($language)->toArray();
 
-  public function testReviewLogicWithExplicitLanguageCodeProducesResults(): void
-  {
-    $page = $this->kirby->page('editorial-review');
-    $this->assertNotNull($page);
+        $review = Proofreader::reviewFields(
+            $content,
+            $site->blueprint()->fields(),
+            ['dashes'],
+            null
+        );
 
-    $language = $this->kirby->language('en');
-    $this->assertInstanceOf(Language::class, $language);
+        $this->assertArrayHasKey('suggestions', $review);
+        $this->assertArrayHasKey('fixed', $review);
+    }
 
-    $content = $page->version('latest')->content($language)->toArray();
+    // -------------------------------------------------------------------------
+    // Fix logic (write path — mirrors proofreader:fix)
+    // -------------------------------------------------------------------------
 
-    $review = Proofreader::reviewFields(
-      $content,
-      $page->blueprint()->fields(),
-      ['ellipsis'],
-      $language->code()
-    );
+    public function testFixLogicComputesDiffsFromPageContent(): void
+    {
+        $page = $this->kirby->page('editorial-review');
+        $this->assertNotNull($page);
 
-    $this->assertNotEmpty($review['suggestions']);
-  }
+        $language = $this->kirby->language('en');
+        $content  = $page->version('latest')->content($language)->toArray();
+
+        $review = Proofreader::reviewFields(
+            $content,
+            $page->blueprint()->fields(),
+            ['ellipsis'],
+            null
+        );
+
+        $fixed = $review['fixed'];
+        $diffs = [];
+
+        foreach ($fixed as $key => $value) {
+            $origKey = (string) $key;
+            if (isset($content[$origKey]) && $value !== $content[$origKey]) {
+                $diffs[$origKey] = ['from' => $content[$origKey], 'to' => $value];
+            }
+        }
+
+        $this->assertNotEmpty($diffs, 'At least one field should have a diff after applying the ellipsis rule');
+    }
+
+    public function testFixLogicSavesToChangesVersionAndCanBeCleanedUp(): void
+    {
+        $page = $this->kirby->page('editorial-review');
+        $this->assertNotNull($page);
+
+        $language       = $this->kirby->language('en');
+        $changesVersion = $page->version('changes');
+        $latestVersion  = $page->version('latest');
+
+        $this->assertFalse(
+            $changesVersion->exists($language),
+            'Precondition: changes version must not exist before the test'
+        );
+
+        try {
+            $content = $latestVersion->content($language)->toArray();
+
+            $review = Proofreader::reviewFields(
+                $content,
+                $page->blueprint()->fields(),
+                ['ellipsis'],
+                null
+            );
+
+            $changesVersion->save($review['fixed'], $language);
+
+            $this->assertTrue(
+                $changesVersion->exists($language),
+                'Changes version should exist after saving fixes'
+            );
+
+            $saved = $changesVersion->content($language)->toArray();
+            $this->assertStringContainsString('…', $saved['title'] ?? '');
+        } finally {
+            if ($changesVersion->exists($language)) {
+                $changesVersion->delete($language);
+            }
+        }
+    }
+
+    public function testDryRunLogicDoesNotWriteToAnyVersion(): void
+    {
+        $page = $this->kirby->page('editorial-review');
+        $this->assertNotNull($page);
+
+        $language       = $this->kirby->language('en');
+        $changesVersion = $page->version('changes');
+
+        $this->assertFalse($changesVersion->exists($language));
+
+        $content = $page->version('latest')->content($language)->toArray();
+
+        // Compute review but intentionally skip the save step (dry-run behaviour)
+        $review = Proofreader::reviewFields(
+            $content,
+            $page->blueprint()->fields(),
+            ['ellipsis'],
+            null
+        );
+
+        $this->assertNotEmpty($review['suggestions']);
+
+        // No save — changes version must remain absent
+        $this->assertFalse(
+            $changesVersion->exists($language),
+            'Dry-run must not write to the changes version'
+        );
+    }
+
+    public function testFixLogicWritesToLatestVersionWhenPublishFlagIsSet(): void
+    {
+        $page = $this->kirby->page('editorial-review');
+        $this->assertNotNull($page);
+
+        $language      = $this->kirby->language('en');
+        $latestVersion = $page->version('latest');
+
+        $originalContent = $latestVersion->content($language)->toArray();
+
+        try {
+            $review = Proofreader::reviewFields(
+                $originalContent,
+                $page->blueprint()->fields(),
+                ['ellipsis'],
+                null
+            );
+
+            // Simulate --publish: write fixed content directly to latest
+            $latestVersion->save($review['fixed'], $language);
+
+            $saved = $latestVersion->content($language)->toArray();
+            $this->assertStringContainsString('…', $saved['title'] ?? '');
+        } finally {
+            // Restore original content to keep the playground in a known state
+            $latestVersion->save($originalContent, $language);
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Language-resolution logic (mirrors $resolveCliLanguage)
+    // -------------------------------------------------------------------------
+
+    public function testReviewLogicWithExplicitLanguageCodeProducesResults(): void
+    {
+        $page = $this->kirby->page('editorial-review');
+        $this->assertNotNull($page);
+
+        $language = $this->kirby->language('en');
+        $this->assertInstanceOf(Language::class, $language);
+
+        $content = $page->version('latest')->content($language)->toArray();
+
+        $review = Proofreader::reviewFields(
+            $content,
+            $page->blueprint()->fields(),
+            ['ellipsis'],
+            $language->code()
+        );
+
+        $this->assertNotEmpty($review['suggestions']);
+    }
 }

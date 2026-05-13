@@ -23,6 +23,10 @@ App::plugin('grommasdietz/proofreader', [
             'include' => [],
             'exclude' => [],
         ],
+        // Protects matched spans from all rule processing. Built-in presets
+        // are enabled by key with true; custom regex strings are accepted too.
+        // Example: ['phone' => true, 'myCode' => '/\bSKU-\d+/u']
+        'protect' => [],
     ],
     'panel' => [
         'viewButtons' => [
@@ -38,4 +42,5 @@ App::plugin('grommasdietz/proofreader', [
     ],
     'routes'       => require __DIR__ . '/config/routes.php',
     'translations' => require __DIR__ . '/config/translations.php',
+    'commands'     => require __DIR__ . '/config/commands.php',
 ]);

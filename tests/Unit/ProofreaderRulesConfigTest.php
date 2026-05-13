@@ -336,4 +336,98 @@ final class ProofreaderRulesConfigTest extends TestCase
         $this->assertSame('Default text...', $review['fixed']['summary']);
         $this->assertSame('<p>Default writer...</p>', $review['fixed']['body']);
     }
+
+    // -------------------------------------------------------------------------
+    // protect option
+    // -------------------------------------------------------------------------
+
+    public function testProtectPhonePresetPreventsDashConversionOnChainedNumbers(): void
+    {
+        $this->bootKirby([
+            'options' => [
+                'grommasdietz.proofreader' => [
+                    'protect' => ['phone' => true],
+                ],
+            ],
+        ]);
+
+        // Three-group domestic number — must stay unchanged
+        $this->assertSame(
+            '0800-123-4567',
+            Proofreader::fix('0800-123-4567', ['dashes', 'spaces'])
+        );
+    }
+
+    public function testProtectPhonePresetPreservesInternationalNumbers(): void
+    {
+        $this->bootKirby([
+            'options' => [
+                'grommasdietz.proofreader' => [
+                    'protect' => ['phone' => true],
+                ],
+            ],
+        ]);
+
+        $this->assertSame(
+            '+49 89 1234-5678',
+            Proofreader::fix('+49 89 1234-5678', ['dashes', 'spaces'])
+        );
+    }
+
+    public function testProtectPhonePresetDoesNotAffectTwoGroupYearRanges(): void
+    {
+        $this->bootKirby([
+            'options' => [
+                'grommasdietz.proofreader' => [
+                    'protect' => ['phone' => true],
+                ],
+            ],
+        ]);
+
+        $rangeSpace = "\u{2006}";
+
+        // Two-group range (year) must still receive en dash
+        $this->assertSame(
+            "2010{$rangeSpace}–{$rangeSpace}2020",
+            Proofreader::fix('2010-2020', ['dashes', 'spaces'])
+        );
+    }
+
+    public function testProtectCustomRegexPatternPreservesMatchedSpans(): void
+    {
+        $this->bootKirby([
+            'options' => [
+                'grommasdietz.proofreader' => [
+                    'protect' => ['skuPattern' => '/\bSKU-\d+-\d+\b/u'],
+                ],
+            ],
+        ]);
+
+        // SKU code must pass through dashes unchanged; surrounding text is fixed
+        $result = Proofreader::fix('Order SKU-100-200 from 2020-2025', ['dashes', 'spaces']);
+
+        $rangeSpace = "\u{2006}";
+
+        $this->assertStringContainsString('SKU-100-200', $result);
+        $this->assertStringContainsString("2020{$rangeSpace}–{$rangeSpace}2025", $result);
+    }
+
+    public function testProtectDisabledPresetIsSkipped(): void
+    {
+        $this->bootKirby([
+            'options' => [
+                'grommasdietz.proofreader' => [
+                    'protect' => ['phone' => false],
+                ],
+            ],
+        ]);
+
+        $rangeSpace = "\u{2006}";
+
+        // With preset disabled, chained numbers still get en-dash treatment
+        $this->assertSame(
+            "0800{$rangeSpace}–{$rangeSpace}123{$rangeSpace}–{$rangeSpace}4567",
+            Proofreader::fix('0800-123-4567', ['dashes', 'spaces'])
+        );
+    }
 }

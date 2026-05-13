@@ -17,6 +17,24 @@ final class Proofreader
      * @var list<string>
      */
     private const BUILTIN_RULES = ['unicode', 'ellipsis', 'quotes', 'apostrophes', 'dashes', 'spaces', 'dimensions'];
+
+    /**
+     * Regex patterns for built-in protect presets.
+     *
+     * 'phone' covers:
+     *   - International notation: +XX with at least 6 more digits/separators
+     *   - Domestic chained notation: 3 or more hyphen-separated groups (e.g. 0800-123-4567)
+     *     Two-group sequences (e.g. 2010-2020) are deliberately left unprotected so
+     *     the dashes rule can still convert year ranges.
+     *
+     * @var array<string, list<string>>
+     */
+    private const BUILTIN_PROTECT_PATTERNS = [
+        'phone' => [
+            '/(?<!\d)\+\d[\d\p{Zs}\t\-\(\)\.]{6,20}(?![\d\p{L}])/u',
+            '/(?<!\d)\d{2,}(?:-\d{2,}){2,}(?![\d\p{L}])/u',
+        ],
+    ];
     private const DEFAULT_RULES = ['unicode', 'ellipsis', 'quotes', 'apostrophes', 'dashes', 'spaces'];
     private const EN_DASH_SPACE = "\u{2006}";
     private const EM_DASH_SPACE = "\u{200A}";
@@ -48,22 +66,59 @@ final class Proofreader
      * @var array<string, string>
      */
     private const COMPOSED_DIACRITICS = [
-        "A\u{0300}" => 'À', "A\u{0301}" => 'Á', "A\u{0302}" => 'Â', "A\u{0303}" => 'Ã', "A\u{0308}" => 'Ä', "A\u{030A}" => 'Å',
+        "A\u{0300}" => 'À',
+        "A\u{0301}" => 'Á',
+        "A\u{0302}" => 'Â',
+        "A\u{0303}" => 'Ã',
+        "A\u{0308}" => 'Ä',
+        "A\u{030A}" => 'Å',
         "C\u{0327}" => 'Ç',
-        "E\u{0300}" => 'È', "E\u{0301}" => 'É', "E\u{0302}" => 'Ê', "E\u{0308}" => 'Ë',
-        "I\u{0300}" => 'Ì', "I\u{0301}" => 'Í', "I\u{0302}" => 'Î', "I\u{0308}" => 'Ï',
+        "E\u{0300}" => 'È',
+        "E\u{0301}" => 'É',
+        "E\u{0302}" => 'Ê',
+        "E\u{0308}" => 'Ë',
+        "I\u{0300}" => 'Ì',
+        "I\u{0301}" => 'Í',
+        "I\u{0302}" => 'Î',
+        "I\u{0308}" => 'Ï',
         "N\u{0303}" => 'Ñ',
-        "O\u{0300}" => 'Ò', "O\u{0301}" => 'Ó', "O\u{0302}" => 'Ô', "O\u{0303}" => 'Õ', "O\u{0308}" => 'Ö',
-        "U\u{0300}" => 'Ù', "U\u{0301}" => 'Ú', "U\u{0302}" => 'Û', "U\u{0308}" => 'Ü',
+        "O\u{0300}" => 'Ò',
+        "O\u{0301}" => 'Ó',
+        "O\u{0302}" => 'Ô',
+        "O\u{0303}" => 'Õ',
+        "O\u{0308}" => 'Ö',
+        "U\u{0300}" => 'Ù',
+        "U\u{0301}" => 'Ú',
+        "U\u{0302}" => 'Û',
+        "U\u{0308}" => 'Ü',
         "Y\u{0301}" => 'Ý',
-        "a\u{0300}" => 'à', "a\u{0301}" => 'á', "a\u{0302}" => 'â', "a\u{0303}" => 'ã', "a\u{0308}" => 'ä', "a\u{030A}" => 'å',
+        "a\u{0300}" => 'à',
+        "a\u{0301}" => 'á',
+        "a\u{0302}" => 'â',
+        "a\u{0303}" => 'ã',
+        "a\u{0308}" => 'ä',
+        "a\u{030A}" => 'å',
         "c\u{0327}" => 'ç',
-        "e\u{0300}" => 'è', "e\u{0301}" => 'é', "e\u{0302}" => 'ê', "e\u{0308}" => 'ë',
-        "i\u{0300}" => 'ì', "i\u{0301}" => 'í', "i\u{0302}" => 'î', "i\u{0308}" => 'ï',
+        "e\u{0300}" => 'è',
+        "e\u{0301}" => 'é',
+        "e\u{0302}" => 'ê',
+        "e\u{0308}" => 'ë',
+        "i\u{0300}" => 'ì',
+        "i\u{0301}" => 'í',
+        "i\u{0302}" => 'î',
+        "i\u{0308}" => 'ï',
         "n\u{0303}" => 'ñ',
-        "o\u{0300}" => 'ò', "o\u{0301}" => 'ó', "o\u{0302}" => 'ô', "o\u{0303}" => 'õ', "o\u{0308}" => 'ö',
-        "u\u{0300}" => 'ù', "u\u{0301}" => 'ú', "u\u{0302}" => 'û', "u\u{0308}" => 'ü',
-        "y\u{0301}" => 'ý', "y\u{0308}" => 'ÿ',
+        "o\u{0300}" => 'ò',
+        "o\u{0301}" => 'ó',
+        "o\u{0302}" => 'ô',
+        "o\u{0303}" => 'õ',
+        "o\u{0308}" => 'ö',
+        "u\u{0300}" => 'ù',
+        "u\u{0301}" => 'ú',
+        "u\u{0302}" => 'û',
+        "u\u{0308}" => 'ü',
+        "y\u{0301}" => 'ý',
+        "y\u{0308}" => 'ÿ',
     ];
 
     /**
@@ -187,8 +242,14 @@ final class Proofreader
         $dash = self::dashCharactersForLanguage($language);
 
         $result = preg_replace_callback(
-            '/(?<![\p{L}\p{N}])(\d+)([\p{Zs}\t]*)[-–—]([\p{Zs}\t]*)(\d+)(?![\p{L}\p{N}])/u',
-            static fn (array $m): string => $m[1] . $m[2] . $dash['range'] . $m[3] . $m[4],
+            '/(?<![\p{L}\p{N}])(\d+(?:[\p{Zs}\t]*[-–—][\p{Zs}\t]*\d+)+)(?![\p{L}\p{N}])/u',
+            static function (array $m) use ($dash): string {
+                return preg_replace_callback(
+                    '/([\p{Zs}\t]*)[-–—]([\p{Zs}\t]*)/u',
+                    static fn (array $inner): string => $inner[1] . $dash['range'] . $inner[2],
+                    $m[0]
+                ) ?? $m[0];
+            },
             $text
         ) ?? $text;
 
@@ -238,13 +299,13 @@ final class Proofreader
         }
 
         $result = preg_replace_callback(
-            '/(\S+)[\p{Zs}\t]*(' . $dashPattern . ')[\p{Zs}\t]*(\S+)/u',
+            '/(\S)[\p{Zs}\t]*(' . $dashPattern . ')[\p{Zs}\t]*(?=\S)/u',
             static function (array $m) use ($spacing, $dash): string {
                 $space = in_array($m[2], ['–', $dash['range']], true)
                     ? $spacing['range']
                     : $spacing['break'];
 
-                return $m[1] . $space . $m[2] . $space . $m[3];
+                return $m[1] . $space . $m[2] . $space;
             },
             $text
         );
@@ -457,6 +518,9 @@ final class Proofreader
     /**
      * Applies enabled typography rules in sequence.
      *
+     * Spans matched by configured protect patterns are tokenised before any
+     * rule runs and restored verbatim afterwards.
+     *
      * @param list<string>|null $rules
      */
     public static function fix(
@@ -464,11 +528,13 @@ final class Proofreader
         ?array $rules = null,
         ?string $language = null
     ): string {
+        [$text, $tokens] = self::tokenizeProtected($text);
+
         foreach (self::normaliseRules($rules) as $rule) {
             $text = self::applyRule($text, $rule, $language);
         }
 
-        return $text;
+        return self::restoreProtected($text, $tokens);
     }
 
     /**
@@ -521,6 +587,100 @@ final class Proofreader
         }
 
         return $out;
+    }
+
+    /**
+     * Returns the flat list of active protect regex patterns from config.
+     *
+     * Each entry under `grommasdietz.proofreader.protect` is processed:
+     * - `'phone' => true`              → expands all patterns from BUILTIN_PROTECT_PATTERNS['phone']
+     * - `'myPattern' => '/regex/u'`    → used directly as a user-supplied pattern
+     * - `'phone' => false`             → skipped (disabled)
+     *
+     * @return list<string>
+     */
+    private static function configuredProtectPatterns(): array
+    {
+        $config = self::optionValue('grommasdietz.proofreader.protect', []);
+
+        if (!is_array($config) || $config === []) {
+            return [];
+        }
+
+        $patterns = [];
+
+        foreach ($config as $key => $value) {
+            if ($value === false) {
+                continue;
+            }
+
+            if ($value === true && is_string($key)) {
+                foreach (self::BUILTIN_PROTECT_PATTERNS[$key] ?? [] as $pattern) {
+                    $patterns[] = $pattern;
+                }
+                continue;
+            }
+
+            if (is_string($value) && $value !== '') {
+                $patterns[] = $value;
+            }
+        }
+
+        return array_values(array_unique($patterns));
+    }
+
+    /**
+     * Replaces spans matched by active protect patterns with PUA-range tokens.
+     *
+     * Uses U+E002/U+E003 as delimiters, distinct from the apostrophe token
+     * pair (U+E000/U+E001) used elsewhere in the class.
+     *
+     * @return array{string, array<string, string>}
+     */
+    private static function tokenizeProtected(string $text): array
+    {
+        $patterns = self::configuredProtectPatterns();
+
+        if ($patterns === []) {
+            return [$text, []];
+        }
+
+        $tokens = [];
+        $index  = 0;
+
+        foreach ($patterns as $pattern) {
+            if ($pattern === '') {
+                continue;
+            }
+
+            $text = preg_replace_callback(
+                $pattern,
+                static function (array $m) use (&$tokens, &$index): string {
+                    $token = "\u{E002}proofreader-protect-{$index}\u{E003}";
+                    $tokens[$token] = $m[0];
+                    $index++;
+
+                    return $token;
+                },
+                $text
+            ) ?? $text;
+        }
+
+        return [$text, $tokens];
+    }
+
+    /**
+     * Restores tokenised protected spans to their original values.
+     *
+     * @param array<string, string> $tokens
+     */
+    private static function restoreProtected(string $text, array $tokens): string
+    {
+        if ($tokens === []) {
+            return $text;
+        }
+
+        return strtr($text, $tokens);
     }
 
     /**
@@ -1020,6 +1180,9 @@ final class Proofreader
         return null;
     }
 
+    /**
+     * @param true|string $value
+     */
     private static function normaliseFieldFormat(mixed $value, ?string $defaultFormat): ?string
     {
         if ($value === true) {
