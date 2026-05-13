@@ -87,6 +87,41 @@ return [
 ];
 ```
 
+Use `grommasdietz.proofreader.protect` to prevent specific text spans from
+being modified by any rule. The built-in `phone` preset protects international
+(`+49 89 …`) and domestic chained (`0800-123-4567`) numbers. Arbitrary regex
+patterns are accepted for other span types:
+
+```php
+return [
+    'grommasdietz.proofreader.protect' => [
+        'phone'      => true,
+        'skuPattern' => '/\bSKU-\d+-\d+\b/u',
+    ],
+];
+```
+
+### CLI
+
+With the [Kirby CLI](https://github.com/getkirby/cli) installed, fixes can
+also be applied from the command line:
+
+```bash
+# Preview suggestions (read-only)
+kirby proofreader:review projects/my-project
+
+# Fix a page (saved as unpublished changes)
+kirby proofreader:fix projects/my-project
+
+# Fix all pages and publish immediately
+kirby proofreader:fix --all --publish
+
+# Dry-run batch fix
+kirby proofreader:fix --all --dry-run
+```
+
+See [docs/usage/index.md](docs/usage/index.md) for the full flag reference.
+
 ### Documentation
 
 Full reference for [usage](docs/usage/index.md), [contributions](docs/contributions/index.md) and [maintenance](docs/maintenance/index.md) lives in [documentation](docs/index.md).
