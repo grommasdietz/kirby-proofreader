@@ -95,6 +95,7 @@ final class ProofreaderTest extends TestCase
             'no surrounding spaces'   => ['well-known', 'well-known'],
             'hyphen mid-word'         => ['self-aware', 'self-aware'],
             'multiple dashes'         => ['a - b and 1 - 2', "a{$dashSpace}—{$dashSpace}b and 1{$rangeSpace}–{$rangeSpace}2"],
+            'numeric chain three parts' => ['0800-123-4567', "0800{$rangeSpace}–{$rangeSpace}123{$rangeSpace}–{$rangeSpace}4567"],
         ];
     }
 
