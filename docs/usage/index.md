@@ -181,6 +181,135 @@ return [
 HTML-backed fields are fixed only in text nodes. Code-like elements such as
 `pre`, `code`, `kbd`, `samp`, `script`, `style` and `math` are left unchanged.
 
+### Protect patterns
+
+Some text spans should pass through all typography rules unchanged — phone
+numbers being the most common case. The `grommasdietz.proofreader.protect`
+option lets you declare patterns to protect.
+
+The built-in `phone` preset recognises two notations:
+
+- **International** — starts with `+` followed by a country code, e.g.
+  `+49 89 1234-5678`
+- **Domestic chained** — three or more hyphen-separated digit groups, e.g.
+  `0800-123-4567`
+
+Two-group sequences such as `2010-2020` are deliberately left unprotected so
+the `dashes` rule can still convert year and page ranges to en dashes.
+
+```php
+return [
+    'grommasdietz.proofreader.protect' => [
+        'phone' => true,
+    ],
+];
+```
+
+You can also supply arbitrary regex patterns for any span you want to preserve
+— product codes, order numbers, ISBNs, or anything else:
+
+```php
+return [
+    'grommasdietz.proofreader.protect' => [
+        'phone'      => true,
+        'skuPattern' => '/\bSKU-\d+-\d+\b/u',
+        'isbn'       => '/\b97[89]-\d{1,5}-\d{1,7}-\d{1,7}-\d\b/u',
+    ],
+];
+```
+
+Set a preset or custom entry to `false` to explicitly disable it:
+
+```php
+return [
+    'grommasdietz.proofreader.protect' => [
+        'phone' => false,
+    ],
+];
+```
+
+## CLI
+
+Kirby Proofreader registers two commands for the
+[Kirby CLI](https://github.com/getkirby/cli). Install the CLI first:
+
+```bash
+composer global require getkirby/cli
+```
+
+### proofreader:fix
+
+Applies typography fixes to a page, the site model, or a batch of pages. By
+default fixes are saved as unpublished changes (same as the Panel button). Use
+`--publish` to write directly to the published version.
+
+```bash
+# Fix a single page (saves to changes version)
+kirby proofreader:fix projects/my-project
+
+# Fix the site model
+kirby proofreader:fix
+
+# Dry-run — show what would change without saving
+kirby proofreader:fix projects/my-project --dry-run
+
+# Fix all pages on the site
+kirby proofreader:fix --all
+
+# Fix direct children of a page
+kirby proofreader:fix projects --children
+
+# Fix a page and all its descendants
+kirby proofreader:fix projects --recursive
+
+# Publish immediately instead of saving as changes
+kirby proofreader:fix projects/my-project --publish
+
+# Limit to specific rules
+kirby proofreader:fix projects/my-project --rules=ellipsis,dashes
+
+# Target a specific language in a multi-language install
+kirby proofreader:fix projects/my-project --language=de
+```
+
+**Available flags**
+
+| Flag                | Description                                       |
+| ------------------- | ------------------------------------------------- |
+| `--all`             | Process all pages on the site                     |
+| `--children`        | Process direct children of the given page         |
+| `--recursive`       | Process the given page and all its descendants    |
+| `--publish`         | Write to the published version instead of changes |
+| `--dry-run`         | Preview changes without saving                    |
+| `--language=<code>` | Language code for multi-language installs         |
+| `--rules=<list>`    | Comma-separated rule names to apply               |
+
+### proofreader:review
+
+Shows suggestions without saving anything. Useful for a quick audit before
+committing to changes.
+
+```bash
+# Review a single page
+kirby proofreader:review projects/my-project
+
+# Review the site model
+kirby proofreader:review
+
+# Limit to specific rules
+kirby proofreader:review projects/my-project --rules=dashes,spaces
+
+# Target a specific language
+kirby proofreader:review projects/my-project --language=de
+```
+
+**Available flags**
+
+| Flag                | Description                               |
+| ------------------- | ----------------------------------------- |
+| `--language=<code>` | Language code for multi-language installs |
+| `--rules=<list>`    | Comma-separated rule names to apply       |
+
 ---
 
 Next: Continue with [Architecture](./architecture.md)
