@@ -1,3 +1,13 @@
+# [1.4.0](https://github.com/grommasdietz/kirby-proofreader/compare/v1.3.3...v1.4.0) (2026-05-13)
+
+
+### Features
+
+* **commands:** add CLI commands for typography fixes and reviews ([11a327b](https://github.com/grommasdietz/kirby-proofreader/commit/11a327bc5b1144563fe0a9934d7283bea3210633))
+* **docs:** add CLI commands and protect patterns for phone numbers ([6608d72](https://github.com/grommasdietz/kirby-proofreader/commit/6608d72ad76c262870fa3f80474d041286c4eb22))
+* **docs:** add protect patterns for typography rules ([3eb97e2](https://github.com/grommasdietz/kirby-proofreader/commit/3eb97e25154a7b92dafb7ef68f6df129e9b22eae))
+* **protect:** add phone protection presets and tests ([1db6c23](https://github.com/grommasdietz/kirby-proofreader/commit/1db6c2390349f3e2103a4e944a990cd50cd40965))
+
 ## [1.3.3](https://github.com/grommasdietz/kirby-proofreader/compare/v1.3.2...v1.3.3) (2026-05-12)
 
 
