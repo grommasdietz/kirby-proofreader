@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9dd7d77b1ee79218b4ce429f36f9f23c",
+    "content-hash": "d551c010717c94010e2d2aa0d8465d7f",
     "packages": [
         {
             "name": "christian-riesen/base32",
@@ -415,61 +415,17 @@
         },
         {
             "name": "grommasdietz/kirby-hidden-characters",
-            "version": "v2.0.12",
+            "version": "2.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/grommasdietz/kirby-hidden-characters.git",
-                "reference": "27a575be9b3880126310f0d04df9495cae8b8cf7"
+                "reference": "0252a6ed8c47caa14abd08d30dbd6e684bc30ee0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/grommasdietz/kirby-hidden-characters/zipball/27a575be9b3880126310f0d04df9495cae8b8cf7",
-                "reference": "27a575be9b3880126310f0d04df9495cae8b8cf7",
+                "url": "https://api.github.com/repos/grommasdietz/kirby-hidden-characters/zipball/0252a6ed8c47caa14abd08d30dbd6e684bc30ee0",
+                "reference": "0252a6ed8c47caa14abd08d30dbd6e684bc30ee0",
                 "shasum": ""
-            },
-            "require": {
-                "getkirby/composer-installer": "^1.2"
-            },
-            "require-dev": {
-                "getkirby/cms": "^5.0"
-            },
-            "type": "kirby-plugin",
-            "extra": {
-                "kirby-cms-path": false
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Grommas Dietz",
-                    "email": "info@grommas-dietz.com",
-                    "homepage": "https://grommas-dietz.com",
-                    "role": "Developer"
-                }
-            ],
-            "description": "Visually show hidden characters on Kirby CMS",
-            "homepage": "https://github.com/grommasdietz/kirby-hidden-characters",
-            "keywords": [
-                "hidden-characters",
-                "kirby",
-                "kirby-cms",
-                "kirby-plugin"
-            ],
-            "support": {
-                "issues": "https://github.com/grommasdietz/kirby-hidden-characters/issues",
-                "source": "https://github.com/grommasdietz/kirby-hidden-characters"
-            },
-            "time": "2025-11-03T14:50:32+00:00"
-        },
-        {
-            "name": "grommasdietz/kirby-proofreader",
-            "version": "dev-main",
-            "dist": {
-                "type": "path",
-                "url": "..",
-                "reference": "f4eb8e577ff8bf348e3ad3f1ce24e841a338a291"
             },
             "require": {
                 "getkirby/composer-installer": "^1.2",
@@ -477,7 +433,56 @@
             },
             "require-dev": {
                 "friendsofphp/php-cs-fixer": "^3.93",
-                "phpunit/phpunit": "^11.5",
+                "phpunit/phpunit": "^12.5",
+                "vimeo/psalm": "^6.15"
+            },
+            "type": "kirby-plugin",
+            "autoload": {
+                "psr-4": {
+                    "GrommasDietz\\HiddenCharacters\\": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Grommas Dietz",
+                    "email": "info@grommas-dietz.com",
+                    "homepage": "https://grommas-dietz.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Kirby CMS plugin for visualising hidden characters in the Panel",
+            "keywords": [
+                "hidden-characters",
+                "kirby",
+                "kirby-cms",
+                "kirby-plugin",
+                "panel"
+            ],
+            "support": {
+                "issues": "https://github.com/grommasdietz/kirby-hidden-characters/issues",
+                "source": "https://github.com/grommasdietz/kirby-hidden-characters"
+            },
+            "time": "2026-05-12T10:51:29+00:00"
+        },
+        {
+            "name": "grommasdietz/kirby-proofreader",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "..",
+                "reference": "60aea8baf2d23b327ac8437cc6aedddbd3231944"
+            },
+            "require": {
+                "getkirby/composer-installer": "^1.2",
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.93",
+                "phpunit/phpunit": "^12.5",
                 "vimeo/psalm": "^6.15"
             },
             "type": "kirby-plugin",
@@ -485,52 +490,6 @@
                 "psr-4": {
                     "GrommasDietz\\Proofreader\\": "lib/"
                 }
-            },
-            "archive": {
-                "exclude": [
-                    "/.DS_Store",
-                    "/.editorconfig",
-                    "/.gitattributes",
-                    "/.github",
-                    "/.gitignore",
-                    "/.gitmessage",
-                    "/.husky",
-                    "/.markdownlint.json",
-                    "/.npmrc",
-                    "/.php-cs-fixer.cache",
-                    "/.php-cs-fixer.dist.php",
-                    "/.phpunit.cache",
-                    "/.prettierignore",
-                    "/.releaserc",
-                    "/.vscode",
-                    "/AGENTS.md",
-                    "/commitlint.config.cjs",
-                    "/composer.lock",
-                    "/CONTRIBUTING.md",
-                    "/dist",
-                    "/docs",
-                    "/eslint.config.cjs",
-                    "/licenses",
-                    "/node_modules",
-                    "/package.json",
-                    "/phpmd.xml.dist",
-                    "/phpunit.ci.xml",
-                    "/phpunit.dist.xml",
-                    "/playground",
-                    "/playwright.config.ts",
-                    "/pnpm-lock.yaml",
-                    "/pnpm-workspace.yaml",
-                    "/postcss.config.cjs",
-                    "/psalm.xml.dist",
-                    "/SECURITY.md",
-                    "/src",
-                    "/STYLE_GUIDE.md",
-                    "/task",
-                    "/test-results",
-                    "/tests",
-                    "/tools",
-                    "/vendor"
-                ]
             },
             "scripts": {
                 "test": [
@@ -568,7 +527,7 @@
                     "@test"
                 ],
                 "package:clean": [
-                    "composer archive --dir=dist --format=zip"
+                    "rm -rf dist && mkdir -p dist && git archive --format=zip --worktree-attributes HEAD -o dist/kirby-proofreader.zip"
                 ],
                 "notices:generate": [
                     "php tools/generate-third-party-notices.php"
@@ -588,7 +547,7 @@
                     "role": "Developer"
                 }
             ],
-            "description": "Opinionated boilerplate for Kirby CMS plugins",
+            "description": "Typographic suggestions for Kirby CMS",
             "keywords": [
                 "kirby",
                 "kirby-cms",
@@ -912,16 +871,16 @@
         },
         {
             "name": "symfony/deprecation-contracts",
-            "version": "v3.6.0",
+            "version": "v3.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/deprecation-contracts.git",
-                "reference": "63afe740e99a13ba87ec199bb07bbdee937a5b62"
+                "reference": "50f59d1f3ca46d41ac911f97a78626b6756af35b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/63afe740e99a13ba87ec199bb07bbdee937a5b62",
-                "reference": "63afe740e99a13ba87ec199bb07bbdee937a5b62",
+                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/50f59d1f3ca46d41ac911f97a78626b6756af35b",
+                "reference": "50f59d1f3ca46d41ac911f97a78626b6756af35b",
                 "shasum": ""
             },
             "require": {
@@ -934,7 +893,7 @@
                     "name": "symfony/contracts"
                 },
                 "branch-alias": {
-                    "dev-main": "3.6-dev"
+                    "dev-main": "3.7-dev"
                 }
             },
             "autoload": {
@@ -959,7 +918,7 @@
             "description": "A generic function and convention to trigger deprecation notices",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/deprecation-contracts/tree/v3.6.0"
+                "source": "https://github.com/symfony/deprecation-contracts/tree/v3.7.0"
             },
             "funding": [
                 {
@@ -971,11 +930,15 @@
                     "type": "github"
                 },
                 {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
                     "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-09-25T14:21:43+00:00"
+            "time": "2026-04-13T15:52:40+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -3208,16 +3171,16 @@
         },
         {
             "name": "symfony/process",
-            "version": "v7.4.8",
+            "version": "v7.4.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/process.git",
-                "reference": "60f19cd3badc8de688421e21e4305eba50f8089a"
+                "reference": "d9593c9efa40499eb078b81144de42cbc28a31f0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/process/zipball/60f19cd3badc8de688421e21e4305eba50f8089a",
-                "reference": "60f19cd3badc8de688421e21e4305eba50f8089a",
+                "url": "https://api.github.com/repos/symfony/process/zipball/d9593c9efa40499eb078b81144de42cbc28a31f0",
+                "reference": "d9593c9efa40499eb078b81144de42cbc28a31f0",
                 "shasum": ""
             },
             "require": {
@@ -3249,7 +3212,7 @@
             "description": "Executes commands in sub-processes",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/process/tree/v7.4.8"
+                "source": "https://github.com/symfony/process/tree/v7.4.11"
             },
             "funding": [
                 {
@@ -3269,20 +3232,20 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-03-24T13:12:05+00:00"
+            "time": "2026-05-11T16:55:21+00:00"
         },
         {
             "name": "symfony/uid",
-            "version": "v7.4.8",
+            "version": "v7.4.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/uid.git",
-                "reference": "6883ebdf7bf6a12b37519dbc0df62b0222401b56"
+                "reference": "2676b524340abcfe4d6151ec698463cebafee439"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/uid/zipball/6883ebdf7bf6a12b37519dbc0df62b0222401b56",
-                "reference": "6883ebdf7bf6a12b37519dbc0df62b0222401b56",
+                "url": "https://api.github.com/repos/symfony/uid/zipball/2676b524340abcfe4d6151ec698463cebafee439",
+                "reference": "2676b524340abcfe4d6151ec698463cebafee439",
                 "shasum": ""
             },
             "require": {
@@ -3327,7 +3290,7 @@
                 "uuid"
             ],
             "support": {
-                "source": "https://github.com/symfony/uid/tree/v7.4.8"
+                "source": "https://github.com/symfony/uid/tree/v7.4.9"
             },
             "funding": [
                 {
@@ -3347,7 +3310,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-03-24T13:12:05+00:00"
+            "time": "2026-04-30T15:19:22+00:00"
         },
         {
             "name": "webmozart/assert",
@@ -3420,7 +3383,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.1"
+        "php": "^8.2"
     },
     "platform-dev": {},
     "plugin-api-version": "2.9.0"

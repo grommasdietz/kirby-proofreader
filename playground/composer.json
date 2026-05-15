@@ -1,19 +1,28 @@
 {
+    "name": "grommasdietz/kirby-proofreader-playground",
+    "description": "Integration playground for Kirby Proofreader",
+    "license": "MIT",
     "prefer-stable": true,
     "repositories": [
         {
             "type": "path",
-            "url": "../"
+            "url": "../",
+            "options": {
+                "versions": {
+                    "grommasdietz/kirby-proofreader": "dev-main"
+                }
+            }
         }
     ],
     "require": {
-        "php": "^8.1",
-        "grommasdietz/kirby-proofreader": "*@dev",
+        "php": "^8.2",
+        "grommasdietz/kirby-proofreader": "dev-main",
         "grommasdietz/kirby-hidden-characters": "^2.0",
         "getkirby/cms": "^5.2"
     },
     "require-dev": {
-        "bnomei/kirby-mcp": "^1.0"
+        "bnomei/kirby-mcp": "^1.0",
+        "getkirby/cli": "^1.9"
     },
     "config": {
         "allow-plugins": {
