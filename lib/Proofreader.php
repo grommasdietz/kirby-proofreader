@@ -1078,6 +1078,11 @@ final class Proofreader
             ?? $defaultFormat;
     }
 
+    private static function fieldLookupKey(string $field): string
+    {
+        return str_replace('-', '_', strtolower($field));
+    }
+
     /**
      * @param array<string, mixed> $blueprint
      */
@@ -1108,7 +1113,7 @@ final class Proofreader
             return false;
         }
 
-        return self::configListContains(strtolower($field), $config['names'] ?? [])
+        return self::configListContains(self::fieldLookupKey($field), $config['names'] ?? [], true)
             || ($type !== null && self::configListContains($type, $config['types'] ?? []));
     }
 
@@ -1122,7 +1127,12 @@ final class Proofreader
             return null;
         }
 
-        $nameFormat = self::fieldFormatFromConfigList(strtolower($field), $config['names'] ?? [], $defaultFormat);
+        $nameFormat = self::fieldFormatFromConfigList(
+            self::fieldLookupKey($field),
+            $config['names'] ?? [],
+            $defaultFormat,
+            true
+        );
 
         if ($nameFormat !== null) {
             return $nameFormat;
@@ -1135,7 +1145,7 @@ final class Proofreader
         return self::fieldFormatFromConfigList($type, $config['types'] ?? [], $defaultFormat);
     }
 
-    private static function configListContains(string $needle, mixed $entries): bool
+    private static function configListContains(string $needle, mixed $entries, bool $normaliseFieldNames = false): bool
     {
         if (is_array($entries) === false) {
             return false;
@@ -1143,14 +1153,20 @@ final class Proofreader
 
         foreach ($entries as $key => $value) {
             if (is_int($key)) {
-                if (is_string($value) && strtolower($value) === $needle) {
+                $entry = is_string($value) ? strtolower($value) : null;
+                $entry = $normaliseFieldNames === true && $entry !== null ? self::fieldLookupKey($entry) : $entry;
+
+                if ($entry === $needle) {
                     return true;
                 }
 
                 continue;
             }
 
-            if (strtolower((string) $key) === $needle && $value !== false) {
+            $entry = strtolower((string) $key);
+            $entry = $normaliseFieldNames === true ? self::fieldLookupKey($entry) : $entry;
+
+            if ($entry === $needle && $value !== false) {
                 return true;
             }
         }
@@ -1161,7 +1177,8 @@ final class Proofreader
     private static function fieldFormatFromConfigList(
         string $needle,
         mixed $entries,
-        ?string $defaultFormat
+        ?string $defaultFormat,
+        bool $normaliseFieldNames = false
     ): ?string {
         if (is_array($entries) === false) {
             return null;
@@ -1169,14 +1186,20 @@ final class Proofreader
 
         foreach ($entries as $key => $value) {
             if (is_int($key)) {
-                if (is_string($value) && strtolower($value) === $needle) {
+                $entry = is_string($value) ? strtolower($value) : null;
+                $entry = $normaliseFieldNames === true && $entry !== null ? self::fieldLookupKey($entry) : $entry;
+
+                if ($entry === $needle) {
                     return self::normaliseFieldFormat(true, $defaultFormat);
                 }
 
                 continue;
             }
 
-            if (strtolower((string) $key) === $needle) {
+            $entry = strtolower((string) $key);
+            $entry = $normaliseFieldNames === true ? self::fieldLookupKey($entry) : $entry;
+
+            if ($entry === $needle) {
                 return self::normaliseFieldFormat($value, $defaultFormat);
             }
         }
@@ -1233,10 +1256,10 @@ final class Proofreader
         $fixed = [];
         $selectedFields = $onlyFields === null
             ? null
-            : array_map(static fn (string $field): string => strtolower($field), $onlyFields);
+            : array_map(static fn (string $field): string => self::fieldLookupKey($field), $onlyFields);
 
         foreach ($fields as $key => $value) {
-            $lkey = strtolower((string) $key);
+            $lkey = self::fieldLookupKey((string) $key);
             $bp = $blueprintFields[$lkey] ?? [];
 
             if ($selectedFields !== null && !in_array($lkey, $selectedFields, true)) {
@@ -1311,11 +1334,11 @@ final class Proofreader
         $suggestions = [];
         $selectedFields = $onlyFields === null
             ? null
-            : array_map(static fn (string $field): string => strtolower($field), $onlyFields);
+            : array_map(static fn (string $field): string => self::fieldLookupKey($field), $onlyFields);
 
         foreach ($fields as $key => $value) {
             $field = (string) $key;
-            $lkey  = strtolower($field);
+            $lkey  = self::fieldLookupKey($field);
             $bp    = $blueprintFields[$lkey] ?? [];
 
             if ($selectedFields !== null && !in_array($lkey, $selectedFields, true)) {
@@ -1753,7 +1776,7 @@ final class Proofreader
                 continue;
             }
 
-            $normalised[strtolower((string) $key)] = self::resolveBlueprintDefinition($definition);
+            $normalised[self::fieldLookupKey((string) $key)] = self::resolveBlueprintDefinition($definition);
         }
 
         if ($includePageTitle === true && !isset($normalised['title'])) {

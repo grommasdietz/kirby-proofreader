@@ -27,11 +27,26 @@ final class ProofreaderTest extends TestCase
     {
         return [
             'lowercase diaeresis' => ["a\u{0308}", 'ä'],
+            'lowercase u diaeresis' => ["fu\u{0308}r", 'für'],
             'uppercase diaeresis' => ["U\u{0308}ber", 'Über'],
             'acute accent'        => ["Cafe\u{0301}", 'Café'],
             'already composed'    => ['Mädchen', 'Mädchen'],
             'plain text'          => ['Editorial text', 'Editorial text'],
         ];
+    }
+
+    public function testReviewFieldsMatchesDashedContentKeysToUnderscoredBlueprintFields(): void
+    {
+        $review = Proofreader::reviewFields(
+            ['portrait-layout' => "steht fu\u{0308}r"],
+            ['portrait_layout' => ['label' => 'Portrait', 'type' => 'text']],
+            ['unicode']
+        );
+
+        self::assertSame('steht für', $review['fixed']['portrait-layout']);
+        self::assertCount(1, $review['suggestions']);
+        self::assertSame('portrait-layout', $review['suggestions'][0]['field']);
+        self::assertSame('Portrait', $review['suggestions'][0]['fieldLabel']);
     }
 
     // -------------------------------------------------------------------------
