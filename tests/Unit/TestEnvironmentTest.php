@@ -18,8 +18,8 @@ final class TestEnvironmentTest extends TestCase
     {
         $kirby = TestEnvironment::boot();
 
-        $this->assertInstanceOf(App::class, $kirby);
-        $this->assertSame('Kirby Playground', $kirby->site()->title()->value());
+        self::assertInstanceOf(App::class, $kirby);
+        self::assertSame('Kirby Playground', $kirby->site()->title()->value());
     }
 
     public function testAllowsConfigOverrides(): void
@@ -30,6 +30,6 @@ final class TestEnvironmentTest extends TestCase
             ],
         ]);
 
-        $this->assertTrue($kirby->option('debug'));
+        self::assertTrue($kirby->option('debug'));
     }
 }

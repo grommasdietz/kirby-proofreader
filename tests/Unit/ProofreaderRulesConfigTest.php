@@ -30,11 +30,11 @@ final class ProofreaderRulesConfigTest extends TestCase
         $hairSpace = "\u{200A}";
         $thinSpace = "\u{2009}";
 
-        $this->assertSame(
+        self::assertSame(
             'Text «quoted» and ‹aside›',
             Proofreader::fixQuotes('Text "quoted" and \'aside\'')
         );
-        $this->assertSame(
+        self::assertSame(
             "Range 2019{$thinSpace}–{$thinSpace}2024 and note{$hairSpace}—{$hairSpace}review",
             Proofreader::fix('Range 2019 - 2024 and note - review', ['dashes', 'spaces'])
         );
@@ -54,11 +54,11 @@ final class ProofreaderRulesConfigTest extends TestCase
             ],
         ]);
 
-        $this->assertSame(
+        self::assertSame(
             ['dashes', 'ellipsis'],
             array_column(Proofreader::rulesForPanel(), 'name')
         );
-        $this->assertSame(
+        self::assertSame(
             'Text… from 2020 – 2024',
             Proofreader::fix('Text... from 2020 - 2024')
         );
@@ -85,11 +85,11 @@ final class ProofreaderRulesConfigTest extends TestCase
         $space = "\u{2006}";
         $nbsp = "\u{00A0}";
 
-        $this->assertSame(
+        self::assertSame(
             ['unicode', 'ellipsis', 'quotes', 'apostrophes', 'dashes', 'spaces', 'dimensions'],
             array_column(Proofreader::rulesForPanel(), 'name')
         );
-        $this->assertSame(
+        self::assertSame(
             "Frame 5{$space}×{$space}5{$nbsp}cm",
             Proofreader::fix('Frame 5 x 5 cm')
         );
@@ -129,19 +129,19 @@ final class ProofreaderRulesConfigTest extends TestCase
             ['subtitle' => ['type' => 'text']]
         );
 
-        $this->assertSame(
+        self::assertSame(
             ['customTrademark', 'customCopyright', 'noMatches'],
             array_column(Proofreader::rulesForPanel(), 'name')
         );
-        $this->assertSame(
+        self::assertSame(
             ['Trademark', 'Copyright', 'No matches'],
             array_column(Proofreader::rulesForPanel(), 'label')
         );
-        $this->assertSame(
+        self::assertSame(
             ['customTrademark', 'customCopyright'],
             array_column($review['suggestions'], 'rule')
         );
-        $this->assertSame('Label™ ©', $review['fixed']['subtitle']);
+        self::assertSame('Label™ ©', $review['fixed']['subtitle']);
     }
 
     public function testReviewFieldsTranslatesBlueprintLabelKeys(): void
@@ -161,8 +161,8 @@ final class ProofreaderRulesConfigTest extends TestCase
             ['ellipsis']
         );
 
-        $this->assertSame('Client', $review['suggestions'][0]['fieldLabel']);
-        $this->assertSame('Client', $review['suggestions'][0]['pathLabel']);
+        self::assertSame('Client', $review['suggestions'][0]['fieldLabel']);
+        self::assertSame('Client', $review['suggestions'][0]['pathLabel']);
     }
 
     public function testBlocksFieldsResolveKirbyFieldsetShorthand(): void
@@ -173,7 +173,7 @@ final class ProofreaderRulesConfigTest extends TestCase
             ['type' => 'text', 'id' => 'text-a', 'content' => ['text' => '<p>Hello...</p>']],
         ]);
 
-        $this->assertIsString($blocks);
+        self::assertIsString($blocks);
 
         $review = Proofreader::reviewFields(
             ['blocks' => $blocks],
@@ -181,8 +181,8 @@ final class ProofreaderRulesConfigTest extends TestCase
             ['ellipsis']
         );
 
-        $this->assertSame(['ellipsis'], array_column($review['suggestions'], 'rule'));
-        $this->assertSame('<p>Hello…</p>', json_decode($review['fixed']['blocks'], true)[0]['content']['text']);
+        self::assertSame(['ellipsis'], array_column($review['suggestions'], 'rule'));
+        self::assertSame('<p>Hello…</p>', json_decode($review['fixed']['blocks'], true)[0]['content']['text']);
     }
 
     public function testFieldsOptionCanIncludeCustomPlainFieldTypes(): void
@@ -207,8 +207,8 @@ final class ProofreaderRulesConfigTest extends TestCase
             ['ellipsis']
         );
 
-        $this->assertSame(['ellipsis'], array_column($review['suggestions'], 'rule'));
-        $this->assertSame('Custom field…', $review['fixed']['summary']);
+        self::assertSame(['ellipsis'], array_column($review['suggestions'], 'rule'));
+        self::assertSame('Custom field…', $review['fixed']['summary']);
     }
 
     public function testFieldsOptionCanIncludeCustomHtmlFieldNames(): void
@@ -233,8 +233,8 @@ final class ProofreaderRulesConfigTest extends TestCase
             ['ellipsis']
         );
 
-        $this->assertSame(['ellipsis'], array_column($review['suggestions'], 'rule'));
-        $this->assertSame('<p>Custom field…</p><code>Leave code...</code>', $review['fixed']['body']);
+        self::assertSame(['ellipsis'], array_column($review['suggestions'], 'rule'));
+        self::assertSame('<p>Custom field…</p><code>Leave code...</code>', $review['fixed']['body']);
     }
 
     public function testFieldsOptionCanIncludeCustomDecodedStructureTypesInsideBlocks(): void
@@ -266,7 +266,7 @@ final class ProofreaderRulesConfigTest extends TestCase
                 ],
             ],
         ]);
-        $this->assertIsString($blockPayload);
+        self::assertIsString($blockPayload);
 
         $review = Proofreader::reviewFields(
             ['blocks' => $blockPayload],
@@ -292,7 +292,7 @@ final class ProofreaderRulesConfigTest extends TestCase
             ['ellipsis'],
         );
 
-        $this->assertSame(
+        self::assertSame(
             [
                 'Blocks -> Custom review block 1 -> Custom entries -> Row 1 -> Entry text',
             ],
@@ -301,8 +301,8 @@ final class ProofreaderRulesConfigTest extends TestCase
 
         $fixed = json_decode($review['fixed']['blocks'], associative: true);
 
-        $this->assertIsArray($fixed);
-        $this->assertSame('Custom nested field…', $fixed[0]['content']['customEntries'][0]['entryText']);
+        self::assertIsArray($fixed);
+        self::assertSame('Custom nested field…', $fixed[0]['content']['customEntries'][0]['entryText']);
     }
 
     public function testFieldsOptionCanExcludeDefaultFieldNamesAndTypes(): void
@@ -332,9 +332,9 @@ final class ProofreaderRulesConfigTest extends TestCase
             ['ellipsis']
         );
 
-        $this->assertSame([], $review['suggestions']);
-        $this->assertSame('Default text...', $review['fixed']['summary']);
-        $this->assertSame('<p>Default writer...</p>', $review['fixed']['body']);
+        self::assertSame([], $review['suggestions']);
+        self::assertSame('Default text...', $review['fixed']['summary']);
+        self::assertSame('<p>Default writer...</p>', $review['fixed']['body']);
     }
 
     // -------------------------------------------------------------------------
@@ -352,7 +352,7 @@ final class ProofreaderRulesConfigTest extends TestCase
         ]);
 
         // Three-group domestic number — must stay unchanged
-        $this->assertSame(
+        self::assertSame(
             '0800-123-4567',
             Proofreader::fix('0800-123-4567', ['dashes', 'spaces'])
         );
@@ -368,10 +368,30 @@ final class ProofreaderRulesConfigTest extends TestCase
             ],
         ]);
 
-        $this->assertSame(
+        self::assertSame(
             '+49 89 1234-5678',
             Proofreader::fix('+49 89 1234-5678', ['dashes', 'spaces'])
         );
+    }
+
+    public function testProtectPhonePresetKeepsReviewSuggestionsInSyncWithFixedValues(): void
+    {
+        $this->bootKirby([
+            'options' => [
+                'grommasdietz.proofreader' => [
+                    'protect' => ['phone' => true],
+                ],
+            ],
+        ]);
+
+        $review = Proofreader::reviewFields(
+            ['phone' => '0800-123-4567'],
+            ['phone' => ['type' => 'text']],
+            ['dashes', 'spaces']
+        );
+
+        self::assertSame([], $review['suggestions']);
+        self::assertSame('0800-123-4567', $review['fixed']['phone']);
     }
 
     public function testProtectPhonePresetDoesNotAffectTwoGroupYearRanges(): void
@@ -387,7 +407,7 @@ final class ProofreaderRulesConfigTest extends TestCase
         $rangeSpace = "\u{2006}";
 
         // Two-group range (year) must still receive en dash
-        $this->assertSame(
+        self::assertSame(
             "2010{$rangeSpace}–{$rangeSpace}2020",
             Proofreader::fix('2010-2020', ['dashes', 'spaces'])
         );
@@ -408,8 +428,21 @@ final class ProofreaderRulesConfigTest extends TestCase
 
         $rangeSpace = "\u{2006}";
 
-        $this->assertStringContainsString('SKU-100-200', $result);
-        $this->assertStringContainsString("2020{$rangeSpace}–{$rangeSpace}2025", $result);
+        self::assertStringContainsString('SKU-100-200', $result);
+        self::assertStringContainsString("2020{$rangeSpace}–{$rangeSpace}2025", $result);
+    }
+
+    public function testInvalidProtectRegexPatternIsIgnored(): void
+    {
+        $this->bootKirby([
+            'options' => [
+                'grommasdietz.proofreader' => [
+                    'protect' => ['brokenPattern' => '/[invalid/u'],
+                ],
+            ],
+        ]);
+
+        self::assertSame('Text…', Proofreader::fix('Text...', ['ellipsis']));
     }
 
     public function testProtectDisabledPresetIsSkipped(): void
@@ -425,7 +458,7 @@ final class ProofreaderRulesConfigTest extends TestCase
         $rangeSpace = "\u{2006}";
 
         // With preset disabled, chained numbers still get en-dash treatment
-        $this->assertSame(
+        self::assertSame(
             "0800{$rangeSpace}–{$rangeSpace}123{$rangeSpace}–{$rangeSpace}4567",
             Proofreader::fix('0800-123-4567', ['dashes', 'spaces'])
         );

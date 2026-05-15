@@ -18,23 +18,23 @@ final class PlaygroundTest extends TestCase
 
     public function testPluginRegistersWithKirby(): void
     {
-        $this->assertNotNull($this->kirby->plugin('grommasdietz/proofreader'));
+        self::assertNotNull($this->kirby->plugin('grommasdietz/proofreader'));
     }
 
     public function testHomePageCanBeLoaded(): void
     {
         $page = $this->kirby->page('home');
 
-        $this->assertSame('home', $page?->id());
-        $this->assertSame('Home', $page?->title()->value());
+        self::assertSame('home', $page?->id());
+        self::assertSame('Home', $page?->title()->value());
     }
 
     public function testProofreaderRouteAppliesPageTitleViaTitleAction(): void
     {
         $page = $this->kirby->page('editorial-review');
 
-        $this->assertNotNull($page);
-        $this->assertSame('Editorial Review...', $page->title()->value());
+        self::assertNotNull($page);
+        self::assertSame('Editorial Review...', $page->title()->value());
 
         try {
             $response = $this->callProofreaderRoute(
@@ -49,11 +49,11 @@ final class PlaygroundTest extends TestCase
             $page = $this->kirby->page('editorial-review');
             $language = $this->kirby->language('en') ?? 'default';
 
-            $this->assertSame('ok', $data['status']);
-            $this->assertSame(['title'], $data['changedFields']);
-            $this->assertSame('Editorial Review…', $data['diffs']['title']['to']);
-            $this->assertSame('Editorial Review…', $page?->title()->value());
-            $this->assertFalse($page?->version('changes')->exists($language));
+            self::assertSame('ok', $data['status']);
+            self::assertSame(['title'], $data['changedFields']);
+            self::assertSame('Editorial Review…', $data['diffs']['title']['to']);
+            self::assertSame('Editorial Review…', $page?->title()->value());
+            self::assertFalse($page?->version('changes')->exists($language));
         } finally {
             $page = $this->kirby->page('editorial-review');
             $language = $this->kirby->language('en') ?? 'default';
@@ -80,9 +80,9 @@ final class PlaygroundTest extends TestCase
         );
         $data = $this->jsonResponse($response);
 
-        $this->assertSame('ok', $data['status']);
-        $this->assertSame(['description'], array_unique(array_column($data['suggestions'], 'field')));
-        $this->assertSame('Description', $data['suggestions'][0]['fieldLabel']);
+        self::assertSame('ok', $data['status']);
+        self::assertSame(['description'], array_unique(array_column($data['suggestions'], 'field')));
+        self::assertSame('Description', $data['suggestions'][0]['fieldLabel']);
     }
 
     public function testOptionalDimensionRuleCanReviewPlaygroundContent(): void
@@ -112,9 +112,9 @@ final class PlaygroundTest extends TestCase
         );
         $data = $this->jsonResponse($response);
 
-        $this->assertSame('ok', $data['status']);
-        $this->assertSame(['dimensions'], array_unique(array_column($data['suggestions'], 'rule')));
-        $this->assertSame(['summary'], array_unique(array_column($data['suggestions'], 'field')));
+        self::assertSame('ok', $data['status']);
+        self::assertSame(['dimensions'], array_unique(array_column($data['suggestions'], 'rule')));
+        self::assertSame(['summary'], array_unique(array_column($data['suggestions'], 'field')));
     }
 
     public function testProofreaderRouteCanIncludeConfiguredFieldNames(): void
@@ -143,9 +143,9 @@ final class PlaygroundTest extends TestCase
         );
         $data = $this->jsonResponse($response);
 
-        $this->assertSame('ok', $data['status']);
-        $this->assertSame(['date'], array_unique(array_column($data['suggestions'], 'field')));
-        $this->assertSame(['date'], $data['changedFields']);
+        self::assertSame('ok', $data['status']);
+        self::assertSame(['date'], array_unique(array_column($data['suggestions'], 'field')));
+        self::assertSame(['date'], $data['changedFields']);
     }
 
     public function testProofreaderRouteHonorsConfiguredFieldExcludes(): void
@@ -172,10 +172,10 @@ final class PlaygroundTest extends TestCase
         );
         $data = $this->jsonResponse($response);
 
-        $this->assertSame('ok', $data['status']);
-        $this->assertSame([], $data['suggestions']);
-        $this->assertSame([], $data['changedFields']);
-        $this->assertSame([], $data['diffs']);
+        self::assertSame('ok', $data['status']);
+        self::assertSame([], $data['suggestions']);
+        self::assertSame([], $data['changedFields']);
+        self::assertSame([], $data['diffs']);
     }
 
     public function testListFieldCanReviewPlaygroundContent(): void
@@ -190,10 +190,10 @@ final class PlaygroundTest extends TestCase
         );
         $data = $this->jsonResponse($response);
 
-        $this->assertSame('ok', $data['status']);
-        $this->assertSame(['checklist'], array_unique(array_column($data['suggestions'], 'field')));
-        $this->assertContains('ellipsis', array_column($data['suggestions'], 'rule'));
-        $this->assertContains('dashes', array_column($data['suggestions'], 'rule'));
+        self::assertSame('ok', $data['status']);
+        self::assertSame(['checklist'], array_unique(array_column($data['suggestions'], 'field')));
+        self::assertContains('ellipsis', array_column($data['suggestions'], 'rule'));
+        self::assertContains('dashes', array_column($data['suggestions'], 'rule'));
     }
 
     public function testUsersCanBeCreatedAndDeleted(): void
@@ -207,7 +207,7 @@ final class PlaygroundTest extends TestCase
 
         // seedUsers() creates a default admin during boot
         $seededCount = $this->kirby->users()->count();
-        $this->assertGreaterThanOrEqual(1, $seededCount);
+        self::assertGreaterThanOrEqual(1, $seededCount);
 
         $primaryAdmin = $this->kirby->users()->create([
             'email' => 'primary-admin@kirby-proofreader.test',
@@ -223,14 +223,14 @@ final class PlaygroundTest extends TestCase
             'password' => 'test-password',
         ]);
 
-        $this->assertSame('admin', $primaryAdmin->role()->name());
-        $this->assertSame('admin', $secondaryAdmin->role()->name());
-        $this->assertCount($seededCount + 2, $this->kirby->users());
+        self::assertSame('admin', $primaryAdmin->role()->name());
+        self::assertSame('admin', $secondaryAdmin->role()->name());
+        self::assertCount($seededCount + 2, $this->kirby->users());
 
         $secondaryAdmin->delete();
 
-        $this->assertCount($seededCount + 1, $this->kirby->users());
-        $this->assertNotNull(
+        self::assertCount($seededCount + 1, $this->kirby->users());
+        self::assertNotNull(
             $this->kirby->user('primary-admin@kirby-proofreader.test')
         );
 
@@ -256,7 +256,7 @@ final class PlaygroundTest extends TestCase
 
         $response = $this->kirby->call($path, 'POST');
 
-        $this->assertInstanceOf(Response::class, $response);
+        self::assertInstanceOf(Response::class, $response);
 
         return $response;
     }

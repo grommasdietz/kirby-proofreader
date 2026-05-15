@@ -20,7 +20,7 @@ final class ProofreaderTest extends TestCase
     #[DataProvider('unicodeCompositionProvider')]
     public function testFixUnicodeComposition(string $input, string $expected): void
     {
-        $this->assertSame($expected, Proofreader::fixUnicodeComposition($input));
+        self::assertSame($expected, Proofreader::fixUnicodeComposition($input));
     }
 
     public static function unicodeCompositionProvider(): array
@@ -44,7 +44,7 @@ final class ProofreaderTest extends TestCase
     #[DataProvider('ellipsisProvider')]
     public function testFixEllipsis(string $input, string $expected): void
     {
-        $this->assertSame($expected, Proofreader::fixEllipsis($input));
+        self::assertSame($expected, Proofreader::fixEllipsis($input));
     }
 
     public static function ellipsisProvider(): array
@@ -73,7 +73,7 @@ final class ProofreaderTest extends TestCase
     #[DataProvider('dashProvider')]
     public function testFixDashes(string $input, string $expected): void
     {
-        $this->assertSame($expected, Proofreader::fixDashes($input));
+        self::assertSame($expected, Proofreader::fixDashes($input));
     }
 
     public static function dashProvider(): array
@@ -104,23 +104,23 @@ final class ProofreaderTest extends TestCase
         $rangeSpace = "\u{2006}";
         $dashSpace  = "\u{200A}";
 
-        $this->assertSame(
+        self::assertSame(
             'Range 2010 – 2020',
             Proofreader::fix('Range 2010 - 2020', ['dashes'])
         );
-        $this->assertSame(
+        self::assertSame(
             "Range 2010{$rangeSpace}–{$rangeSpace}2020",
             Proofreader::fix('Range 2010 - 2020', ['dashes', 'spaces'])
         );
-        $this->assertSame(
+        self::assertSame(
             "Route draft{$dashSpace}—{$dashSpace}review",
             Proofreader::fix('Route draft - review', ['dashes', 'spaces'])
         );
-        $this->assertSame(
+        self::assertSame(
             "Range 2010{$rangeSpace}–{$rangeSpace}2020",
             Proofreader::fix('Range 2010–2020', ['spaces'])
         );
-        $this->assertSame(
+        self::assertSame(
             "Route Hamburg{$rangeSpace}–{$rangeSpace}Bremen",
             Proofreader::fix('Route Hamburg – Bremen', ['dashes', 'spaces'])
         );
@@ -132,30 +132,30 @@ final class ProofreaderTest extends TestCase
 
     public function testFixQuotesSkipsWhenNoLanguageOrConfiguredMarksExist(): void
     {
-        $this->assertSame('Text "quoted" here', Proofreader::fixQuotes('Text "quoted" here'));
+        self::assertSame('Text "quoted" here', Proofreader::fixQuotes('Text "quoted" here'));
     }
 
     public function testFixQuotesUsesEnglishQuotesWhenLanguageIsKnown(): void
     {
-        $this->assertSame('Text “quoted” here', Proofreader::fixQuotes('Text "quoted" here', 'en'));
+        self::assertSame('Text “quoted” here', Proofreader::fixQuotes('Text "quoted" here', 'en'));
     }
 
     public function testFixQuotesUsesGermanQuotes(): void
     {
-        $this->assertSame('Text „zitiert“ hier', Proofreader::fixQuotes('Text "zitiert" hier', 'de'));
+        self::assertSame('Text „zitiert“ hier', Proofreader::fixQuotes('Text "zitiert" hier', 'de'));
     }
 
     public function testFixQuotesUsesSingleQuotePairs(): void
     {
-        $this->assertSame('Text ‘quoted’ here', Proofreader::fixQuotes("Text 'quoted' here", 'en'));
-        $this->assertSame('Text ‚zitiert‘ hier', Proofreader::fixQuotes("Text 'zitiert' hier", 'de'));
+        self::assertSame('Text ‘quoted’ here', Proofreader::fixQuotes("Text 'quoted' here", 'en'));
+        self::assertSame('Text ‚zitiert‘ hier', Proofreader::fixQuotes("Text 'zitiert' hier", 'de'));
     }
 
     public function testFixQuotesUsesFrenchQuotes(): void
     {
         $thinNbsp = "\u{202F}";
 
-        $this->assertSame(
+        self::assertSame(
             "Texte «{$thinNbsp}cité{$thinNbsp}» ici",
             Proofreader::fixQuotes('Texte "cité" ici', 'fr')
         );
@@ -163,16 +163,16 @@ final class ProofreaderTest extends TestCase
 
     public function testFixQuotesNormalisesApostrophes(): void
     {
-        $this->assertSame('It’s ready', Proofreader::fixQuotes("It's ready", 'en'));
-        $this->assertSame('It’s ready', Proofreader::fixQuotes('It‘s ready', 'en'));
-        $this->assertSame('James’ notes', Proofreader::fixQuotes("James' notes", 'en'));
-        $this->assertSame('Hans’ Notiz', Proofreader::fixQuotes("Hans' Notiz", 'de'));
-        $this->assertSame('l’éditeur', Proofreader::fixQuotes("l'éditeur", 'fr'));
+        self::assertSame('It’s ready', Proofreader::fixQuotes("It's ready", 'en'));
+        self::assertSame('It’s ready', Proofreader::fixQuotes('It‘s ready', 'en'));
+        self::assertSame('James’ notes', Proofreader::fixQuotes("James' notes", 'en'));
+        self::assertSame('Hans’ Notiz', Proofreader::fixQuotes("Hans' Notiz", 'de'));
+        self::assertSame('l’éditeur', Proofreader::fixQuotes("l'éditeur", 'fr'));
     }
 
     public function testFixQuotePairsDoesNotTreatApostrophesAsOpeningQuotes(): void
     {
-        $this->assertSame(
+        self::assertSame(
             "It's ‘quoted’ here",
             Proofreader::fixQuotePairs("It's 'quoted' here", 'en')
         );
@@ -184,20 +184,20 @@ final class ProofreaderTest extends TestCase
 
     public function testFixApostrophesNormalisesApostrophes(): void
     {
-        $this->assertSame('It’s ready', Proofreader::fixApostrophes("It's ready"));
-        $this->assertSame('It’s ready', Proofreader::fixApostrophes('It‘s ready'));
-        $this->assertSame('James’ notes', Proofreader::fixApostrophes("James' notes"));
-        $this->assertSame('Hans’ Notiz', Proofreader::fixApostrophes("Hans' Notiz"));
-        $this->assertSame('l’éditeur', Proofreader::fixApostrophes("l'éditeur"));
+        self::assertSame('It’s ready', Proofreader::fixApostrophes("It's ready"));
+        self::assertSame('It’s ready', Proofreader::fixApostrophes('It‘s ready'));
+        self::assertSame('James’ notes', Proofreader::fixApostrophes("James' notes"));
+        self::assertSame('Hans’ Notiz', Proofreader::fixApostrophes("Hans' Notiz"));
+        self::assertSame('l’éditeur', Proofreader::fixApostrophes("l'éditeur"));
     }
 
     public function testFixApostrophesSkipsSingleQuotePairs(): void
     {
-        $this->assertSame(
+        self::assertSame(
             "It’s 'quoted' here",
             Proofreader::fixApostrophes("It's 'quoted' here")
         );
-        $this->assertSame(
+        self::assertSame(
             "Text 'James' here",
             Proofreader::fixApostrophes("Text 'James' here")
         );
@@ -205,15 +205,15 @@ final class ProofreaderTest extends TestCase
 
     public function testApostrophesRuleCanRunSeparatelyFromQuotes(): void
     {
-        $this->assertSame(
+        self::assertSame(
             'It’s "quoted" here',
             Proofreader::fix('It\'s "quoted" here', ['apostrophes'], 'en')
         );
-        $this->assertSame(
+        self::assertSame(
             'It\'s “quoted” here',
             Proofreader::fix('It\'s "quoted" here', ['quotes'], 'en')
         );
-        $this->assertSame(
+        self::assertSame(
             'It’s “quoted” here',
             Proofreader::fix('It\'s "quoted" here', ['quotes', 'apostrophes'], 'en')
         );
@@ -229,7 +229,7 @@ final class ProofreaderTest extends TestCase
     #[DataProvider('leadingNbspProvider')]
     public function testFixLeadingNbsp(string $input, string $expected): void
     {
-        $this->assertSame($expected, Proofreader::fixLeadingNbsp($input));
+        self::assertSame($expected, Proofreader::fixLeadingNbsp($input));
     }
 
     public static function leadingNbspProvider(): array
@@ -261,7 +261,7 @@ final class ProofreaderTest extends TestCase
     #[DataProvider('trailingNbspProvider')]
     public function testFixTrailingNbsp(string $input, string $expected): void
     {
-        $this->assertSame($expected, Proofreader::fixTrailingNbsp($input));
+        self::assertSame($expected, Proofreader::fixTrailingNbsp($input));
     }
 
     public static function trailingNbspProvider(): array
@@ -291,7 +291,7 @@ final class ProofreaderTest extends TestCase
     #[DataProvider('ordinalProvider')]
     public function testFixOrdinalSpacing(string $input, string $expected): void
     {
-        $this->assertSame($expected, Proofreader::fixOrdinalSpacing($input));
+        self::assertSame($expected, Proofreader::fixOrdinalSpacing($input));
     }
 
     public static function ordinalProvider(): array
@@ -324,12 +324,12 @@ final class ProofreaderTest extends TestCase
         $input    = "Cafe\u{0301} docs... see 3. April";
         $expected = "Café{$nbsp}docs… see 3.{$thinNbsp}April";
 
-        $this->assertSame($expected, Proofreader::fix($input));
+        self::assertSame($expected, Proofreader::fix($input));
     }
 
     public function testFixEmptyString(): void
     {
-        $this->assertSame('', Proofreader::fix(''));
+        self::assertSame('', Proofreader::fix(''));
     }
 
     public function testFixIsIdempotent(): void
@@ -340,12 +340,12 @@ final class ProofreaderTest extends TestCase
         $once   = Proofreader::fix($input);
         $twice  = Proofreader::fix($once);
 
-        $this->assertSame($once, $twice);
+        self::assertSame($once, $twice);
     }
 
     public function testFixCanDisableDashRule(): void
     {
-        $this->assertSame('Text… from 2020 - 2024', Proofreader::fix(
+        self::assertSame('Text… from 2020 - 2024', Proofreader::fix(
             'Text... from 2020 - 2024',
             ['ellipsis']
         ));
@@ -355,7 +355,7 @@ final class ProofreaderTest extends TestCase
     {
         $nbsp = "\u{00A0}";
 
-        $this->assertSame(
+        self::assertSame(
             "Proofreader note{$nbsp}stays",
             Proofreader::fixRepeatedSpaces("Proofreader   note{$nbsp}stays")
         );
@@ -363,11 +363,11 @@ final class ProofreaderTest extends TestCase
 
     public function testFixPunctuationSpacingRemovesSpacesBeforePunctuation(): void
     {
-        $this->assertSame(
+        self::assertSame(
             'Proofreader note!',
             Proofreader::fixPunctuationSpacing('Proofreader note !')
         );
-        $this->assertSame(
+        self::assertSame(
             'Proofreader note: ready',
             Proofreader::fixPunctuationSpacing('Proofreader note : ready')
         );
@@ -375,7 +375,7 @@ final class ProofreaderTest extends TestCase
 
     public function testFixPunctuationSpacingKeepsColonPrefixedWords(): void
     {
-        $this->assertSame(
+        self::assertSame(
             'von :mlzd',
             Proofreader::fixPunctuationSpacing('von :mlzd')
         );
@@ -383,11 +383,11 @@ final class ProofreaderTest extends TestCase
 
     public function testFixPunctuationSpacingKeepsFrenchHighPunctuationSpacing(): void
     {
-        $this->assertSame(
+        self::assertSame(
             'Proofreader note !',
             Proofreader::fixPunctuationSpacing('Proofreader note !', 'fr_FR')
         );
-        $this->assertSame(
+        self::assertSame(
             'Proofreader note.',
             Proofreader::fixPunctuationSpacing('Proofreader note .', 'fr_FR')
         );
@@ -397,15 +397,15 @@ final class ProofreaderTest extends TestCase
     {
         $space = "\u{2006}";
 
-        $this->assertSame(
+        self::assertSame(
             "Frame 5{$space}×{$space}5 cm",
             Proofreader::fixDimensions('Frame 5 x 5 cm')
         );
-        $this->assertSame(
+        self::assertSame(
             "Frame 5 cm{$space}×{$space}5 cm",
             Proofreader::fixDimensions('Frame 5 cm x 5 cm')
         );
-        $this->assertSame(
+        self::assertSame(
             "Frame 5{$space}×{$space}5 cm",
             Proofreader::fixDimensions('Frame 5×5 cm')
         );
@@ -413,7 +413,7 @@ final class ProofreaderTest extends TestCase
 
     public function testRulesForPanelReturnsDefaultRuleOrder(): void
     {
-        $this->assertSame(
+        self::assertSame(
             ['unicode', 'ellipsis', 'quotes', 'apostrophes', 'dashes', 'spaces'],
             array_column(Proofreader::rulesForPanel(), 'name')
         );
@@ -486,7 +486,7 @@ final class ProofreaderTest extends TestCase
             'users'      => ['type' => 'users'],
         ];
 
-        $this->assertSame($fields, Proofreader::fixFields($fields, $blueprint));
+        self::assertSame($fields, Proofreader::fixFields($fields, $blueprint));
     }
 
     public function testFixFieldsAppliesFixToTextField(): void
@@ -495,7 +495,7 @@ final class ProofreaderTest extends TestCase
         $blueprint = ['title' => ['type' => 'text']];
         $result    = Proofreader::fixFields($fields, $blueprint);
 
-        $this->assertSame('Hello…', $result['title']);
+        self::assertSame('Hello…', $result['title']);
     }
 
     public function testFixFieldsIncludesPageTitleWithoutBlueprintField(): void
@@ -503,14 +503,14 @@ final class ProofreaderTest extends TestCase
         $fields = ['title' => 'Hello...'];
         $result = Proofreader::fixFields($fields, []);
 
-        $this->assertSame('Hello…', $result['title']);
+        self::assertSame('Hello…', $result['title']);
     }
 
     public function testReviewFieldsLabelsImplicitPageTitleLikeKirby(): void
     {
         $review = Proofreader::reviewFields(['title' => 'Hello...'], []);
 
-        $this->assertSame('Title', $review['suggestions'][0]['fieldLabel']);
+        self::assertSame('Title', $review['suggestions'][0]['fieldLabel']);
     }
 
     public function testFixFieldsAppliesFixToTextareaField(): void
@@ -521,7 +521,7 @@ final class ProofreaderTest extends TestCase
         $result    = Proofreader::fixFields($fields, $blueprint);
 
         // Ellipsis + leading NBSP after the sentence starter + trailing NBSP.
-        $this->assertSame("Read{$nbsp}the docs…{$nbsp}now", $result['body']);
+        self::assertSame("Read{$nbsp}the docs…{$nbsp}now", $result['body']);
     }
 
     public function testFixFieldsAppliesFixHtmlToListField(): void
@@ -531,7 +531,7 @@ final class ProofreaderTest extends TestCase
         $blueprint = ['items' => ['type' => 'list']];
         $result    = Proofreader::fixFields($fields, $blueprint);
 
-        $this->assertSame(
+        self::assertSame(
             "<ul><li>Check…</li><li>2025{$rangeSpace}–{$rangeSpace}2026</li></ul>",
             $result['items']
         );
@@ -544,12 +544,12 @@ final class ProofreaderTest extends TestCase
         $blueprint = [];
         $result    = Proofreader::fixFields($fields, $blueprint);
 
-        $this->assertSame('Hello...', $result['mystery']);
+        self::assertSame('Hello...', $result['mystery']);
     }
 
     public function testFixFieldsHandlesEmptyInput(): void
     {
-        $this->assertSame([], Proofreader::fixFields([], []));
+        self::assertSame([], Proofreader::fixFields([], []));
     }
 
     public function testFixFieldsCaseInsensitiveBlueprintKey(): void
@@ -559,7 +559,7 @@ final class ProofreaderTest extends TestCase
         $blueprint = ['title' => ['type' => 'text']];
         $result    = Proofreader::fixFields($fields, $blueprint);
 
-        $this->assertSame('Hello…', $result['Title']);
+        self::assertSame('Hello…', $result['Title']);
     }
 
     public function testFixFieldsPassesThroughNonStringValues(): void
@@ -569,7 +569,7 @@ final class ProofreaderTest extends TestCase
         $blueprint = ['items' => ['type' => 'text']]; // type says text but value is array
         $result    = Proofreader::fixFields($fields, $blueprint);
 
-        $this->assertSame(['a', 'b'], $result['items']);
+        self::assertSame(['a', 'b'], $result['items']);
     }
 
     public function testFixFieldsCanLimitTopLevelFields(): void
@@ -585,8 +585,8 @@ final class ProofreaderTest extends TestCase
 
         $result = Proofreader::fixFields($fields, $blueprint, null, null, ['title']);
 
-        $this->assertSame('Hello…', $result['title']);
-        $this->assertSame('Body...', $result['body']);
+        self::assertSame('Hello…', $result['title']);
+        self::assertSame('Body...', $result['body']);
     }
 
     public function testReviewFieldsReturnsSegmentSuggestions(): void
@@ -614,11 +614,11 @@ final class ProofreaderTest extends TestCase
 
         $review = Proofreader::reviewFields($fields, $blueprint, null, 'de');
 
-        $this->assertGreaterThanOrEqual(3, count($review['suggestions']));
-        $this->assertContains('quotes', array_column($review['suggestions'], 'rule'));
-        $this->assertContains('ellipsis', array_column($review['suggestions'], 'rule'));
-        $this->assertContains('Content Blocks -> Text 1 -> Text', array_column($review['suggestions'], 'pathLabel'));
-        $this->assertSame('„Hello“…', $review['fixed']['title']);
+        self::assertGreaterThanOrEqual(3, count($review['suggestions']));
+        self::assertContains('quotes', array_column($review['suggestions'], 'rule'));
+        self::assertContains('ellipsis', array_column($review['suggestions'], 'rule'));
+        self::assertContains('Content Blocks -> Text 1 -> Text', array_column($review['suggestions'], 'pathLabel'));
+        self::assertSame('„Hello“…', $review['fixed']['title']);
     }
 
     public function testReviewFieldsKeepsParagraphBreaksInHtmlPreviews(): void
@@ -629,8 +629,8 @@ final class ProofreaderTest extends TestCase
             ['ellipsis']
         );
 
-        $this->assertSame("First paragraph...\nSecond paragraph...", $review['suggestions'][0]['previewBefore']);
-        $this->assertSame("First paragraph…\nSecond paragraph…", $review['suggestions'][0]['previewAfter']);
+        self::assertSame("First paragraph...\nSecond paragraph...", $review['suggestions'][0]['previewBefore']);
+        self::assertSame("First paragraph…\nSecond paragraph…", $review['suggestions'][0]['previewAfter']);
     }
 
     // -------------------------------------------------------------------------
@@ -639,7 +639,7 @@ final class ProofreaderTest extends TestCase
 
     public function testFixHtmlFixesTextNodes(): void
     {
-        $this->assertSame('<p>Hello…</p>', Proofreader::fixHtml('<p>Hello...</p>'));
+        self::assertSame('<p>Hello…</p>', Proofreader::fixHtml('<p>Hello...</p>'));
     }
 
     public function testFixHtmlSkipsCodeElements(): void
@@ -647,7 +647,7 @@ final class ProofreaderTest extends TestCase
         $input    = '<p>Text...</p><code>code...</code>';
         $expected = '<p>Text…</p><code>code...</code>';
 
-        $this->assertSame($expected, Proofreader::fixHtml($input));
+        self::assertSame($expected, Proofreader::fixHtml($input));
     }
 
     public function testFixHtmlSkipsPreElements(): void
@@ -655,7 +655,7 @@ final class ProofreaderTest extends TestCase
         $input    = '<p>Text...</p><pre>pre...</pre>';
         $expected = '<p>Text…</p><pre>pre...</pre>';
 
-        $this->assertSame($expected, Proofreader::fixHtml($input));
+        self::assertSame($expected, Proofreader::fixHtml($input));
     }
 
     public function testFixHtmlSkipsCodeLikeElements(): void
@@ -663,7 +663,7 @@ final class ProofreaderTest extends TestCase
         $input = '<p>Text...</p><pre><code>code...</code> pre...</pre><kbd>kbd...</kbd><samp>samp...</samp><math>math...</math><script>script...</script><style>style...</style>';
         $expected = '<p>Text…</p><pre><code>code...</code> pre...</pre><kbd>kbd...</kbd><samp>samp...</samp><math>math...</math><script>script...</script><style>style...</style>';
 
-        $this->assertSame($expected, Proofreader::fixHtml($input));
+        self::assertSame($expected, Proofreader::fixHtml($input));
     }
 
     public function testFixHtmlPreservesTagsExactly(): void
@@ -672,12 +672,12 @@ final class ProofreaderTest extends TestCase
         $input    = '<p><strong>bold - text</strong></p>';
         $expected = "<p><strong>bold{$dashSpace}—{$dashSpace}text</strong></p>";
 
-        $this->assertSame($expected, Proofreader::fixHtml($input));
+        self::assertSame($expected, Proofreader::fixHtml($input));
     }
 
     public function testFixHtmlEmptyString(): void
     {
-        $this->assertSame('', Proofreader::fixHtml(''));
+        self::assertSame('', Proofreader::fixHtml(''));
     }
 
     public function testFixHtmlFixesDashesInTextNodes(): void
@@ -686,7 +686,7 @@ final class ProofreaderTest extends TestCase
         $input    = '<p>2020 - 2024</p>';
         $expected = "<p>2020{$rangeSpace}–{$rangeSpace}2024</p>";
 
-        $this->assertSame($expected, Proofreader::fixHtml($input));
+        self::assertSame($expected, Proofreader::fixHtml($input));
     }
 
     // -------------------------------------------------------------------------
@@ -699,7 +699,7 @@ final class ProofreaderTest extends TestCase
         $blueprint = ['body' => ['type' => 'writer']];
         $result    = Proofreader::fixFields($fields, $blueprint);
 
-        $this->assertSame('<p>Hello…</p>', $result['body']);
+        self::assertSame('<p>Hello…</p>', $result['body']);
     }
 
     public function testFixFieldsSkipsUrlEmailAlongsideWriter(): void
@@ -716,9 +716,9 @@ final class ProofreaderTest extends TestCase
         ];
         $result = Proofreader::fixFields($fields, $blueprint);
 
-        $this->assertSame('<p>Hello…</p>', $result['body']);
-        $this->assertSame('https://kirby-proofreader.test', $result['url']);
-        $this->assertSame('proof@kirby-proofreader.test', $result['email']);
+        self::assertSame('<p>Hello…</p>', $result['body']);
+        self::assertSame('https://kirby-proofreader.test', $result['url']);
+        self::assertSame('proof@kirby-proofreader.test', $result['email']);
     }
 
     // -------------------------------------------------------------------------
@@ -739,9 +739,9 @@ final class ProofreaderTest extends TestCase
 
         $result = Proofreader::processStructureRows($rows, $subFields);
 
-        $this->assertSame('Review entry…', $result[0]['name']);
-        $this->assertSame("Editorial role{$dashSpace}—{$dashSpace}planning", $result[0]['role']);
-        $this->assertSame('Documentation entry…', $result[1]['name']);
+        self::assertSame('Review entry…', $result[0]['name']);
+        self::assertSame("Editorial role{$dashSpace}—{$dashSpace}planning", $result[0]['role']);
+        self::assertSame('Documentation entry…', $result[1]['name']);
     }
 
     public function testProcessStructureRowsSkipsNonEligibleFields(): void
@@ -761,15 +761,15 @@ final class ProofreaderTest extends TestCase
 
         $result = Proofreader::processStructureRows($rows, $subFields);
 
-        $this->assertSame('proof@kirby-proofreader.test', $result[0]['contact']);
-        $this->assertSame('https://kirby-proofreader.test', $result[0]['reference']);
-        $this->assertSame('2026-05-08', $result[0]['checked']);
-        $this->assertSame('focused', $result[0]['mode']);
+        self::assertSame('proof@kirby-proofreader.test', $result[0]['contact']);
+        self::assertSame('https://kirby-proofreader.test', $result[0]['reference']);
+        self::assertSame('2026-05-08', $result[0]['checked']);
+        self::assertSame('focused', $result[0]['mode']);
     }
 
     public function testProcessStructureRowsEmptyRows(): void
     {
-        $this->assertSame([], Proofreader::processStructureRows([], ['name' => ['type' => 'text']]));
+        self::assertSame([], Proofreader::processStructureRows([], ['name' => ['type' => 'text']]));
     }
 
     // -------------------------------------------------------------------------
@@ -787,7 +787,7 @@ final class ProofreaderTest extends TestCase
 
         $result = Proofreader::processBlocks($blocks, $fieldsets);
 
-        $this->assertSame('<p>Hello…</p>', $result[0]['content']['text']);
+        self::assertSame('<p>Hello…</p>', $result[0]['content']['text']);
     }
 
     public function testProcessBlocksFixesTextareaContentField(): void
@@ -802,7 +802,7 @@ final class ProofreaderTest extends TestCase
         $thinNbsp = "\u{202F}";
         $result   = Proofreader::processBlocks($blocks, $fieldsets);
 
-        $this->assertSame("3.{$thinNbsp}April…", $result[0]['content']['text']);
+        self::assertSame("3.{$thinNbsp}April…", $result[0]['content']['text']);
     }
 
     public function testProcessBlocksSkipsUnknownBlockType(): void
@@ -812,7 +812,7 @@ final class ProofreaderTest extends TestCase
 
         $result = Proofreader::processBlocks($blocks, $fieldsets);
 
-        $this->assertSame('Hello...', $result[0]['content']['text']);
+        self::assertSame('Hello...', $result[0]['content']['text']);
     }
 
     public function testProcessBlocksHandlesTabbedFieldsets(): void
@@ -830,7 +830,7 @@ final class ProofreaderTest extends TestCase
 
         $result = Proofreader::processBlocks($blocks, $fieldsets);
 
-        $this->assertSame('<p>Hello…</p>', $result[0]['content']['body']);
+        self::assertSame('<p>Hello…</p>', $result[0]['content']['body']);
     }
 
     // -------------------------------------------------------------------------
@@ -855,7 +855,7 @@ final class ProofreaderTest extends TestCase
         $result        = Proofreader::fixFields($fields, $blueprint);
         $decodedResult = json_decode($result['content'], associative: true);
 
-        $this->assertSame('<p>Hello…</p>', $decodedResult[0]['content']['text']);
+        self::assertSame('<p>Hello…</p>', $decodedResult[0]['content']['text']);
     }
 
     public function testFixFieldsSkipsBlocksWithInvalidJson(): void
@@ -865,7 +865,7 @@ final class ProofreaderTest extends TestCase
 
         $result = Proofreader::fixFields($fields, $blueprint);
 
-        $this->assertSame('not-valid-json', $result['content']);
+        self::assertSame('not-valid-json', $result['content']);
     }
 
     public function testFixFieldsAppliesFixToLayoutField(): void
@@ -894,6 +894,6 @@ final class ProofreaderTest extends TestCase
         $result        = Proofreader::fixFields($fields, $blueprint);
         $decodedResult = json_decode($result['layout'], associative: true);
 
-        $this->assertSame('<p>Hello…</p>', $decodedResult[0]['columns'][0]['blocks'][0]['content']['text']);
+        self::assertSame('<p>Hello…</p>', $decodedResult[0]['columns'][0]['blocks'][0]['content']['text']);
     }
 }
