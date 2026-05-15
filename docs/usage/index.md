@@ -296,6 +296,15 @@ kirby proofreader:review projects/my-project
 # Review the site model
 kirby proofreader:review
 
+# Review all pages on the site
+kirby proofreader:review --all
+
+# Review direct children of a page
+kirby proofreader:review projects --children
+
+# Review a page and all its descendants
+kirby proofreader:review projects --recursive
+
 # Limit to specific rules
 kirby proofreader:review projects/my-project --rules=dashes,spaces
 
@@ -305,10 +314,13 @@ kirby proofreader:review projects/my-project --language=de
 
 #### Available flags on review
 
-| Flag                | Description                               |
-| ------------------- | ----------------------------------------- |
-| `--language=<code>` | Language code for multi-language installs |
-| `--rules=<list>`    | Comma-separated rule names to apply       |
+| Flag                | Description                                    |
+| ------------------- | ---------------------------------------------- |
+| `--all`             | Review all pages on the site                   |
+| `--children`        | Review direct children of the given page       |
+| `--recursive`       | Review the given page and all its descendants  |
+| `--language=<code>` | Language code for multi-language installs      |
+| `--rules=<list>`    | Comma-separated rule names to apply            |
 
 ---
 

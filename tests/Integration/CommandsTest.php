@@ -279,6 +279,17 @@ final class CommandsTest extends TestCase
         }
     }
 
+    public function testKirbyCliHelpListsRegisteredReviewFlags(): void
+    {
+        $result = $this->runKirbyCli(['proofreader:review', '--help']);
+
+        self::assertSame(0, $result['exitCode'], $result['output']);
+
+        foreach (['--all', '--children', '--recursive', '--language', '--rules'] as $flag) {
+            self::assertStringContainsString($flag, $result['output']);
+        }
+    }
+
     public function testKirbyCliReviewParsesRulesFlag(): void
     {
         $result = $this->runKirbyCli(['proofreader:review', 'editorial-review', '--rules=ellipsis']);
@@ -296,6 +307,22 @@ final class CommandsTest extends TestCase
         self::assertSame(0, $result['exitCode'], $result['output']);
         self::assertStringContainsString('[dashes] Description', $result['output']);
         self::assertStringContainsString('suggestion(s) found.', $result['output']);
+    }
+
+    public function testKirbyCliReviewAllAggregatesSuggestionsAcrossModels(): void
+    {
+        $result = $this->runKirbyCli(['proofreader:review', '--all']);
+
+        self::assertSame(0, $result['exitCode'], $result['output']);
+        self::assertMatchesRegularExpression('/suggestion\(s\) across \d+ model\(s\)\.|No suggestions/', $result['output']);
+    }
+
+    public function testKirbyCliReviewChildrenReturnsNoModelsWhenPageHasNoChildren(): void
+    {
+        $result = $this->runKirbyCli(['proofreader:review', 'editorial-review', '--children']);
+
+        self::assertSame(0, $result['exitCode'], $result['output']);
+        self::assertStringContainsString('No models to review.', $result['output']);
     }
 
     public function testKirbyCliDryRunUsesDefaultLanguageForSiteModel(): void

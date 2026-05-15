@@ -283,33 +283,121 @@ return [
     // proofreader:review
     // -------------------------------------------------------------------------
     'proofreader:review' => [
-        'description' => 'Preview typography suggestions for a page or the site model (read-only)',
+        'description' => 'Preview typography suggestions for one or more pages (or the site model) — read-only',
         'args'        => [
             'page' => $pageArg,
+            'all' => [
+                'description' => 'Review all pages on the site',
+                'longPrefix'  => 'all',
+                'noValue'     => true,
+            ],
+            'children' => [
+                'description' => 'Review direct children of the given page',
+                'longPrefix'  => 'children',
+                'noValue'     => true,
+            ],
+            'recursive' => [
+                'description' => 'Review the given page and all its descendants',
+                'longPrefix'  => 'recursive',
+                'noValue'     => true,
+            ],
             'language' => $languageArg,
             'rules' => $rulesArg,
         ],
         /** @param \Kirby\CLI\CLI $cli */
-        'command' => static function ($cli) use ($resolveCliLanguage, $parseCliRules, $optionalCliString): void {
+        'command' => static function ($cli) use ($resolveCliLanguage, $parseCliRules, $optionalCliString, $collectAllPages, $collectChildren, $collectRecursive): void {
             $kirby = App::instance();
 
-            $pageId   = (string) $cli->arg('page');
-            $langCode = $optionalCliString($cli->arg('language'));
-            $rulesArg = $optionalCliString($cli->arg('rules'));
-            $rules    = $parseCliRules($rulesArg);
+            $pageId    = (string) $cli->arg('page');
+            $all       = (bool)   ($cli->arg('all')       ?? false);
+            $children  = (bool)   ($cli->arg('children')  ?? false);
+            $recursive = (bool)   ($cli->arg('recursive') ?? false);
+            $langCode  = $optionalCliString($cli->arg('language'));
+            $rulesArg  = $optionalCliString($cli->arg('rules'));
+            $rules     = $parseCliRules($rulesArg);
 
             [$language,, $ruleLanguage] = $resolveCliLanguage($kirby, $langCode);
 
-            if ($pageId !== '') {
-                $model = $kirby->page($pageId);
+            // --- resolve target models ---------------------------------------
+            /** @var list<Page|Site> $models */
+            $models  = [];
+            $isBatch = $all || $children || $recursive;
 
-                if ($model === null) {
+            if ($all) {
+                $models = $collectAllPages($kirby);
+            } elseif ($pageId !== '') {
+                $page = $kirby->page($pageId);
+
+                if ($page === null) {
                     $cli->error("Page not found: {$pageId}");
                     return;
                 }
+
+                if ($children) {
+                    $models = $collectChildren($page);
+                } elseif ($recursive) {
+                    $models = $collectRecursive($page);
+                } else {
+                    $models = [$page];
+                }
             } else {
-                $model = $kirby->site();
+                $models = [$kirby->site()];
             }
+
+            if ($models === []) {
+                $cli->out('No models to review.');
+                return;
+            }
+
+            // --- batch output -----------------------------------------------
+            if ($isBatch) {
+                $totalSuggestions = 0;
+
+                foreach ($models as $model) {
+                    $changesVersion = $model->version('changes');
+                    $latestVersion  = $model->version('latest');
+                    $sourceVersion  = $changesVersion->exists($language) ? $changesVersion : $latestVersion;
+                    $content        = $sourceVersion->content($language)->toArray();
+
+                    $review = Proofreader::reviewFields(
+                        $content,
+                        $model->blueprint()->fields(),
+                        $rules,
+                        $ruleLanguage
+                    );
+
+                    $count = count($review['suggestions']);
+                    $totalSuggestions += $count;
+
+                    if ($count === 0) {
+                        continue;
+                    }
+
+                    $title = $model instanceof Site
+                        ? 'site'
+                        : (string) $model->title();
+
+                    $cli->out("  [{$title}] {$count} suggestion(s)");
+
+                    foreach ($review['suggestions'] as $suggestion) {
+                        $cli->bold("    [{$suggestion['rule']}] {$suggestion['pathLabel']}");
+                        $cli->out("      Before: {$suggestion['previewBefore']}");
+                        $cli->out("      After:  {$suggestion['previewAfter']}");
+                        $cli->br();
+                    }
+                }
+
+                if ($totalSuggestions === 0) {
+                    $cli->success('No suggestions — content looks good.');
+                    return;
+                }
+
+                $cli->out("{$totalSuggestions} suggestion(s) across " . count($models) . " model(s).");
+                return;
+            }
+
+            // --- single-model output ----------------------------------------
+            $model = $models[0];
 
             $changesVersion = $model->version('changes');
             $latestVersion  = $model->version('latest');
