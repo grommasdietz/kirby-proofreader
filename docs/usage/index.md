@@ -314,13 +314,13 @@ kirby proofreader:review projects/my-project --language=de
 
 #### Available flags on review
 
-| Flag                | Description                                    |
-| ------------------- | ---------------------------------------------- |
-| `--all`             | Review all pages on the site                   |
-| `--children`        | Review direct children of the given page       |
-| `--recursive`       | Review the given page and all its descendants  |
-| `--language=<code>` | Language code for multi-language installs      |
-| `--rules=<list>`    | Comma-separated rule names to apply            |
+| Flag                | Description                                   |
+| ------------------- | --------------------------------------------- |
+| `--all`             | Review all pages on the site                  |
+| `--children`        | Review direct children of the given page      |
+| `--recursive`       | Review the given page and all its descendants |
+| `--language=<code>` | Language code for multi-language installs     |
+| `--rules=<list>`    | Comma-separated rule names to apply           |
 
 ---
 
