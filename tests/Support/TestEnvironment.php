@@ -148,7 +148,7 @@ final class TestEnvironment
             'project'   => $projectRoot,
             'playground' => $playgroundRoot,
             'cache'     => $playgroundRoot . '/site/cache',
-            'plugins'   => $playgroundRoot . '/site/plugins',
+            'plugins'   => $projectRoot . '/tests/.plugins',
             'accounts'  => $playgroundRoot . '/site/accounts',
         ];
     }
@@ -197,10 +197,15 @@ final class TestEnvironment
 
     private static function preparePluginSandbox(string $projectRoot, string $pluginsRoot): void
     {
-        Dir::remove($pluginsRoot);
-        Dir::make($pluginsRoot);
+        Dir::make($pluginsRoot, true);
 
         $target = $pluginsRoot . '/kirby-proofreader';
+        if (is_link($target) === true || is_file($target) === true) {
+            @unlink($target);
+        } elseif (is_dir($target) === true) {
+            Dir::remove($target);
+        }
+
         if (!symlink($projectRoot, $target)) {
             throw new \RuntimeException('Unable to link plugin into sandbox');
         }

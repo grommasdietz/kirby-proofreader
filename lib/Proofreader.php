@@ -653,7 +653,7 @@ final class Proofreader
                 continue;
             }
 
-            $text = preg_replace_callback(
+            $result = @preg_replace_callback(
                 $pattern,
                 static function (array $m) use (&$tokens, &$index): string {
                     $token = "\u{E002}proofreader-protect-{$index}\u{E003}";
@@ -663,7 +663,11 @@ final class Proofreader
                     return $token;
                 },
                 $text
-            ) ?? $text;
+            );
+
+            if (is_string($result)) {
+                $text = $result;
+            }
         }
 
         return [$text, $tokens];
@@ -1447,7 +1451,7 @@ final class Proofreader
         foreach ($rules as $rule) {
             $next = $format === 'html'
                 ? self::fixHtml($current, [$rule], $language)
-                : self::applyRule($current, $rule, $language);
+                : self::fix($current, [$rule], $language);
 
             if ($next !== $current) {
                 $suggestions[] = [

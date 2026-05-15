@@ -33,10 +33,18 @@ final class ExampleTest extends TestCase
     {
         $kirby = $this->bootKirby(['options' => ['debug' => true]]);
 
-        $this->assertSame('Kirby Playground', $kirby->site()->title()->value());
+        self::assertSame('Kirby Playground', $kirby->site()->title()->value());
     }
 }
 ```
+
+Some integration tests shell out to `playground/vendor/bin/kirby` to exercise
+the real Kirby CLI parser. The playground declares `getkirby/cli` as a dev
+dependency for that purpose; the plugin itself does not require Kirby CLI at
+runtime.
+
+The PHP test bootstrap links the plugin into `tests/.plugins` and leaves
+Composer-installed entries in `playground/site/plugins` intact.
 
 When you need custom blueprints or content fixtures, add the smallest possible
 files under `playground/site/` so tests stay fast to understand.

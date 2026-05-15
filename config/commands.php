@@ -13,8 +13,10 @@ use Kirby\Cms\Site;
  * @return array{string|object, string|null, string|null}
  */
 $resolveCliLanguage = static function (App $kirby, ?string $langCode): array {
-    if ($kirby->multilang() === true && $langCode !== null && $langCode !== '') {
-        $language = $kirby->language($langCode) ?? $kirby->defaultLanguage();
+    if ($kirby->multilang() === true) {
+        $language = $langCode !== null && $langCode !== ''
+            ? $kirby->language($langCode) ?? $kirby->defaultLanguage()
+            : $kirby->defaultLanguage();
         $ruleLanguage = is_object($language) ? $language->code() : null;
     } else {
         $language     = 'default';
@@ -43,7 +45,7 @@ $processModel = static function (
     ?array $rules,
     bool $dryRun,
     bool $publish
-) use (&$processModel): array {
+): array {
     [$language, $languageCode, $ruleLanguage] = $languageTuple;
 
     $changesVersion = $model->version('changes');
@@ -137,6 +139,32 @@ $collectRecursive = static function (Page $page): array {
     );
 };
 
+$parseCliRules = static function (?string $rulesArg): ?array {
+    return $rulesArg !== null
+        ? array_values(array_filter(array_map('trim', explode(',', $rulesArg))))
+        : null;
+};
+
+$optionalCliString = static function (mixed $value): ?string {
+    return is_string($value) && $value !== '' ? $value : null;
+};
+
+$pageArg = [
+    'description' => 'Page ID or path. Omit to target the site model.',
+    'required'    => false,
+    'defaultValue' => '',
+];
+
+$languageArg = [
+    'description' => 'Language code for multi-language installs',
+    'longPrefix'  => 'language',
+];
+
+$rulesArg = [
+    'description' => 'Comma-separated rule names to apply',
+    'longPrefix'  => 'rules',
+];
+
 return [
     // -------------------------------------------------------------------------
     // proofreader:fix
@@ -144,14 +172,37 @@ return [
     'proofreader:fix' => [
         'description' => 'Apply typography fixes to one or more pages (or the site model)',
         'args'        => [
-            'page' => [
-                'description' => 'Page ID or path. Omit to target the site model.',
-                'required'    => false,
-                'defaultValue' => '',
+            'page' => $pageArg,
+            'all' => [
+                'description' => 'Process all pages on the site',
+                'longPrefix'  => 'all',
+                'noValue'     => true,
             ],
+            'children' => [
+                'description' => 'Process direct children of the given page',
+                'longPrefix'  => 'children',
+                'noValue'     => true,
+            ],
+            'recursive' => [
+                'description' => 'Process the given page and all its descendants',
+                'longPrefix'  => 'recursive',
+                'noValue'     => true,
+            ],
+            'publish' => [
+                'description' => 'Write to the published version instead of changes',
+                'longPrefix'  => 'publish',
+                'noValue'     => true,
+            ],
+            'dry-run' => [
+                'description' => 'Preview changes without saving',
+                'longPrefix'  => 'dry-run',
+                'noValue'     => true,
+            ],
+            'language' => $languageArg,
+            'rules' => $rulesArg,
         ],
         /** @param \Kirby\CLI\CLI $cli */
-        'command' => static function ($cli) use ($resolveCliLanguage, $processModel, $collectAllPages, $collectChildren, $collectRecursive): void {
+        'command' => static function ($cli) use ($resolveCliLanguage, $processModel, $collectAllPages, $collectChildren, $collectRecursive, $parseCliRules, $optionalCliString): void {
             $kirby = App::instance();
 
             // --- flags -------------------------------------------------------
@@ -161,11 +212,13 @@ return [
             $recursive = (bool)   ($cli->arg('recursive') ?? false);
             $publish   = (bool)   ($cli->arg('publish')   ?? false);
             $dryRun    = (bool)   ($cli->arg('dry-run')   ?? false);
-            $langCode  = $cli->arg('language') !== null ? (string) $cli->arg('language') : null;
-            $rulesArg  = $cli->arg('rules') !== null ? (string) $cli->arg('rules') : null;
-            $rules     = $rulesArg !== null
-                ? array_values(array_filter(array_map('trim', explode(',', $rulesArg))))
-                : null;
+            $langCode  = $optionalCliString($cli->arg('language'));
+            $rulesArg  = $optionalCliString($cli->arg('rules'));
+            $rules     = $parseCliRules($rulesArg);
+
+            if ($dryRun === false) {
+                $kirby->impersonate('kirby');
+            }
 
             $languageTuple = $resolveCliLanguage($kirby, $langCode);
 
@@ -232,22 +285,18 @@ return [
     'proofreader:review' => [
         'description' => 'Preview typography suggestions for a page or the site model (read-only)',
         'args'        => [
-            'page' => [
-                'description' => 'Page ID or path. Omit to target the site model.',
-                'required'    => false,
-                'defaultValue' => '',
-            ],
+            'page' => $pageArg,
+            'language' => $languageArg,
+            'rules' => $rulesArg,
         ],
         /** @param \Kirby\CLI\CLI $cli */
-        'command' => static function ($cli) use ($resolveCliLanguage): void {
+        'command' => static function ($cli) use ($resolveCliLanguage, $parseCliRules, $optionalCliString): void {
             $kirby = App::instance();
 
             $pageId   = (string) $cli->arg('page');
-            $langCode = $cli->arg('language') !== null ? (string) $cli->arg('language') : null;
-            $rulesArg = $cli->arg('rules') !== null ? (string) $cli->arg('rules') : null;
-            $rules    = $rulesArg !== null
-                ? array_values(array_filter(array_map('trim', explode(',', $rulesArg))))
-                : null;
+            $langCode = $optionalCliString($cli->arg('language'));
+            $rulesArg = $optionalCliString($cli->arg('rules'));
+            $rules    = $parseCliRules($rulesArg);
 
             [$language,, $ruleLanguage] = $resolveCliLanguage($kirby, $langCode);
 
