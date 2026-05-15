@@ -111,12 +111,27 @@ $processModel = static function (
 };
 
 /**
+ * Filters pages to persisted content that can be reviewed and fixed by the CLI.
+ *
+ * @param  list<Page> $pages
+ * @return list<Page>
+ */
+$filterPersistedPages = static function (array $pages): array {
+    return array_values(
+        array_filter(
+            $pages,
+            static fn (Page $page): bool => $page->exists() === true
+        )
+    );
+};
+
+/**
  * Collects all pages from a Kirby installation (flat list, all descendants).
  *
  * @return list<Page>
  */
-$collectAllPages = static function (App $kirby): array {
-    return $kirby->site()->index()->values();
+$collectAllPages = static function (App $kirby) use ($filterPersistedPages): array {
+    return $filterPersistedPages($kirby->site()->index()->values());
 };
 
 /**
@@ -124,8 +139,8 @@ $collectAllPages = static function (App $kirby): array {
  *
  * @return list<Page>
  */
-$collectChildren = static function (Page $page): array {
-    return $page->children()->values();
+$collectChildren = static function (Page $page) use ($filterPersistedPages): array {
+    return $filterPersistedPages($page->children()->values());
 };
 
 /**
@@ -133,10 +148,8 @@ $collectChildren = static function (Page $page): array {
  *
  * @return list<Page>
  */
-$collectRecursive = static function (Page $page): array {
-    return array_values(
-        array_merge([$page], $page->index()->values())
-    );
+$collectRecursive = static function (Page $page) use ($filterPersistedPages): array {
+    return $filterPersistedPages(array_merge([$page], $page->index()->values()));
 };
 
 $parseCliRules = static function (?string $rulesArg): ?array {
@@ -236,6 +249,11 @@ return [
                     return;
                 }
 
+                if ($page->exists() === false) {
+                    $cli->error("Page is not stored on disk: {$pageId}");
+                    return;
+                }
+
                 if ($children) {
                     $models = $collectChildren($page);
                 } elseif ($recursive) {
@@ -330,6 +348,11 @@ return [
 
                 if ($page === null) {
                     $cli->error("Page not found: {$pageId}");
+                    return;
+                }
+
+                if ($page->exists() === false) {
+                    $cli->error("Page is not stored on disk: {$pageId}");
                     return;
                 }
 

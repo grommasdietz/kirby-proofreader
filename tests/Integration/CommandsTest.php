@@ -317,6 +317,55 @@ final class CommandsTest extends TestCase
         self::assertMatchesRegularExpression('/suggestion\(s\) across \d+ model\(s\)\.|No suggestions/', $result['output']);
     }
 
+    public function testKirbyCliReviewAllSkipsVirtualPages(): void
+    {
+        $modelsDir = dirname(__DIR__, 2) . '/playground/site/models';
+        $modelFile = $modelsDir . '/home.php';
+        $hadModelsDir = is_dir($modelsDir);
+
+        Dir::make($modelsDir, true);
+
+        $model = <<<'PHP'
+<?php
+
+use Kirby\Cms\Page;
+use Kirby\Cms\Pages;
+
+class HomePage extends Page
+{
+    public function children(): Pages
+    {
+        return parent::children()->add(Page::factory([
+            'slug'     => 'virtual-in-progress',
+            'parent'   => $this,
+            'template' => $this->intendedTemplate()->name(),
+            'model'    => 'default',
+            'content'  => ['title' => 'In Bearbeitung'],
+        ]));
+    }
+}
+PHP;
+
+        if (file_put_contents($modelFile, $model) === false) {
+            self::fail('Unable to write virtual page model fixture.');
+        }
+
+        try {
+            $result = $this->runKirbyCli(['proofreader:review', '--all', '--rules=spaces']);
+
+            self::assertSame(0, $result['exitCode'], $result['output']);
+            self::assertStringNotContainsString('[In Bearbeitung]', $result['output']);
+        } finally {
+            if (is_file($modelFile)) {
+                unlink($modelFile);
+            }
+
+            if ($hadModelsDir === false && is_dir($modelsDir)) {
+                Dir::remove($modelsDir);
+            }
+        }
+    }
+
     public function testKirbyCliReviewChildrenReturnsNoModelsWhenPageHasNoChildren(): void
     {
         $result = $this->runKirbyCli(['proofreader:review', 'editorial-review', '--children']);

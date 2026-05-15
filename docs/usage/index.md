@@ -243,6 +243,9 @@ Applies typography fixes to a page, the site model, or a batch of pages. By
 default fixes are saved as unpublished changes (same as the Panel button). Use
 `--publish` to write directly to the published version.
 
+Batch scopes process stored pages only; virtual pages are skipped because they
+cannot be written back to content files.
+
 ```bash
 # Fix a single page (saves to changes version)
 kirby proofreader:fix projects/my-project
