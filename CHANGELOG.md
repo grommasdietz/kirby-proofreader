@@ -1,3 +1,11 @@
+# [1.6.0](https://github.com/grommasdietz/kirby-proofreader/compare/v1.5.0...v1.6.0) (2026-05-15)
+
+
+### Features
+
+* **commands:** add filtering for persisted pages in CLI ([7ce5bb5](https://github.com/grommasdietz/kirby-proofreader/commit/7ce5bb5654ae98143c83af5c0b72e2ca2935cdd7))
+* **tests:** add test for field lookup key normalization ([89920bf](https://github.com/grommasdietz/kirby-proofreader/commit/89920bf7d19cb6ee47529bfd9e3c9f93b44b436f))
+
 # [1.5.0](https://github.com/grommasdietz/kirby-proofreader/compare/v1.4.0...v1.5.0) (2026-05-15)
 
 
