@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/grommasdietz/kirby-proofreader/compare/v1.4.0...v1.5.0) (2026-05-15)
+
+
+### Features
+
+* **commands:** add flags for reviewing all pages and children ([b6cc2a6](https://github.com/grommasdietz/kirby-proofreader/commit/b6cc2a6f11e94885ccba3ed7bf86dd7663010130))
+
 # [1.4.0](https://github.com/grommasdietz/kirby-proofreader/compare/v1.3.3...v1.4.0) (2026-05-13)
 
 
