@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/grommasdietz/kirby-proofreader/compare/v1.6.0...v1.7.0) (2026-05-18)
+
+
+### Features
+
+* **proofreader:** enhance leading non-breaking space handling and trim paragraph edges ([4073bdc](https://github.com/grommasdietz/kirby-proofreader/commit/4073bdc3620fdb9f751c15ccaa78918a37db8bf3))
+
 # [1.6.0](https://github.com/grommasdietz/kirby-proofreader/compare/v1.5.0...v1.6.0) (2026-05-15)
 
 
