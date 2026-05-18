@@ -85,6 +85,98 @@ final class PlaygroundTest extends TestCase
         self::assertSame('Description', $data['suggestions'][0]['fieldLabel']);
     }
 
+    public function testProofreaderRouteSupportsPageFileContent(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $pageDir = $root . '/playground/content/editorial-review';
+        $blueprintDir = $root . '/playground/site/blueprints/files';
+        $blueprintFile = $blueprintDir . '/image.yml';
+        $file = $pageDir . '/proofreader-route.jpg';
+        $content = $pageDir . '/proofreader-route.jpg.en.txt';
+        $changes = $pageDir . '/_changes/proofreader-route.jpg.en.txt';
+
+        if (is_dir($blueprintDir) === false) {
+            mkdir($blueprintDir, 0777, true);
+        }
+
+        file_put_contents($blueprintFile, <<<YAML
+title: Image
+
+buttons:
+  proofreader: true
+
+fields:
+  alt:
+    label: Alt text
+    type: text
+  caption:
+    label: Caption
+    type: textarea
+YAML);
+        file_put_contents($file, "\xFF\xD8\xFF\xD9");
+        file_put_contents($content, <<<TXT
+Template: image
+
+----
+
+Alt: Image...
+
+----
+
+Caption: Range 2020 - 2024
+TXT);
+
+        try {
+            $this->bootKirby()->impersonate('kirby');
+
+            $response = $this->callProofreaderRoute(
+                'kirby-proofreader/files/pages+editorial-review+files+proofreader-route.jpg/optimize',
+                [
+                    'preview' => true,
+                    'rules'   => ['ellipsis'],
+                    'fields'  => ['alt'],
+                ]
+            );
+            $data = $this->jsonResponse($response);
+
+            self::assertSame('ok', $data['status']);
+            self::assertSame(['alt'], array_unique(array_column($data['suggestions'], 'field')));
+            self::assertSame('Alt text', $data['suggestions'][0]['fieldLabel']);
+
+            $response = $this->callProofreaderRoute(
+                'kirby-proofreader/files/pages+editorial-review+files+proofreader-route.jpg/optimize',
+                [
+                    'preview' => false,
+                    'rules'   => ['ellipsis'],
+                    'fields'  => ['alt'],
+                ]
+            );
+            $data = $this->jsonResponse($response);
+            $fileModel = $this->kirby->page('editorial-review')?->file('proofreader-route.jpg');
+            $language = $this->kirby->language('en') ?? 'default';
+
+            self::assertSame('ok', $data['status']);
+            self::assertSame(['alt'], $data['changedFields']);
+            self::assertSame('Image…', $data['diffs']['alt']['to']);
+            self::assertSame('Image…', $fileModel?->version('changes')->content($language)->get('alt')->value());
+        } finally {
+            foreach ([$changes, $content, $file, $blueprintFile] as $fixture) {
+                if (is_file($fixture)) {
+                    unlink($fixture);
+                }
+            }
+
+            $changesDir = dirname($changes);
+            if (is_dir($changesDir) && count(scandir($changesDir) ?: []) === 2) {
+                rmdir($changesDir);
+            }
+
+            if (is_dir($blueprintDir) && count(scandir($blueprintDir) ?: []) === 2) {
+                rmdir($blueprintDir);
+            }
+        }
+    }
+
     public function testOptionalDimensionRuleCanReviewPlaygroundContent(): void
     {
         $this->bootKirby([

@@ -742,10 +742,6 @@ export default {
 .proofreader-rule-toggle-icon {
   inline-size: 1rem;
   justify-content: center;
-  opacity: 0;
-}
-
-.proofreader-rule-toggle[data-selected="true"] .proofreader-rule-toggle-icon {
   opacity: 1;
 }
 

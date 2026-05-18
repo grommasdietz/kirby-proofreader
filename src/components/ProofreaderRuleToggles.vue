@@ -6,6 +6,7 @@
       class="k-button proofreader-rule-toggle"
       :data-selected="isSelected(option.name)"
       :data-disabled="option.count === 0"
+      :data-has-results="option.count > 0"
       data-has-icon="true"
       data-has-text="true"
       data-theme="passive"
@@ -20,8 +21,12 @@
         :value="option.name"
         @change="toggle(option.name, $event.target.checked)"
       />
-      <span class="k-button-icon proofreader-rule-toggle-icon" aria-hidden="true">
-        <k-icon type="check" />
+      <span
+        class="k-button-icon proofreader-rule-toggle-icon"
+        :data-icon="ruleIcon(option)"
+        aria-hidden="true"
+      >
+        <k-icon :type="ruleIcon(option)" />
       </span>
       <span class="k-button-text proofreader-rule-toggle-text">
         {{ option.label }}
@@ -51,6 +56,9 @@ export default {
   methods: {
     isSelected(name) {
       return this.value.includes(name);
+    },
+    ruleIcon(option) {
+      return option.count > 0 ? "check" : "cancel";
     },
     toggle(name, selected) {
       if (selected === true && this.value.includes(name) === false) {

@@ -252,15 +252,17 @@ final class ProofreaderTest extends TestCase
         $nbsp = "\u{00A0}";
 
         return [
-            '1-letter word'           => ["I went", "I{$nbsp}went"],
-            '2-letter word'           => ["in review", "in{$nbsp}review"],
-            '3-letter word'           => ["The text", "The{$nbsp}text"],
-            '4-letter sentence starter' => ["with review", "with{$nbsp}review"],
-            'multiple selected words' => ["I go to review", "I{$nbsp}go to review"],
+            '1-letter word at paragraph start' => ['I went', 'I went'],
+            '2-letter word at paragraph start' => ['in review', 'in review'],
+            '3-letter word at paragraph start' => ['The text', 'The text'],
+            '4-letter word at paragraph start' => ['with review', 'with review'],
+            'multiple selected words after paragraph start' => ['I go to review', 'I go to review'],
             'short sentence starter'  => ["Done. It was ready", "Done. It{$nbsp}was ready"],
-            'short article'           => ["This is a word", "This{$nbsp}is a{$nbsp}word"],
+            'short word after paragraph break' => ["Done.\nIt was ready", "Done.\nIt was ready"],
+            'short article'           => ["This is a word", "This is a{$nbsp}word"],
             'excluded short words'    => ['and be for now', 'and be for now'],
-            'tab separator'           => ["in\treview", "in{$nbsp}review"],
+            'tab separator at paragraph start' => ["in\treview", "in\treview"],
+            'indented paragraph start' => ["  I went", "  I went"],
             'already nbsp'            => ["in{$nbsp}review", "in{$nbsp}review"],
             'empty string'            => ['', ''],
         ];
@@ -332,12 +334,11 @@ final class ProofreaderTest extends TestCase
 
     public function testFixAppliesAllInOrder(): void
     {
-        $nbsp     = "\u{00A0}";
         $thinNbsp = "\u{202F}";
 
-        // Targets: Unicode composition, ellipsis, ordinal spacing, leading NBSP.
+        // Targets: Unicode composition, ellipsis and ordinal spacing.
         $input    = "Cafe\u{0301} docs... see 3. April";
-        $expected = "Café{$nbsp}docs… see 3.{$thinNbsp}April";
+        $expected = "Café docs… see 3.{$thinNbsp}April";
 
         self::assertSame($expected, Proofreader::fix($input));
     }
@@ -373,6 +374,14 @@ final class ProofreaderTest extends TestCase
         self::assertSame(
             "Proofreader note{$nbsp}stays",
             Proofreader::fixRepeatedSpaces("Proofreader   note{$nbsp}stays")
+        );
+    }
+
+    public function testFixParagraphEdgeSpacesTrimsRegularHorizontalWhitespace(): void
+    {
+        self::assertSame(
+            "First paragraph\nSecond paragraph",
+            Proofreader::fixParagraphEdgeSpaces("  First paragraph  \n\tSecond paragraph\t")
         );
     }
 
@@ -535,8 +544,8 @@ final class ProofreaderTest extends TestCase
         $blueprint = ['body' => ['type' => 'textarea']];
         $result    = Proofreader::fixFields($fields, $blueprint);
 
-        // Ellipsis + leading NBSP after the sentence starter + trailing NBSP.
-        self::assertSame("Read{$nbsp}the docs…{$nbsp}now", $result['body']);
+        // Ellipsis + trailing NBSP.
+        self::assertSame("Read the docs…{$nbsp}now", $result['body']);
     }
 
     public function testFixFieldsAppliesFixHtmlToListField(): void
@@ -702,6 +711,42 @@ final class ProofreaderTest extends TestCase
         $expected = "<p>2020{$rangeSpace}–{$rangeSpace}2024</p>";
 
         self::assertSame($expected, Proofreader::fixHtml($input));
+    }
+
+    public function testFixHtmlTrimsParagraphEdgeSpaces(): void
+    {
+        self::assertSame(
+            '<p>Text</p><p><strong>More</strong></p>',
+            Proofreader::fixHtml('<p> Text </p><p><strong> More </strong></p>', ['spaces'])
+        );
+    }
+
+    public function testFixHtmlKeepsInlineTagSpacing(): void
+    {
+        self::assertSame(
+            '<p>Text <strong>keeps</strong> spacing</p>',
+            Proofreader::fixHtml('<p>Text <strong>keeps</strong> spacing</p>', ['spaces'])
+        );
+    }
+
+    public function testFixHtmlAddsLeadingNbspAfterInlineTags(): void
+    {
+        $nbsp = "\u{00A0}";
+
+        self::assertSame(
+            "<p><strong>Intro</strong> a{$nbsp}note</p>",
+            Proofreader::fixHtml('<p><strong>Intro</strong> a note</p>', ['spaces'])
+        );
+    }
+
+    public function testFixHtmlAddsSentenceStarterNbspAcrossInlineTags(): void
+    {
+        $nbsp = "\u{00A0}";
+
+        self::assertSame(
+            "<p>Done. <em>It{$nbsp}was</em></p>",
+            Proofreader::fixHtml('<p>Done. <em>It was</em></p>', ['spaces'])
+        );
     }
 
     // -------------------------------------------------------------------------

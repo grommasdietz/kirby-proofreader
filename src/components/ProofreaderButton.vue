@@ -36,6 +36,19 @@ export default {
         };
       }
 
+      const fileMatch = path.match(/^(?:files\/.+|.+\/files\/.+)$/);
+      if (fileMatch) {
+        const encodedPath = path.replace(/\//g, "+");
+
+        return {
+          url:
+            window.location.origin +
+            "/kirby-proofreader/files/" +
+            encodedPath +
+            "/optimize",
+        };
+      }
+
       const match = path.match(/^pages\/(.+)/);
       if (match) {
         const encodedId = match[1].replace(/\//g, "+");

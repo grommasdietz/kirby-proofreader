@@ -110,11 +110,30 @@ test.describe("Proofreader review dialog", () => {
     expect(compactDialogRight).toBeLessThanOrEqual(390);
     await page.setViewportSize({ width: 1280, height: 720 });
 
+    const matchedRule = page
+      .locator('.proofreader-rule-toggle[data-has-results="true"]')
+      .first();
+    await expect(
+      matchedRule.locator(".proofreader-rule-toggle-icon")
+    ).toHaveAttribute("data-icon", "check");
+    await matchedRule.click();
+    await expect(matchedRule.locator("input")).not.toBeChecked();
+    await expect(
+      matchedRule.locator(".proofreader-rule-toggle-icon")
+    ).toHaveAttribute("data-icon", "check");
+
     const unicodeRule = page
       .locator(".proofreader-rule-toggle")
       .filter({ hasText: "Unicode" });
     await expect(unicodeRule.locator("input")).toBeDisabled();
     await expect(unicodeRule.locator("input")).not.toBeChecked();
+    await expect(
+      unicodeRule.locator(".proofreader-rule-toggle-icon")
+    ).toHaveAttribute("data-icon", "cancel");
+    await expect(unicodeRule.locator(".proofreader-rule-toggle-icon")).toHaveCSS(
+      "opacity",
+      "1"
+    );
 
     await expect(page.locator(".proofreader-input-overlay")).toHaveCount(0);
   });

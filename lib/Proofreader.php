@@ -152,6 +152,7 @@ final class Proofreader
         'layout'    => 'layout',
     ];
     private const PROTECTED_HTML_TAG_PATTERN = 'code|pre|kbd|samp|script|style|math';
+    private const PARAGRAPH_HTML_TAG_PATTERN = 'p|li|h[1-6]|blockquote|figcaption|td|th';
 
     /**
      * Locale quote definitions: double open/close, single open/close.
@@ -384,13 +385,32 @@ final class Proofreader
     }
 
     /**
-     * Inserts non-breaking spaces after one-letter words ("a", "I") anywhere
-     * and after 2–4 letter sentence starters.
+     * Inserts non-breaking spaces after one-letter words ("a", "I") and after
+     * 2–4 letter sentence starters, except at paragraph starts.
      */
-    public static function fixLeadingNbsp(string $text): string
-    {
+    public static function fixLeadingNbsp(
+        string $text,
+        bool $skipParagraphStart = true,
+        bool $startsAfterSentence = false
+    ): string {
+        if ($startsAfterSentence === true) {
+            $text = preg_replace_callback(
+                '/^([ \t]*)(\p{L}{2,4})[ \t]+(?=[\p{L}\p{N}])/u',
+                static function (array $m): string {
+                    $word = $m[2];
+
+                    if (in_array(strtolower($word), self::NBSP_EXCLUDED_WORDS, true)) {
+                        return $m[0];
+                    }
+
+                    return $m[1] . $word . "\u{00A0}";
+                },
+                $text
+            ) ?? $text;
+        }
+
         $result = preg_replace_callback(
-            '/(^|[.!?]\s+)(\p{L}{2,4})[ \t]+(?=[\p{L}\p{N}])/um',
+            '/([.!?][ \t]+)(\p{L}{2,4})[ \t]+(?=[\p{L}\p{N}])/u',
             static function (array $m): string {
                 $word = $m[2];
 
@@ -403,8 +423,12 @@ final class Proofreader
             $text
         ) ?? $text;
 
+        $pattern = $skipParagraphStart === true
+            ? '/(?:^|\R)[ \t]*[aAiI][ \t]+(?=[\p{L}\p{N}])(*SKIP)(*F)|\b([aAiI])[ \t]+(?=[\p{L}\p{N}])/u'
+            : '/\b([aAiI])[ \t]+(?=[\p{L}\p{N}])/u';
+
         $result = preg_replace(
-            '/\b([aAiI])[ \t]+(?=[\p{L}\p{N}])/u',
+            $pattern,
             "$1\u{00A0}",
             $result
         );
@@ -441,6 +465,17 @@ final class Proofreader
     public static function fixRepeatedSpaces(string $text): string
     {
         $result = preg_replace('/[ \t]{2,}/u', ' ', $text);
+
+        return $result ?? $text;
+    }
+
+    /**
+     * Removes regular horizontal whitespace at paragraph starts and ends.
+     */
+    public static function fixParagraphEdgeSpaces(string $text): string
+    {
+        $result = preg_replace('/(^|\R)[ \t]+/u', '$1', $text) ?? $text;
+        $result = preg_replace('/[ \t]+(?=$|\R)/u', '', $result);
 
         return $result ?? $text;
     }
@@ -528,10 +563,31 @@ final class Proofreader
         ?array $rules = null,
         ?string $language = null
     ): string {
+        return self::fixText($text, $rules, $language, true, true, false);
+    }
+
+    /**
+     * @param list<string>|null $rules
+     */
+    private static function fixText(
+        string $text,
+        ?array $rules,
+        ?string $language,
+        bool $trimParagraphEdges,
+        bool $leadingNbspAtParagraphStart,
+        bool $leadingNbspAfterSentence
+    ): string {
         [$text, $tokens] = self::tokenizeProtected($text);
 
         foreach (self::normaliseRules($rules) as $rule) {
-            $text = self::applyRule($text, $rule, $language);
+            $text = self::applyRule(
+                $text,
+                $rule,
+                $language,
+                $trimParagraphEdges,
+                $leadingNbspAtParagraphStart,
+                $leadingNbspAfterSentence
+            );
         }
 
         return self::restoreProtected($text, $tokens);
@@ -561,11 +617,32 @@ final class Proofreader
         }
 
         $skipDepth = 0;
+        $atParagraphStart = false;
+        $lastTextCharacter = null;
         $out  = '';
 
         foreach ($parts as $part) {
             if (!str_starts_with($part, '<')) {
-                $out .= $skipDepth > 0 ? $part : self::fix($part, $rules, $language);
+                if ($skipDepth > 0) {
+                    $out .= $part;
+                    continue;
+                }
+
+                $fixed = self::fixText(
+                    $part,
+                    $rules,
+                    $language,
+                    false,
+                    $atParagraphStart,
+                    $atParagraphStart === false && in_array($lastTextCharacter, ['.', '!', '?'], true)
+                );
+                $out .= $fixed;
+
+                if (self::containsNonWhitespace($part)) {
+                    $atParagraphStart = false;
+                }
+
+                $lastTextCharacter = self::lastNonWhitespaceCharacter($fixed) ?? $lastTextCharacter;
                 continue;
             }
 
@@ -578,15 +655,195 @@ final class Proofreader
 
             $isSelfClosing = preg_match('/\/\s*>$/', $part) === 1;
 
+            if (self::isOpeningHtmlTag($part, self::PARAGRAPH_HTML_TAG_PATTERN)) {
+                $atParagraphStart = true;
+                $lastTextCharacter = null;
+                continue;
+            }
+
+            if (self::isClosingHtmlTag($part, self::PARAGRAPH_HTML_TAG_PATTERN)) {
+                $atParagraphStart = false;
+                $lastTextCharacter = null;
+                continue;
+            }
+
             if (
                 $isSelfClosing === false &&
                 preg_match('/^<\s*(' . self::PROTECTED_HTML_TAG_PATTERN . ')\b[^>]*>/i', $part)
             ) {
+                if ($atParagraphStart === true) {
+                    $atParagraphStart = false;
+                    $lastTextCharacter = null;
+                }
+
                 $skipDepth++;
             }
         }
 
+        if (in_array('spaces', self::normaliseRules($rules), true)) {
+            return self::fixHtmlParagraphEdgeSpaces($out);
+        }
+
         return $out;
+    }
+
+    private static function fixHtmlParagraphEdgeSpaces(string $html): string
+    {
+        $parts = preg_split('/(<[^>]+>)/u', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
+
+        if ($parts === false) {
+            return $html;
+        }
+
+        return implode('', self::trimHtmlParagraphEndSpaces(
+            self::trimHtmlParagraphStartSpaces($parts)
+        ));
+    }
+
+    /**
+     * @param list<string> $parts
+     * @return list<string>
+     */
+    private static function trimHtmlParagraphStartSpaces(array $parts): array
+    {
+        $atParagraphStart = false;
+        $skipDepth = 0;
+
+        foreach ($parts as $index => $part) {
+            if (str_starts_with($part, '<')) {
+                if (self::isClosingHtmlTag($part, self::PROTECTED_HTML_TAG_PATTERN)) {
+                    $skipDepth = max(0, $skipDepth - 1);
+                    continue;
+                }
+
+                if ($skipDepth > 0) {
+                    continue;
+                }
+
+                if (self::isOpeningHtmlTag($part, self::PARAGRAPH_HTML_TAG_PATTERN)) {
+                    $atParagraphStart = true;
+                    continue;
+                }
+
+                if (self::isClosingHtmlTag($part, self::PARAGRAPH_HTML_TAG_PATTERN)) {
+                    $atParagraphStart = false;
+                    continue;
+                }
+
+                if (self::isOpeningHtmlTag($part, self::PROTECTED_HTML_TAG_PATTERN)) {
+                    if ($atParagraphStart === true) {
+                        $atParagraphStart = false;
+                    }
+
+                    if (self::isSelfClosingHtmlTag($part) === false) {
+                        $skipDepth++;
+                    }
+                }
+
+                continue;
+            }
+
+            if ($skipDepth > 0 || $atParagraphStart === false) {
+                continue;
+            }
+
+            $parts[$index] = preg_replace('/^[ \t]+/u', '', $part) ?? $part;
+
+            if (self::containsNonWhitespace($parts[$index])) {
+                $atParagraphStart = false;
+            }
+        }
+
+        return $parts;
+    }
+
+    /**
+     * @param list<string> $parts
+     * @return list<string>
+     */
+    private static function trimHtmlParagraphEndSpaces(array $parts): array
+    {
+        $atParagraphEnd = false;
+        $skipDepth = 0;
+
+        for ($index = count($parts) - 1; $index >= 0; $index--) {
+            $part = $parts[$index];
+
+            if (str_starts_with($part, '<')) {
+                if (self::isOpeningHtmlTag($part, self::PROTECTED_HTML_TAG_PATTERN)) {
+                    $skipDepth = max(0, $skipDepth - 1);
+                    continue;
+                }
+
+                if ($skipDepth > 0) {
+                    continue;
+                }
+
+                if (self::isClosingHtmlTag($part, self::PARAGRAPH_HTML_TAG_PATTERN)) {
+                    $atParagraphEnd = true;
+                    continue;
+                }
+
+                if (self::isOpeningHtmlTag($part, self::PARAGRAPH_HTML_TAG_PATTERN)) {
+                    $atParagraphEnd = false;
+                    continue;
+                }
+
+                if (self::isClosingHtmlTag($part, self::PROTECTED_HTML_TAG_PATTERN)) {
+                    if ($atParagraphEnd === true) {
+                        $atParagraphEnd = false;
+                    }
+
+                    if (self::isSelfClosingHtmlTag($part) === false) {
+                        $skipDepth++;
+                    }
+                }
+
+                continue;
+            }
+
+            if ($skipDepth > 0 || $atParagraphEnd === false) {
+                continue;
+            }
+
+            $parts[$index] = preg_replace('/[ \t]+$/u', '', $part) ?? $part;
+
+            if (self::containsNonWhitespace($parts[$index])) {
+                $atParagraphEnd = false;
+            }
+        }
+
+        return $parts;
+    }
+
+    private static function isOpeningHtmlTag(string $tag, string $namePattern): bool
+    {
+        return preg_match('/^<\s*(?!\/)(' . $namePattern . ')\b[^>]*>/iu', $tag) === 1;
+    }
+
+    private static function isClosingHtmlTag(string $tag, string $namePattern): bool
+    {
+        return preg_match('/^<\s*\/\s*(' . $namePattern . ')\b[^>]*>/iu', $tag) === 1;
+    }
+
+    private static function isSelfClosingHtmlTag(string $tag): bool
+    {
+        return preg_match('/\/\s*>$/u', $tag) === 1 ||
+            preg_match('/^<\s*(?:area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)\b/iu', $tag) === 1;
+    }
+
+    private static function containsNonWhitespace(string $text): bool
+    {
+        return preg_match('/[^\p{Zs}\t\r\n]/u', $text) === 1;
+    }
+
+    private static function lastNonWhitespaceCharacter(string $text): ?string
+    {
+        if (preg_match('/([^\p{Zs}\t\r\n])[\p{Zs}\t\r\n]*$/u', $text, $m) !== 1) {
+            return null;
+        }
+
+        return $m[1];
     }
 
     /**
@@ -900,7 +1157,10 @@ final class Proofreader
     private static function applyRule(
         string $text,
         string $rule,
-        ?string $language = null
+        ?string $language = null,
+        bool $trimParagraphEdges = true,
+        bool $leadingNbspAtParagraphStart = true,
+        bool $leadingNbspAfterSentence = false
     ): string {
         $configured = self::applyConfiguredRuleCallback($text, $rule, $language);
 
@@ -914,22 +1174,46 @@ final class Proofreader
             'quotes'      => self::fixQuotePairs($text, $language),
             'apostrophes' => self::fixApostrophes($text),
             'dashes'      => self::fixDashCharacters($text, $language),
-            'spaces'      => self::fixOrdinalSpacing(
-                self::fixDashSpacing(
-                    self::fixTrailingNbsp(
-                        self::fixLeadingNbsp(
-                            self::fixPunctuationSpacing(
-                                self::fixRepeatedSpaces($text),
-                                $language
-                            )
-                        )
-                    ),
-                    $language
-                )
+            'spaces'      => self::fixSpaces(
+                $text,
+                $language,
+                $trimParagraphEdges,
+                $leadingNbspAtParagraphStart,
+                $leadingNbspAfterSentence
             ),
             'dimensions'  => self::fixDimensions($text),
             default       => $text,
         };
+    }
+
+    private static function fixSpaces(
+        string $text,
+        ?string $language,
+        bool $trimParagraphEdges,
+        bool $leadingNbspAtParagraphStart,
+        bool $leadingNbspAfterSentence
+    ): string {
+        $text = self::fixPunctuationSpacing(
+            self::fixRepeatedSpaces($text),
+            $language
+        );
+
+        if ($trimParagraphEdges === true) {
+            $text = self::fixParagraphEdgeSpaces($text);
+        }
+
+        return self::fixOrdinalSpacing(
+            self::fixDashSpacing(
+                self::fixTrailingNbsp(
+                    self::fixLeadingNbsp(
+                        $text,
+                        $leadingNbspAtParagraphStart,
+                        $leadingNbspAfterSentence
+                    )
+                ),
+                $language
+            )
+        );
     }
 
     /**

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use GrommasDietz\Proofreader\Proofreader;
 use Kirby\Cms\App;
+use Kirby\Cms\File;
+use Kirby\Cms\Find;
 use Kirby\Cms\Page;
 use Kirby\Cms\Site;
 use Kirby\Http\Response;
@@ -26,9 +28,9 @@ $resolveLanguage = static function (App $kirby): array {
 };
 
 /**
- * @param Page|Site $model
+ * @param Page|Site|File $model
  */
-$optimizeModel = static function (Page|Site $model) use ($resolveLanguage): Response {
+$optimizeModel = static function (Page|Site|File $model) use ($resolveLanguage): Response {
     $kirby = App::instance();
     $body  = $kirby->request()->body()->toArray();
 
@@ -82,12 +84,16 @@ $optimizeModel = static function (Page|Site $model) use ($resolveLanguage): Resp
             }
         }
 
-        $hasTitleChange = $titleKey !== null && array_key_exists($titleKey, $diffs);
-        $contentDiffs   = array_filter(
-            $diffs,
-            static fn (string $key): bool => strtolower($key) !== 'title',
-            ARRAY_FILTER_USE_KEY
-        );
+        $hasTitleChange = $model instanceof File === false &&
+            $titleKey !== null &&
+            array_key_exists($titleKey, $diffs);
+        $contentDiffs   = $model instanceof File
+            ? $diffs
+            : array_filter(
+                $diffs,
+                static fn (string $key): bool => strtolower($key) !== 'title',
+                ARRAY_FILTER_USE_KEY
+            );
 
         // Titles are stored through Kirby's native action so permissions,
         // hooks and existing changes-version syncing still apply.
@@ -110,6 +116,24 @@ $optimizeModel = static function (Page|Site $model) use ($resolveLanguage): Resp
         'changedFields' => array_keys($diffs),
         'diffs'         => $diffs,
     ]);
+};
+
+$resolveFile = static function (string $encodedPath): ?File {
+    $panelPath = str_replace('+', '/', $encodedPath);
+
+    try {
+        if (str_starts_with($panelPath, 'files/')) {
+            return Find::file('', substr($panelPath, 6));
+        }
+
+        if (preg_match('#^(.+)/files/(.+)$#', $panelPath, $m) === 1) {
+            return Find::file($m[1], $m[2]);
+        }
+    } catch (\Throwable) {
+        return null;
+    }
+
+    return null;
 };
 
 return [
@@ -138,6 +162,22 @@ return [
             }
 
             return $optimizeModel($page);
+        },
+    ],
+    [
+        'pattern' => 'kirby-proofreader/files/(:any)/optimize',
+        'method'  => 'POST',
+        'action'  => function (string $encodedPath) use ($optimizeModel, $resolveFile): Response {
+            $file = $resolveFile($encodedPath);
+
+            if ($file === null) {
+                return Response::json(
+                    ['status' => 'error', 'message' => 'File not found'],
+                    404
+                );
+            }
+
+            return $optimizeModel($file);
         },
     ],
 ];

@@ -1,6 +1,6 @@
 # Usage
 
-Kirby Proofreader adds a Panel button for page and site views. It previews
+Kirby Proofreader adds a Panel button for page, site and file views. It previews
 typography fixes for eligible `text`, `textarea`, `writer`, `list`,
 `structure`, `blocks`, and `layout` content before saving field changes as
 unpublished changes. Blueprint definitions that use `extends` are resolved
@@ -97,11 +97,12 @@ return [
 The `dashes` rule normalizes dash characters first and preserves existing
 spacing: number ranges use en dashes, spaced hyphens in text use em dashes,
 and existing en dashes in word ranges are kept as en dashes. The `spaces` rule
-then collapses repeated regular spaces, removes spaces before punctuation
-except French high punctuation, normalizes six-per-em spaces around en dashes,
-hair spaces around em dashes, narrow non-breaking spaces after ordinals, and
-non-breaking spaces after one-letter words, after 2–4 letter sentence starters,
-and before 2–4 letter paragraph-ending words.
+then collapses repeated regular spaces, removes regular spaces at paragraph
+starts and ends, removes spaces before punctuation except French high
+punctuation, normalizes six-per-em spaces around en dashes, hair spaces around
+em dashes, narrow non-breaking spaces after ordinals, and non-breaking spaces
+after one-letter words and 2–4 letter sentence starters outside paragraph
+starts, and before 2–4 letter paragraph-ending words.
 
 Quote characters, dash characters and dash spacing can also come from Kirby's
 native SmartyPants options. In multi-language installations, language-level

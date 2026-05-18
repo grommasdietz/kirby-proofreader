@@ -5,19 +5,19 @@ route.
 
 ## Panel Flow
 
-The Panel button is registered in `src/index.js` and can be enabled in page and
-site blueprints with `proofreader: true`. The button asks the route for a
-preview, opens the review dialog and sends the selected rules and fields back
-when the editor applies fixes.
+The Panel button is registered in `src/index.js` and can be enabled in page,
+site and file blueprints with `proofreader: true`. The button asks the route
+for a preview, opens the review dialog and sends the selected rules and fields
+back when the editor applies fixes.
 
 The review dialog keeps title fixes separate from content fields. Content field
-changes are saved to Kirby's changes version. Title changes use Kirby's native
-`changeTitle()` action because titles are not part of the regular content
-changes layer.
+changes are saved to Kirby's changes version. Page and site title changes use
+Kirby's native `changeTitle()` action because titles are not part of the regular
+content changes layer.
 
 ## PHP Flow
 
-`config/routes.php` resolves the current page or site model, the active
+`config/routes.php` resolves the current page, site or file model, the active
 language and the source content version. It uses the changes version when one
 exists and falls back to the latest version.
 
