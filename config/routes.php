@@ -5,7 +5,6 @@ declare(strict_types=1);
 use GrommasDietz\Proofreader\Proofreader;
 use Kirby\Cms\App;
 use Kirby\Cms\File;
-use Kirby\Cms\Find;
 use Kirby\Cms\Page;
 use Kirby\Cms\Site;
 use Kirby\Http\Response;
@@ -119,15 +118,16 @@ $optimizeModel = static function (Page|Site|File $model) use ($resolveLanguage):
 };
 
 $resolveFile = static function (string $encodedPath): ?File {
-    $panelPath = str_replace('+', '/', $encodedPath);
+    $panelPath = rawurldecode(str_replace('+', '/', $encodedPath));
+    $kirby = App::instance();
 
     try {
-        if (str_starts_with($panelPath, 'files/')) {
-            return Find::file('', substr($panelPath, 6));
+        if (preg_match('#^(?:site/)?files/(.+)$#', $panelPath, $m) === 1) {
+            return $kirby->site()->file($m[1]);
         }
 
-        if (preg_match('#^(.+)/files/(.+)$#', $panelPath, $m) === 1) {
-            return Find::file($m[1], $m[2]);
+        if (preg_match('#^pages/(.+)/files/(.+)$#', $panelPath, $m) === 1) {
+            return $kirby->page($m[1])?->file($m[2]);
         }
     } catch (\Throwable) {
         return null;
