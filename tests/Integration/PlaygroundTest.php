@@ -88,15 +88,31 @@ final class PlaygroundTest extends TestCase
     public function testProofreaderRouteSupportsPageFileContent(): void
     {
         $root = dirname(__DIR__, 2);
-        $pageDir = $root . '/playground/content/editorial-review';
+        $parentDir = $root . '/playground/content/kontext';
+        $pageDir = $parentDir . '/heizen-mit-einem-eisspeicher';
         $blueprintDir = $root . '/playground/site/blueprints/files';
         $blueprintFile = $blueprintDir . '/image.yml';
-        $file = $pageDir . '/proofreader-route.jpg';
-        $content = $pageDir . '/proofreader-route.jpg.en.txt';
-        $changes = $pageDir . '/_changes/proofreader-route.jpg.en.txt';
+        $parentContent = $parentDir . '/about.en.txt';
+        $pageContent = $pageDir . '/about.en.txt';
+        $filename = 'mlzd_msb_maison-del-la-sante_schnitt.png';
+        $file = $pageDir . '/' . $filename;
+        $content = $pageDir . '/' . $filename . '.en.txt';
+        $changes = $pageDir . '/_changes/' . $filename . '.en.txt';
+        $imageBytes = base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFgwJ/lCwL8AAAAABJRU5ErkJggg==',
+            true
+        );
+
+        if ($imageBytes === false) {
+            throw new \RuntimeException('Unable to decode test image');
+        }
 
         if (is_dir($blueprintDir) === false) {
             mkdir($blueprintDir, 0777, true);
+        }
+
+        if (is_dir($pageDir) === false) {
+            mkdir($pageDir, 0777, true);
         }
 
         file_put_contents($blueprintFile, <<<YAML
@@ -113,7 +129,13 @@ fields:
     label: Caption
     type: textarea
 YAML);
-        file_put_contents($file, "\xFF\xD8\xFF\xD9");
+        file_put_contents($parentContent, <<<TXT
+Title: Kontext
+TXT);
+        file_put_contents($pageContent, <<<TXT
+Title: Heizen mit einem Eisspeicher
+TXT);
+        file_put_contents($file, $imageBytes);
         file_put_contents($content, <<<TXT
 Template: image
 
@@ -130,7 +152,7 @@ TXT);
             $this->bootKirby()->impersonate('kirby');
 
             $response = $this->callProofreaderRoute(
-                'kirby-proofreader/files/pages+editorial-review+files+proofreader-route.jpg/optimize',
+                'kirby-proofreader/files/pages+kontext+heizen-mit-einem-eisspeicher+files+' . $filename . '/optimize',
                 [
                     'preview' => true,
                     'rules'   => ['ellipsis'],
@@ -144,7 +166,7 @@ TXT);
             self::assertSame('Alt text', $data['suggestions'][0]['fieldLabel']);
 
             $response = $this->callProofreaderRoute(
-                'kirby-proofreader/files/pages+editorial-review+files+proofreader-route.jpg/optimize',
+                'kirby-proofreader/files/pages+kontext+heizen-mit-einem-eisspeicher+files+' . $filename . '/optimize',
                 [
                     'preview' => false,
                     'rules'   => ['ellipsis'],
@@ -152,7 +174,9 @@ TXT);
                 ]
             );
             $data = $this->jsonResponse($response);
-            $fileModel = $this->kirby->page('editorial-review')?->file('proofreader-route.jpg');
+            $fileModel = $this->kirby
+                ->page('kontext/heizen-mit-einem-eisspeicher')
+                ?->file($filename);
             $language = $this->kirby->language('en') ?? 'default';
 
             self::assertSame('ok', $data['status']);
@@ -160,7 +184,7 @@ TXT);
             self::assertSame('Image…', $data['diffs']['alt']['to']);
             self::assertSame('Image…', $fileModel?->version('changes')->content($language)->get('alt')->value());
         } finally {
-            foreach ([$changes, $content, $file, $blueprintFile] as $fixture) {
+            foreach ([$changes, $content, $file, $pageContent, $parentContent, $blueprintFile] as $fixture) {
                 if (is_file($fixture)) {
                     unlink($fixture);
                 }
@@ -173,6 +197,14 @@ TXT);
 
             if (is_dir($blueprintDir) && count(scandir($blueprintDir) ?: []) === 2) {
                 rmdir($blueprintDir);
+            }
+
+            if (is_dir($pageDir) && count(scandir($pageDir) ?: []) === 2) {
+                rmdir($pageDir);
+            }
+
+            if (is_dir($parentDir) && count(scandir($parentDir) ?: []) === 2) {
+                rmdir($parentDir);
             }
         }
     }
