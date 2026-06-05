@@ -117,6 +117,9 @@ kirby proofreader:fix projects/my-project
 # Fix all pages and publish immediately
 kirby proofreader:fix --all --publish
 
+# Fix only one field across all pages
+kirby proofreader:fix --all --field=summary
+
 # Dry-run batch fix
 kirby proofreader:fix --all --dry-run
 ```

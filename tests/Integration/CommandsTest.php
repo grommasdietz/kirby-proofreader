@@ -274,7 +274,7 @@ final class CommandsTest extends TestCase
 
         self::assertSame(0, $result['exitCode'], $result['output']);
 
-        foreach (['--all', '--children', '--recursive', '--publish', '--dry-run', '--language', '--rules'] as $flag) {
+        foreach (['--all', '--children', '--recursive', '--publish', '--dry-run', '--language', '--rules', '--field'] as $flag) {
             self::assertStringContainsString($flag, $result['output']);
         }
     }
@@ -285,7 +285,7 @@ final class CommandsTest extends TestCase
 
         self::assertSame(0, $result['exitCode'], $result['output']);
 
-        foreach (['--all', '--children', '--recursive', '--language', '--rules'] as $flag) {
+        foreach (['--all', '--children', '--recursive', '--language', '--rules', '--field'] as $flag) {
             self::assertStringContainsString($flag, $result['output']);
         }
     }
@@ -307,6 +307,21 @@ final class CommandsTest extends TestCase
         self::assertSame(0, $result['exitCode'], $result['output']);
         self::assertStringContainsString('[dashes] Description', $result['output']);
         self::assertStringContainsString('suggestion(s) found.', $result['output']);
+    }
+
+    public function testKirbyCliReviewCanLimitSuggestionsToSingleField(): void
+    {
+        $result = $this->runKirbyCli([
+            'proofreader:review',
+            'editorial-review',
+            '--field=summary',
+            '--rules=dashes',
+        ]);
+
+        self::assertSame(0, $result['exitCode'], $result['output']);
+        self::assertStringContainsString('[dashes] Summary', $result['output']);
+        self::assertStringNotContainsString('[dashes] Body', $result['output']);
+        self::assertStringNotContainsString('[dashes] Milestones', $result['output']);
     }
 
     public function testKirbyCliReviewAllAggregatesSuggestionsAcrossModels(): void
@@ -407,6 +422,37 @@ PHP;
             self::assertIsString($changes);
             self::assertStringContainsString('Title: CLI Proofreader Test…', $latest);
             self::assertStringContainsString('Summary: CLI summary…', $changes);
+        } finally {
+            Dir::remove($pageDir);
+        }
+    }
+
+    public function testKirbyCliFixCanLimitWritesToSingleField(): void
+    {
+        $pageDir = $this->createCliTestPage();
+
+        try {
+            $result = $this->runKirbyCli([
+                'proofreader:fix',
+                'cli-proofreader-test',
+                '--language=en',
+                '--rules=ellipsis',
+                '--field=summary',
+            ]);
+
+            self::assertSame(0, $result['exitCode'], $result['output']);
+            self::assertStringContainsString('fixed (changes): 1 field(s)', $result['output']);
+            self::assertStringContainsString('1 field(s) fixed across 1 model(s).', $result['output']);
+
+            $latest = file_get_contents($pageDir . '/about.en.txt');
+            $changes = file_get_contents($pageDir . '/_changes/about.en.txt');
+
+            self::assertIsString($latest);
+            self::assertIsString($changes);
+            self::assertStringContainsString('Title: CLI Proofreader Test...', $latest);
+            self::assertStringContainsString('Title: CLI Proofreader Test...', $changes);
+            self::assertStringContainsString('Summary: CLI summary…', $changes);
+            self::assertStringNotContainsString('Title: CLI Proofreader Test…', $changes);
         } finally {
             Dir::remove($pageDir);
         }

@@ -249,6 +249,10 @@ default fixes are saved as unpublished changes (same as the Panel button). Use
 Batch scopes process stored pages only; virtual pages are skipped because they
 cannot be written back to content files.
 
+Use `--field=<name>` to limit either review or fix to one top-level content
+field. Combine it with `--rules` for scoped corrections or omit `--rules` to
+apply every enabled rule to that field.
+
 ```bash
 # Fix a single page (saves to changes version)
 kirby proofreader:fix projects/my-project
@@ -267,6 +271,12 @@ kirby proofreader:fix projects --children
 
 # Fix a page and all its descendants
 kirby proofreader:fix projects --recursive
+
+# Fix only the summary field across all pages
+kirby proofreader:fix --all --field=summary
+
+# Fix only dashes in the summary field for a page tree
+kirby proofreader:fix projects --recursive --field=summary --rules=dashes
 
 # Publish immediately instead of saving as changes
 kirby proofreader:fix projects/my-project --publish
@@ -289,6 +299,7 @@ kirby proofreader:fix projects/my-project --language=de
 | `--dry-run`         | Preview changes without saving                    |
 | `--language=<code>` | Language code for multi-language installs         |
 | `--rules=<list>`    | Comma-separated rule names to apply               |
+| `--field=<name>`    | Process one top-level content field only          |
 
 ### proofreader:review
 
@@ -311,6 +322,9 @@ kirby proofreader:review projects --children
 # Review a page and all its descendants
 kirby proofreader:review projects --recursive
 
+# Review only the summary field across all pages
+kirby proofreader:review --all --field=summary
+
 # Limit to specific rules
 kirby proofreader:review projects/my-project --rules=dashes,spaces
 
@@ -327,6 +341,7 @@ kirby proofreader:review projects/my-project --language=de
 | `--recursive`       | Review the given page and all its descendants |
 | `--language=<code>` | Language code for multi-language installs     |
 | `--rules=<list>`    | Comma-separated rule names to apply           |
+| `--field=<name>`    | Review one top-level content field only       |
 
 ---
 

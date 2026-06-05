@@ -35,6 +35,7 @@ $resolveCliLanguage = static function (App $kirby, ?string $langCode): array {
  * @param  Page|Site             $model
  * @param  array{string|object, string|null, string|null} $languageTuple
  * @param  list<string>|null     $rules
+ * @param  list<string>|null     $onlyFields
  * @param  bool                  $dryRun
  * @param  bool                  $publish   Write to 'latest' instead of 'changes'
  * @return array{changed:int, suggestions:int, title:string}
@@ -43,6 +44,7 @@ $processModel = static function (
     Page|Site $model,
     array $languageTuple,
     ?array $rules,
+    ?array $onlyFields,
     bool $dryRun,
     bool $publish
 ): array {
@@ -53,12 +55,17 @@ $processModel = static function (
     $sourceVersion  = $changesVersion->exists($language) ? $changesVersion : $latestVersion;
     $content        = $sourceVersion->content($language)->toArray();
 
-    /** @var list<string>|null $rules */
+    /** @var list<string>|null $selectedRules */
+    $selectedRules = $rules;
+    /** @var list<string>|null $selectedFields */
+    $selectedFields = $onlyFields;
+
     $review = Proofreader::reviewFields(
         $content,
         $model->blueprint()->fields(),
-        $rules,
-        $ruleLanguage
+        $selectedRules,
+        $ruleLanguage,
+        $selectedFields
     );
 
     $fixed = $review['fixed'];
@@ -178,6 +185,11 @@ $rulesArg = [
     'longPrefix'  => 'rules',
 ];
 
+$fieldArg = [
+    'description' => 'Top-level field name to process',
+    'longPrefix'  => 'field',
+];
+
 return [
     // -------------------------------------------------------------------------
     // proofreader:fix
@@ -213,6 +225,7 @@ return [
             ],
             'language' => $languageArg,
             'rules' => $rulesArg,
+            'field' => $fieldArg,
         ],
         /** @param \Kirby\CLI\CLI $cli */
         'command' => static function ($cli) use ($resolveCliLanguage, $processModel, $collectAllPages, $collectChildren, $collectRecursive, $parseCliRules, $optionalCliString): void {
@@ -228,6 +241,8 @@ return [
             $langCode  = $optionalCliString($cli->arg('language'));
             $rulesArg  = $optionalCliString($cli->arg('rules'));
             $rules     = $parseCliRules($rulesArg);
+            $fieldName = $optionalCliString($cli->arg('field'));
+            $onlyFields = $fieldName !== null ? [$fieldName] : null;
 
             if ($dryRun === false) {
                 $kirby->impersonate('kirby');
@@ -279,7 +294,7 @@ return [
             $totalModels  = 0;
 
             foreach ($models as $model) {
-                $result = $processModel($model, $languageTuple, $rules, $dryRun, $publish);
+                $result = $processModel($model, $languageTuple, $rules, $onlyFields, $dryRun, $publish);
                 $totalModels++;
                 $totalChanged += $result['changed'];
 
@@ -321,6 +336,7 @@ return [
             ],
             'language' => $languageArg,
             'rules' => $rulesArg,
+            'field' => $fieldArg,
         ],
         /** @param \Kirby\CLI\CLI $cli */
         'command' => static function ($cli) use ($resolveCliLanguage, $parseCliRules, $optionalCliString, $collectAllPages, $collectChildren, $collectRecursive): void {
@@ -333,6 +349,8 @@ return [
             $langCode  = $optionalCliString($cli->arg('language'));
             $rulesArg  = $optionalCliString($cli->arg('rules'));
             $rules     = $parseCliRules($rulesArg);
+            $fieldName = $optionalCliString($cli->arg('field'));
+            $onlyFields = $fieldName !== null ? [$fieldName] : null;
 
             [$language,, $ruleLanguage] = $resolveCliLanguage($kirby, $langCode);
 
@@ -386,7 +404,8 @@ return [
                         $content,
                         $model->blueprint()->fields(),
                         $rules,
-                        $ruleLanguage
+                        $ruleLanguage,
+                        $onlyFields
                     );
 
                     $count = count($review['suggestions']);
@@ -431,7 +450,8 @@ return [
                 $content,
                 $model->blueprint()->fields(),
                 $rules,
-                $ruleLanguage
+                $ruleLanguage,
+                $onlyFields
             );
 
             if ($review['suggestions'] === []) {

@@ -21,7 +21,6 @@
         "getkirby/cms": "^5.2"
     },
     "require-dev": {
-        "bnomei/kirby-mcp": "^1.0",
         "getkirby/cli": "^1.9"
     },
     "config": {
