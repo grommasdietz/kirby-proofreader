@@ -18,6 +18,13 @@ Checklist: <ul><li>Review the queued note...</li><li>Compare panel copy - previe
 
 ----
 
+Milestones:
+
+- Review kickoff...
+- Range 2020 - 2021
+
+----
+
 Notes:
 
 - 

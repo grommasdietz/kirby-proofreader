@@ -320,6 +320,29 @@ TXT);
         self::assertContains('dashes', array_column($data['suggestions'], 'rule'));
     }
 
+    public function testEntriesFieldCanReviewPlaygroundContent(): void
+    {
+        $response = $this->callProofreaderRoute(
+            'kirby-proofreader/pages/editorial-review/optimize',
+            [
+                'preview' => true,
+                'rules'   => ['ellipsis', 'dashes'],
+                'fields'  => ['milestones'],
+            ]
+        );
+        $data = $this->jsonResponse($response);
+
+        self::assertSame('ok', $data['status']);
+        self::assertSame(['milestones'], array_unique(array_column($data['suggestions'], 'field')));
+        self::assertContains('ellipsis', array_column($data['suggestions'], 'rule'));
+        self::assertContains('dashes', array_column($data['suggestions'], 'rule'));
+        self::assertContains('Milestones -> Entry 1', array_column($data['suggestions'], 'pathLabel'));
+        self::assertContains('Milestones -> Entry 2', array_column($data['suggestions'], 'pathLabel'));
+        self::assertSame(['milestones'], $data['changedFields']);
+        self::assertStringContainsString('- Review kickoff…', $data['diffs']['milestones']['to']);
+        self::assertStringContainsString('- Range 2020 – 2021', $data['diffs']['milestones']['to']);
+    }
+
     public function testUsersCanBeCreatedAndDeleted(): void
     {
         // Clean up any leftover test users from a prior run

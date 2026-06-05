@@ -18,6 +18,13 @@ Checklist: <ul><li>Die vorgemerkte Notiz prüfen...</li><li>Panel-Text - Vorscha
 
 ----
 
+Milestones:
+
+- Prüfstart...
+- Zeitraum 2020 - 2021
+
+----
+
 Notes:
 
 -

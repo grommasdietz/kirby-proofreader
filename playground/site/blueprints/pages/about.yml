@@ -22,6 +22,12 @@ sections:
       checklist:
         label: Checklist
         type: list
+      milestones:
+        label: Milestones
+        type: entries
+        field:
+          label: Entry
+          type: text
       notes:
         label: Review notes
         type: structure

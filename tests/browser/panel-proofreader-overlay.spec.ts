@@ -100,6 +100,15 @@ test.describe("Proofreader review dialog", () => {
       titleGroup.getByRole("button", { name: "Apply and save" }),
     ).toBeVisible();
     await expect(titleGroup.getByText("1/1")).toBeVisible();
+
+    const milestonesGroup = page
+      .locator(".proofreader-review-field")
+      .filter({ hasText: "Milestones" })
+      .first();
+    await expect(milestonesGroup).toBeVisible();
+    await expect(milestonesGroup.locator("input").first()).toBeChecked();
+    await expect(milestonesGroup.getByText("Entry 1")).toBeVisible();
+
     await titleGroup.locator("input").first().uncheck();
     await expect(reviewSummary).toContainText(
       /of \d+ suggestions? in \d+ fields?\./,
