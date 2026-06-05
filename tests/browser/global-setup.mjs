@@ -29,6 +29,6 @@ export default async function globalSetup() {
 
   execSync(
     `php ${createUserScript} --email="${env.KIRBY_USER_EMAIL}" --password="${env.KIRBY_USER_PASSWORD}" --role=admin`,
-    { cwd: root, stdio: "inherit", env }
+    { cwd: root, stdio: "inherit", env },
   );
 }

@@ -4,7 +4,9 @@ test.describe("Frontend layout", () => {
   test("site title is visible in the header", async ({ page }) => {
     await page.goto("/");
 
-    await expect(page.locator("[data-test='site-title']")).toHaveText("Kirby Playground");
+    await expect(page.locator("[data-test='site-title']")).toHaveText(
+      "Kirby Playground",
+    );
     await expect(page).toHaveTitle("Kirby Playground");
   });
 
