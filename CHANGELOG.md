@@ -1,3 +1,16 @@
+# [1.8.0](https://github.com/grommasdietz/kirby-proofreader/compare/v1.7.0...v1.8.0) (2026-06-05)
+
+
+### Bug Fixes
+
+* configure types for browser tests ([e92c218](https://github.com/grommasdietz/kirby-proofreader/commit/e92c2182d413b03cc2b571abef3740625f01e471))
+
+
+### Features
+
+* **entries:** add entries field support ([105d900](https://github.com/grommasdietz/kirby-proofreader/commit/105d900b555ab82545c4fab957fba036923e6421))
+* **entries:** add entries field support ([100ce64](https://github.com/grommasdietz/kirby-proofreader/commit/100ce64c07d106f89ac7a4fe56045b4dc28a146d))
+
 # [1.7.0](https://github.com/grommasdietz/kirby-proofreader/compare/v1.6.0...v1.7.0) (2026-05-18)
 
 
