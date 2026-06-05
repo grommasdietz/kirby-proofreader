@@ -2274,6 +2274,10 @@ final class Proofreader
             return $value;
         }
 
+        if (self::entriesFieldFormat($fieldBlueprint) === null) {
+            return $value;
+        }
+
         return self::processEntries($value, $fieldBlueprint, $rules, $language);
     }
 
@@ -2358,6 +2362,10 @@ final class Proofreader
         ?array $rules,
         ?string $language
     ): string {
+        if (self::entriesFieldFormat($fieldBlueprint) === null) {
+            return $value;
+        }
+
         $entries = self::entriesValueToArray($value);
 
         if ($entries === null) {
@@ -2533,6 +2541,14 @@ final class Proofreader
         }
 
         return ['type' => 'text'];
+    }
+
+    /**
+     * @param array<string, mixed> $fieldBlueprint
+     */
+    private static function entriesFieldFormat(array $fieldBlueprint): ?string
+    {
+        return self::fieldFormatFor('entry', self::entriesFieldBlueprint($fieldBlueprint));
     }
 
     /**

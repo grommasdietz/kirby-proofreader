@@ -605,7 +605,7 @@ final class ProofreaderTest extends TestCase
 
     public function testFixFieldsSkipsUnsupportedEntriesFieldType(): void
     {
-        $fields = ['links' => "- https://kirby-proofreader.test/one...\n"];
+        $fields = ['links' => '- https://kirby-proofreader.test/one...'];
         $blueprint = [
             'links' => [
                 'type'  => 'entries',
@@ -615,7 +615,7 @@ final class ProofreaderTest extends TestCase
 
         $result = Proofreader::fixFields($fields, $blueprint, ['ellipsis']);
 
-        self::assertSame("- https://kirby-proofreader.test/one...\n", $result['links']);
+        self::assertSame('- https://kirby-proofreader.test/one...', $result['links']);
     }
 
     public function testFixFieldsLeavesUnknownTypeUnchanged(): void
