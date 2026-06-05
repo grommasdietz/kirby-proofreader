@@ -64,7 +64,7 @@ SmartyPants options when configured globally or per language. Single-language
 installs need SmartyPants configuration to enable quote rule.
 
 Default field coverage includes `text`, `textarea`, `writer`, `list`,
-`structure`, `blocks` and `layout` fields. Custom field names or types can be included or excluded:
+`structure`, `entries`, `blocks` and `layout` fields. Custom field names or types can be included or excluded:
 
 ```php
 return [
@@ -74,6 +74,7 @@ return [
                 'custom-writer' => 'html',
                 'custom-text' => 'plain',
                 'custom-structure' => 'structure',
+                'custom-entries' => 'entries',
             ],
             'names' => [
                 'intro' => 'plain',

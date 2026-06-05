@@ -133,6 +133,7 @@ final class Proofreader
         'writer'    => 'html',
         'list'      => 'html',
         'structure' => 'structure',
+        'entries'   => 'entries',
         'blocks'    => 'blocks',
         'layout'    => 'layout',
     ];
@@ -148,6 +149,7 @@ final class Proofreader
         'writer'    => 'html',
         'list'      => 'html',
         'structure' => 'structure',
+        'entries'   => 'entries',
         'blocks'    => 'blocks',
         'layout'    => 'layout',
     ];
@@ -1514,6 +1516,7 @@ final class Proofreader
      * - text, textarea  → plain-text fix via fix()
      * - writer, list    → HTML-aware fix via fixHtml()
      * - structure       → YAML decoded, each row processed recursively
+     * - entries         → YAML decoded, each entry processed through its nested field
      * - blocks          → JSON decoded, each block's content processed recursively
      * - layout          → JSON decoded, blocks in each column processed recursively
      *
@@ -1668,6 +1671,7 @@ final class Proofreader
             'plain'     => is_string($value) ? self::fix($value, $rules, $language) : $value,
             'html'      => is_string($value) ? self::fixHtml($value, $rules, $language) : $value,
             'structure' => self::fixStructureValue($value, $fieldBlueprint, $rules, $language),
+            'entries'   => self::fixEntriesValue($value, $fieldBlueprint, $rules, $language),
             'blocks'    => self::fixBlocksValue($value, $fieldBlueprint, $rules, $language),
             'layout'    => self::fixLayoutValue($value, $fieldBlueprint, $rules, $language),
             default     => $value,
@@ -1705,6 +1709,16 @@ final class Proofreader
 
         return match ($format) {
             'structure' => self::collectStructureSuggestions(
+                $value,
+                $fieldBlueprint,
+                $field,
+                $fieldLabel,
+                $path,
+                $pathLabel,
+                $rules,
+                $language
+            ),
+            'entries' => self::collectEntriesSuggestions(
                 $value,
                 $fieldBlueprint,
                 $field,
@@ -1833,6 +1847,59 @@ final class Proofreader
                     )
                 );
             }
+        }
+
+        return $suggestions;
+    }
+
+    /**
+     * @param  array<string, mixed> $fieldBlueprint
+     * @param  list<string>         $rules
+     * @return list<array<string, string>>
+     */
+    private static function collectEntriesSuggestions(
+        mixed $value,
+        array $fieldBlueprint,
+        string $field,
+        string $fieldLabel,
+        string $basePath,
+        string $baseLabel,
+        array $rules,
+        ?string $language
+    ): array {
+        $entries = self::entriesValueToArray($value);
+
+        if ($entries === null) {
+            return [];
+        }
+
+        $entryBlueprint = self::entriesFieldBlueprint($fieldBlueprint);
+        $format = self::fieldFormatFor('entry', $entryBlueprint);
+
+        if ($format === null) {
+            return [];
+        }
+
+        $suggestions = [];
+
+        foreach (array_values($entries) as $entryIndex => $entryValue) {
+            $path = $basePath . '.' . $entryIndex;
+            $pathLabel = $baseLabel . ' -> Entry ' . ($entryIndex + 1);
+
+            array_push(
+                $suggestions,
+                ...self::collectFieldValueSuggestions(
+                    $entryValue,
+                    $format,
+                    $entryBlueprint,
+                    $field,
+                    $fieldLabel,
+                    $path,
+                    $pathLabel,
+                    $rules,
+                    $language
+                )
+            );
         }
 
         return $suggestions;
@@ -2193,6 +2260,27 @@ final class Proofreader
      * @param array<string, mixed> $fieldBlueprint
      * @param list<string>|null $rules
      */
+    private static function fixEntriesValue(
+        mixed $value,
+        array $fieldBlueprint,
+        ?array $rules,
+        ?string $language
+    ): mixed {
+        if (is_string($value)) {
+            return self::fixEntriesField($value, $fieldBlueprint, $rules, $language);
+        }
+
+        if (!is_array($value)) {
+            return $value;
+        }
+
+        return self::processEntries($value, $fieldBlueprint, $rules, $language);
+    }
+
+    /**
+     * @param array<string, mixed> $fieldBlueprint
+     * @param list<string>|null $rules
+     */
     private static function fixBlocksValue(
         mixed $value,
         array $fieldBlueprint,
@@ -2255,6 +2343,28 @@ final class Proofreader
         }
 
         return Yaml::encode(self::processStructureRows($rows, $subFields, $rules, $language));
+    }
+
+    /**
+     * Decodes a YAML-encoded entries field, applies fixes to each entry through
+     * its nested field definition, and re-encodes to YAML.
+     *
+     * @param array<string, mixed> $fieldBlueprint The entries field definition
+     * @param list<string>|null $rules
+     */
+    private static function fixEntriesField(
+        string $value,
+        array $fieldBlueprint,
+        ?array $rules,
+        ?string $language
+    ): string {
+        $entries = self::entriesValueToArray($value);
+
+        if ($entries === null) {
+            return $value;
+        }
+
+        return Yaml::encode(self::processEntries($entries, $fieldBlueprint, $rules, $language));
     }
 
     /**
@@ -2377,6 +2487,74 @@ final class Proofreader
             fn ($row) => self::fixFields((array) $row, $subFields, $rules, $language),
             $rows
         );
+    }
+
+    /**
+     * Applies typography fixes to decoded entries field values.
+     *
+     * @param  array<int|string, mixed> $entries
+     * @param  array<string, mixed>     $fieldBlueprint
+     * @param  list<string>|null        $rules
+     * @return list<mixed>
+     */
+    private static function processEntries(
+        array $entries,
+        array $fieldBlueprint,
+        ?array $rules,
+        ?string $language
+    ): array {
+        $entryBlueprint = self::entriesFieldBlueprint($fieldBlueprint);
+        $format = self::fieldFormatFor('entry', $entryBlueprint);
+
+        if ($format === null) {
+            return array_values($entries);
+        }
+
+        return array_map(
+            fn (mixed $entry): mixed => self::fixFieldValue($entry, $format, $entryBlueprint, $rules, $language),
+            array_values($entries)
+        );
+    }
+
+    /**
+     * @param  array<string, mixed> $fieldBlueprint
+     * @return array<string, mixed>
+     */
+    private static function entriesFieldBlueprint(array $fieldBlueprint): array
+    {
+        $entryBlueprint = $fieldBlueprint['field'] ?? ['type' => 'text'];
+
+        if (is_string($entryBlueprint)) {
+            return ['type' => $entryBlueprint];
+        }
+
+        if (is_array($entryBlueprint)) {
+            return $entryBlueprint;
+        }
+
+        return ['type' => 'text'];
+    }
+
+    /**
+     * @return array<int|string, mixed>|null
+     */
+    private static function entriesValueToArray(mixed $value): ?array
+    {
+        if (is_array($value)) {
+            return $value;
+        }
+
+        if (!is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        if (preg_match('/^\s*-\s/m', $value) !== 1) {
+            return null;
+        }
+
+        $entries = Yaml::decode($value);
+
+        return is_array($entries) ? $entries : null;
     }
 
     /**

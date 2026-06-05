@@ -561,6 +561,63 @@ final class ProofreaderTest extends TestCase
         );
     }
 
+    public function testFixFieldsAppliesFixToEntriesField(): void
+    {
+        $fields = ['awards' => "- Award...\n- 2020 - 2021"];
+        $blueprint = [
+            'awards' => [
+                'label' => 'Awards',
+                'type'  => 'entries',
+                'field' => [
+                    'label' => 'Title',
+                    'type'  => 'text',
+                ],
+            ],
+        ];
+
+        $result = Proofreader::fixFields($fields, $blueprint, ['ellipsis', 'dashes']);
+
+        self::assertSame("- Award…\n- 2020 – 2021\n", $result['awards']);
+    }
+
+    public function testReviewFieldsReturnsEntriesSuggestions(): void
+    {
+        $fields = ['awards' => "- Award...\n- 2020 - 2021"];
+        $blueprint = [
+            'awards' => [
+                'label' => 'Awards',
+                'type'  => 'entries',
+                'field' => [
+                    'label' => 'Title',
+                    'type'  => 'text',
+                ],
+            ],
+        ];
+
+        $review = Proofreader::reviewFields($fields, $blueprint, ['ellipsis', 'dashes']);
+
+        self::assertSame(['ellipsis', 'dashes'], array_column($review['suggestions'], 'rule'));
+        self::assertSame(
+            ['Awards -> Entry 1', 'Awards -> Entry 2'],
+            array_column($review['suggestions'], 'pathLabel')
+        );
+    }
+
+    public function testFixFieldsSkipsUnsupportedEntriesFieldType(): void
+    {
+        $fields = ['links' => "- https://kirby-proofreader.test/one...\n"];
+        $blueprint = [
+            'links' => [
+                'type'  => 'entries',
+                'field' => ['type' => 'url'],
+            ],
+        ];
+
+        $result = Proofreader::fixFields($fields, $blueprint, ['ellipsis']);
+
+        self::assertSame("- https://kirby-proofreader.test/one...\n", $result['links']);
+    }
+
     public function testFixFieldsLeavesUnknownTypeUnchanged(): void
     {
         // Fields absent from the blueprint pass through without modification.

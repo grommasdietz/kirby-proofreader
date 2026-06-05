@@ -132,9 +132,10 @@ Kirby's full SmartyPants parser for content.
 ### Fields
 
 By default, Kirby Proofreader handles `text` and `textarea` fields as plain
-text, `writer` and `list` fields as HTML text nodes, and `structure`, `blocks`
-and `layout` fields recursively. Other fields are ignored to avoid touching
-technical values such as URLs, dates, emails, slugs or select values.
+text, `writer` and `list` fields as HTML text nodes, `structure`, `blocks`
+and `layout` fields recursively, and `entries` fields through their nested
+field definition. Other fields are ignored to avoid touching technical values
+such as URLs, dates, emails, slugs or select values.
 
 Custom field names or field types can be included with
 `grommasdietz.proofreader.fields.include`. Default-covered fields can be
@@ -149,6 +150,7 @@ return [
                 'custom-writer' => 'html',
                 'custom-text' => 'plain',
                 'custom-structure' => 'structure',
+                'custom-entries' => 'entries',
             ],
             'names' => [
                 'intro' => 'plain',
@@ -162,11 +164,11 @@ return [
 ];
 ```
 
-Supported include formats are `plain`, `html`, `structure`, `blocks` and
-`layout`. Field-type aliases are accepted too: `text` and `textarea` map to
-`plain`, while `writer` and `list` map to `html`. List entries without a mapped
-format, for example `'names' => ['intro']`, are treated as `plain` unless the
-field already has a default format.
+Supported include formats are `plain`, `html`, `structure`, `entries`,
+`blocks` and `layout`. Field-type aliases are accepted too: `text` and
+`textarea` map to `plain`, while `writer` and `list` map to `html`. List
+entries without a mapped format, for example `'names' => ['intro']`, are
+treated as `plain` unless the field already has a default format.
 
 ### Button label
 
