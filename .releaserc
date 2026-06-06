@@ -14,18 +14,18 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "node tools/set-version.mjs ${nextRelease.version}"
+        "prepareCmd": "node tools/package-release.mjs ${nextRelease.version}"
       }
     ],
-    "@semantic-release/github",
     [
-      "@semantic-release/git",
+      "@semantic-release/github",
       {
         "assets": [
-          "CHANGELOG.md",
-          "package.json",
-          "composer.json",
-          "pnpm-lock.yaml"
+          {
+            "path": "dist/kirby-proofreader.zip",
+            "name": "kirby-proofreader-${nextRelease.gitTag}.zip",
+            "label": "Kirby Proofreader plugin ZIP"
+          }
         ]
       }
     ]

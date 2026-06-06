@@ -6,6 +6,7 @@
 .gitattributes export-ignore
 .github/ export-ignore
 .gitignore export-ignore
+__MACOSX/ export-ignore
 
 # Playground (development-only)
 playground/ export-ignore
@@ -15,6 +16,7 @@ playground/ export-ignore
 .gitmessage export-ignore
 .husky/ export-ignore
 .markdownlint.json export-ignore
+.npmrc export-ignore
 .php-cs-fixer.cache export-ignore
 .php-cs-fixer.dist.php export-ignore
 .phpunit.cache/ export-ignore
@@ -38,6 +40,7 @@ package.json export-ignore
 pnpm-lock.yaml export-ignore
 pnpm-workspace.yaml export-ignore
 test-results/ export-ignore
+tsconfig.json export-ignore
 vendor/ export-ignore
 
 # Markdown (development only)
