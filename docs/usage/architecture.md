@@ -41,7 +41,7 @@ The optional dimensions and paragraph cleanup rules are predefined but omitted
 from the default rule list. Projects can enable dimensions alongside the default
 rules when they want `x` in dimension values to become a multiplication sign.
 Paragraph cleanup runs on HTML fields only; it removes empty paragraphs and
-stale trailing `<br>` elements from the final paragraph.
+stale trailing whitespace or `<br>` elements from paragraph ends.
 
 ## Field Coverage
 

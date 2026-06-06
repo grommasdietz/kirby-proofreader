@@ -564,8 +564,8 @@ final class Proofreader
     }
 
     /**
-     * Removes empty HTML paragraphs and stale trailing breaks from the last
-     * paragraph.
+     * Removes empty HTML paragraphs and stale trailing breaks/spacing from
+     * paragraph ends.
      */
     public static function fixHtmlParagraphs(string $html): string
     {
@@ -574,7 +574,8 @@ final class Proofreader
         }
 
         $html = self::removeEmptyHtmlParagraphs($html);
-        $html = self::removeTrailingBreaksFromLastHtmlParagraph($html);
+        $html = self::removeTrailingBreaksFromHtmlParagraphs($html);
+        $html = self::trimHtmlParagraphEndBlanks($html);
 
         return self::removeEmptyHtmlParagraphs($html);
     }
@@ -733,49 +734,93 @@ final class Proofreader
         return $result ?? $html;
     }
 
-    private static function removeTrailingBreaksFromLastHtmlParagraph(string $html): string
+    private static function removeTrailingBreaksFromHtmlParagraphs(string $html): string
     {
-        $matches = [];
-
-        $matchCount = preg_match_all('/<p\b[^>]*>.*?<\/p>/isu', $html, $matches, PREG_OFFSET_CAPTURE);
-
-        if ($matchCount === false || $matchCount === 0) {
-            return $html;
-        }
-
-        $paragraphs = $matches[0] ?? [];
-        $lastKey = array_key_last($paragraphs);
-
-        if ($lastKey === null) {
-            return $html;
-        }
-
-        $last = $paragraphs[$lastKey] ?? null;
-
-        if (
-            !is_array($last) ||
-            !is_string($last[0] ?? null) ||
-            !is_int($last[1] ?? null)
-        ) {
-            return $html;
-        }
-
-        $paragraph = $last[0];
-        $offset = $last[1];
         $trailingBreakPattern = '/'
             . self::HTML_BLANK_CONTENT_PATTERN
             . '(?:<br\b[^>]*>' . self::HTML_BLANK_CONTENT_PATTERN . ')+(?=<\/p>$)/iu';
-        $fixed = preg_replace(
-            $trailingBreakPattern,
-            '',
-            $paragraph
-        ) ?? $paragraph;
 
-        if ($fixed === $paragraph) {
+        $result = preg_replace_callback(
+            '/<p\b[^>]*>.*?<\/p>/isu',
+            static fn (array $m): string => preg_replace($trailingBreakPattern, '', $m[0]) ?? $m[0],
+            $html
+        );
+
+        return $result ?? $html;
+    }
+
+    private static function trimHtmlParagraphEndBlanks(string $html): string
+    {
+        $parts = preg_split('/(<[^>]+>)/u', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
+
+        if ($parts === false) {
             return $html;
         }
 
-        return substr($html, 0, $offset) . $fixed . substr($html, $offset + strlen($paragraph));
+        return implode('', self::trimHtmlParagraphEndBlankParts($parts));
+    }
+
+    /**
+     * @param list<string> $parts
+     * @return list<string>
+     */
+    private static function trimHtmlParagraphEndBlankParts(array $parts): array
+    {
+        $atParagraphEnd = false;
+        $skipDepth = 0;
+
+        for ($index = count($parts) - 1; $index >= 0; $index--) {
+            $part = $parts[$index];
+
+            if (str_starts_with($part, '<')) {
+                if (self::isOpeningHtmlTag($part, self::PROTECTED_HTML_TAG_PATTERN)) {
+                    $skipDepth = max(0, $skipDepth - 1);
+                    continue;
+                }
+
+                if ($skipDepth > 0) {
+                    continue;
+                }
+
+                if (self::isClosingHtmlTag($part, 'p')) {
+                    $atParagraphEnd = true;
+                    continue;
+                }
+
+                if (self::isOpeningHtmlTag($part, 'p')) {
+                    $atParagraphEnd = false;
+                    continue;
+                }
+
+                if (self::isClosingHtmlTag($part, self::PROTECTED_HTML_TAG_PATTERN)) {
+                    if ($atParagraphEnd === true) {
+                        $atParagraphEnd = false;
+                    }
+
+                    if (self::isSelfClosingHtmlTag($part) === false) {
+                        $skipDepth++;
+                    }
+                }
+
+                continue;
+            }
+
+            if ($skipDepth > 0 || $atParagraphEnd === false) {
+                continue;
+            }
+
+            $parts[$index] = preg_replace(
+                '/(?:[\p{Zs}\t\r\n]|&nbsp;?|&#0*160;?|&#x0*a0;?)+$/iu',
+                '',
+                $part
+            ) ?? $part;
+
+            if (self::containsNonWhitespace($parts[$index])) {
+                $atParagraphEnd = false;
+            }
+        }
+
+        return $parts;
     }
 
     private static function fixHtmlParagraphEdgeSpaces(string $html): string

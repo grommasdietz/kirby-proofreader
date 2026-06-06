@@ -35,7 +35,8 @@ buttons:
 The default rule order is `unicode`, `ellipsis`, `quotes`, `apostrophes`,
 `dashes`, `spaces`. `dimensions` and `paragraphs` are predefined optional
 rules. `dimensions` handles values such as `5 x 5 cm`; `paragraphs` removes
-empty HTML paragraphs and stale trailing `<br>` tags from the last paragraph.
+empty HTML paragraphs and stale trailing whitespace or `<br>` tags from
+paragraph ends.
 Rules can be reordered, disabled or extended. Configure via
 `site/config/config.php`:
 

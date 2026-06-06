@@ -776,10 +776,18 @@ final class ProofreaderTest extends TestCase
         self::assertSame($expected, Proofreader::fixHtmlParagraphs($input));
     }
 
-    public function testFixHtmlRemovesTrailingBreaksFromLastParagraphWhenEnabled(): void
+    public function testFixHtmlRemovesTrailingBreaksFromEveryParagraphWhenEnabled(): void
     {
         $input = '<p>First<br></p><p>Second<br><br /></p><p> </p>';
-        $expected = '<p>First<br></p><p>Second</p>';
+        $expected = '<p>First</p><p>Second</p>';
+
+        self::assertSame($expected, Proofreader::fixHtmlParagraphs($input));
+    }
+
+    public function testFixHtmlRemovesParagraphEndWhitespaceWhenEnabled(): void
+    {
+        $input = '<p>First </p><p><strong>Second&nbsp;</strong></p><p>Third&#160;</p>';
+        $expected = '<p>First</p><p><strong>Second</strong></p><p>Third</p>';
 
         self::assertSame($expected, Proofreader::fixHtmlParagraphs($input));
     }
