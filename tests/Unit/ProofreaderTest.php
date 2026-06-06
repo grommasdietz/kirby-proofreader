@@ -761,6 +761,29 @@ final class ProofreaderTest extends TestCase
         self::assertSame('', Proofreader::fixHtml(''));
     }
 
+    public function testFixHtmlKeepsParagraphCleanupOptional(): void
+    {
+        $input = '<p>Text<br></p><p></p>';
+
+        self::assertSame($input, Proofreader::fixHtml($input));
+    }
+
+    public function testFixHtmlRemovesEmptyParagraphsWhenEnabled(): void
+    {
+        $input = '<p>First</p><p></p><p> </p><p>&nbsp;</p><p><br></p><p>Second</p>';
+        $expected = '<p>First</p><p>Second</p>';
+
+        self::assertSame($expected, Proofreader::fixHtmlParagraphs($input));
+    }
+
+    public function testFixHtmlRemovesTrailingBreaksFromLastParagraphWhenEnabled(): void
+    {
+        $input = '<p>First<br></p><p>Second<br><br /></p><p> </p>';
+        $expected = '<p>First<br></p><p>Second</p>';
+
+        self::assertSame($expected, Proofreader::fixHtmlParagraphs($input));
+    }
+
     public function testFixHtmlFixesDashesInTextNodes(): void
     {
         $rangeSpace = "\u{2006}";

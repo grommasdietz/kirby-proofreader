@@ -16,7 +16,16 @@ final class Proofreader
      *
      * @var list<string>
      */
-    private const BUILTIN_RULES = ['unicode', 'ellipsis', 'quotes', 'apostrophes', 'dashes', 'spaces', 'dimensions'];
+    private const BUILTIN_RULES = [
+        'unicode',
+        'ellipsis',
+        'quotes',
+        'apostrophes',
+        'dashes',
+        'spaces',
+        'dimensions',
+        'paragraphs',
+    ];
 
     /**
      * Regex patterns for built-in protect presets.
@@ -155,6 +164,8 @@ final class Proofreader
     ];
     private const PROTECTED_HTML_TAG_PATTERN = 'code|pre|kbd|samp|script|style|math';
     private const PARAGRAPH_HTML_TAG_PATTERN = 'p|li|h[1-6]|blockquote|figcaption|td|th';
+    private const HTML_BLANK_CONTENT_PATTERN = '(?:[\p{Zs}\t\r\n]|&nbsp;?|&#0*160;?|&#x0*a0;?)*';
+    private const HTML_EMPTY_PARAGRAPH_CONTENT_PATTERN = '(?:[\p{Zs}\t\r\n]|&nbsp;?|&#0*160;?|&#x0*a0;?|<br\b[^>]*>)*';
 
     /**
      * Locale quote definitions: double open/close, single open/close.
@@ -553,6 +564,22 @@ final class Proofreader
     }
 
     /**
+     * Removes empty HTML paragraphs and stale trailing breaks from the last
+     * paragraph.
+     */
+    public static function fixHtmlParagraphs(string $html): string
+    {
+        if ($html === '') {
+            return $html;
+        }
+
+        $html = self::removeEmptyHtmlParagraphs($html);
+        $html = self::removeTrailingBreaksFromLastHtmlParagraph($html);
+
+        return self::removeEmptyHtmlParagraphs($html);
+    }
+
+    /**
      * Applies enabled typography rules in sequence.
      *
      * Spans matched by configured protect patterns are tokenised before any
@@ -682,11 +709,73 @@ final class Proofreader
             }
         }
 
-        if (in_array('spaces', self::normaliseRules($rules), true)) {
-            return self::fixHtmlParagraphEdgeSpaces($out);
+        $enabledRules = self::normaliseRules($rules);
+
+        if (in_array('spaces', $enabledRules, true)) {
+            $out = self::fixHtmlParagraphEdgeSpaces($out);
+        }
+
+        if (in_array('paragraphs', $enabledRules, true)) {
+            return self::fixHtmlParagraphs($out);
         }
 
         return $out;
+    }
+
+    private static function removeEmptyHtmlParagraphs(string $html): string
+    {
+        $result = preg_replace(
+            '/<p\b[^>]*>' . self::HTML_EMPTY_PARAGRAPH_CONTENT_PATTERN . '<\/p>/iu',
+            '',
+            $html
+        );
+
+        return $result ?? $html;
+    }
+
+    private static function removeTrailingBreaksFromLastHtmlParagraph(string $html): string
+    {
+        $matches = [];
+
+        $matchCount = preg_match_all('/<p\b[^>]*>.*?<\/p>/isu', $html, $matches, PREG_OFFSET_CAPTURE);
+
+        if ($matchCount === false || $matchCount === 0) {
+            return $html;
+        }
+
+        $paragraphs = $matches[0] ?? [];
+        $lastKey = array_key_last($paragraphs);
+
+        if ($lastKey === null) {
+            return $html;
+        }
+
+        $last = $paragraphs[$lastKey] ?? null;
+
+        if (
+            !is_array($last) ||
+            !is_string($last[0] ?? null) ||
+            !is_int($last[1] ?? null)
+        ) {
+            return $html;
+        }
+
+        $paragraph = $last[0];
+        $offset = $last[1];
+        $trailingBreakPattern = '/'
+            . self::HTML_BLANK_CONTENT_PATTERN
+            . '(?:<br\b[^>]*>' . self::HTML_BLANK_CONTENT_PATTERN . ')+(?=<\/p>$)/iu';
+        $fixed = preg_replace(
+            $trailingBreakPattern,
+            '',
+            $paragraph
+        ) ?? $paragraph;
+
+        if ($fixed === $paragraph) {
+            return $html;
+        }
+
+        return substr($html, 0, $offset) . $fixed . substr($html, $offset + strlen($paragraph));
     }
 
     private static function fixHtmlParagraphEdgeSpaces(string $html): string
@@ -1184,6 +1273,7 @@ final class Proofreader
                 $leadingNbspAfterSentence
             ),
             'dimensions'  => self::fixDimensions($text),
+            'paragraphs'  => $text,
             default       => $text,
         };
     }

@@ -30,15 +30,18 @@ exists and falls back to the latest version.
 5. Dash characters
 6. Spacing
 7. Optional dimensions, when enabled
+8. Optional paragraph cleanup, when enabled
 
 The dash character and spacing steps are intentionally separate. This lets the
 review dialog show a clear first suggestion for the dash glyph and a later
 suggestion for the language-specific spacing around existing or corrected
 dashes.
 
-The optional dimensions rule is predefined but omitted from the default rule
-list. Projects can enable it alongside the default rules when they want `x` in
-dimension values to become a multiplication sign.
+The optional dimensions and paragraph cleanup rules are predefined but omitted
+from the default rule list. Projects can enable dimensions alongside the default
+rules when they want `x` in dimension values to become a multiplication sign.
+Paragraph cleanup runs on HTML fields only; it removes empty paragraphs and
+stale trailing `<br>` elements from the final paragraph.
 
 ## Field Coverage
 

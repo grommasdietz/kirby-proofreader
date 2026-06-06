@@ -28,8 +28,10 @@ The default rule order is:
 ]
 ```
 
-An optional built-in `dimensions` rule is available but disabled by default.
-It normalizes dimension separators such as `5 x 5 cm` to `5 × 5 cm`.
+Optional built-in `dimensions` and `paragraphs` rules are available but disabled
+by default. `dimensions` normalizes dimension separators such as `5 x 5 cm` to
+`5 × 5 cm`; `paragraphs` removes empty HTML paragraphs and stale trailing `<br>`
+tags from the last paragraph.
 
 You can override the enabled rules and their order with one option in
 `site/config/config.php`. String entries and keyed `true` entries use the
@@ -90,6 +92,7 @@ return [
         'dashes',
         'spaces',
         'dimensions',
+        'paragraphs',
     ],
 ];
 ```
@@ -103,6 +106,11 @@ punctuation, normalizes six-per-em spaces around en dashes, hair spaces around
 em dashes, narrow non-breaking spaces after ordinals, and non-breaking spaces
 after one-letter words and 2–4 letter sentence starters outside paragraph
 starts, and before 2–4 letter paragraph-ending words.
+
+The optional `dimensions` rule handles values such as `5 x 5 cm`. The optional
+`paragraphs` rule applies only to HTML fields. It removes empty `<p>` elements
+whose content is blank, `&nbsp;` or `<br>`, and removes trailing `<br>` elements
+from the last remaining paragraph.
 
 Quote characters, dash characters and dash spacing can also come from Kirby's
 native SmartyPants options. In multi-language installations, language-level

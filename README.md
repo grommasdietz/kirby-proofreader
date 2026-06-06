@@ -32,7 +32,12 @@ buttons:
 
 ### Options
 
-The default rule order is `unicode`, `ellipsis`, `quotes`, `apostrophes`, `dashes`, `spaces`. `dimensions` is a predefined optional rule for values such as `5 x 5 cm`. Rules can be reordered, disabled or extended. Configure via `site/config/config.php`:
+The default rule order is `unicode`, `ellipsis`, `quotes`, `apostrophes`,
+`dashes`, `spaces`. `dimensions` and `paragraphs` are predefined optional
+rules. `dimensions` handles values such as `5 x 5 cm`; `paragraphs` removes
+empty HTML paragraphs and stale trailing `<br>` tags from the last paragraph.
+Rules can be reordered, disabled or extended. Configure via
+`site/config/config.php`:
 
 ```php
 return [
@@ -44,6 +49,7 @@ return [
         'dashes',
         'spaces',
         'dimensions',
+        'paragraphs',
         'trademark' => [
             'label' => 'Trademark',
             'callback' => static fn (string $text): string => str_replace(

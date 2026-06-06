@@ -195,6 +195,7 @@ const RULE_LABELS = {
   apostrophes: "panel.button.proofreader.rule.apostrophes",
   spaces: "panel.button.proofreader.rule.spaces",
   dimensions: "panel.button.proofreader.rule.dimensions",
+  paragraphs: "panel.button.proofreader.rule.paragraphs",
 };
 
 export default {

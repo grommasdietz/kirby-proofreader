@@ -36,6 +36,7 @@ $en = [
     'panel.button.proofreader.rule.apostrophes'  => 'Apostrophes',
     'panel.button.proofreader.rule.spaces'       => 'Spaces',
     'panel.button.proofreader.rule.dimensions'   => 'Dimensions',
+    'panel.button.proofreader.rule.paragraphs'   => 'Paragraphs',
 ];
 
 $de = [
@@ -72,6 +73,7 @@ $de = [
     'panel.button.proofreader.rule.apostrophes'  => 'Apostrophe',
     'panel.button.proofreader.rule.spaces'       => 'Abstände',
     'panel.button.proofreader.rule.dimensions'   => 'Maße',
+    'panel.button.proofreader.rule.paragraphs'   => 'Absätze',
 ];
 
 $fr = [
@@ -108,6 +110,7 @@ $fr = [
     'panel.button.proofreader.rule.apostrophes'  => 'Apostrophes',
     'panel.button.proofreader.rule.spaces'       => 'Espaces',
     'panel.button.proofreader.rule.dimensions'   => 'Dimensions',
+    'panel.button.proofreader.rule.paragraphs'   => 'Paragraphes',
 ];
 
 $es = [
@@ -144,6 +147,7 @@ $es = [
     'panel.button.proofreader.rule.apostrophes'  => 'Apóstrofes',
     'panel.button.proofreader.rule.spaces'       => 'Espacios',
     'panel.button.proofreader.rule.dimensions'   => 'Dimensiones',
+    'panel.button.proofreader.rule.paragraphs'   => 'Párrafos',
 ];
 
 $translations = [

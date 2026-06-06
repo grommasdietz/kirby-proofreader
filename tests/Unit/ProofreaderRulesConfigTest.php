@@ -95,6 +95,37 @@ final class ProofreaderRulesConfigTest extends TestCase
         );
     }
 
+    public function testRulesOptionCanEnableOptionalParagraphsRule(): void
+    {
+        $this->bootKirby([
+            'options' => [
+                'grommasdietz.proofreader' => [
+                    'rules' => [
+                        'unicode',
+                        'ellipsis',
+                        'quotes',
+                        'apostrophes',
+                        'dashes',
+                        'spaces',
+                        'paragraphs',
+                    ],
+                ],
+            ],
+        ]);
+
+        $review = Proofreader::reviewFields(
+            ['body' => '<p>Ready</p><p></p>'],
+            ['body' => ['type' => 'writer']]
+        );
+
+        self::assertSame(
+            ['unicode', 'ellipsis', 'quotes', 'apostrophes', 'dashes', 'spaces', 'paragraphs'],
+            array_column(Proofreader::rulesForPanel(), 'name')
+        );
+        self::assertSame(['paragraphs'], array_column($review['suggestions'], 'rule'));
+        self::assertSame('<p>Ready</p>', $review['fixed']['body']);
+    }
+
     public function testRulesOptionSupportsInlineCustomRules(): void
     {
         $this->bootKirby([
