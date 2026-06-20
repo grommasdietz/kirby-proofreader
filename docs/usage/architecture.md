@@ -5,10 +5,10 @@ route.
 
 ## Panel Flow
 
-The Panel button is registered in `src/index.js` and can be enabled in page,
-site and file blueprints with `proofreader: true`. The button asks the route
-for a preview, opens the review dialog and sends the selected rules and fields
-back when the editor applies fixes.
+The Panel button is registered in `src/index.js` and can be enabled in
+blueprints with `proofreader: true`. The button resolves the current target from
+the Panel view API path, asks the route for a preview, opens the review dialog
+and sends the selected rules and fields back when the editor applies fixes.
 
 The review dialog keeps title fixes separate from content fields. Content field
 changes are saved to Kirby's changes version. Page and site title changes use
@@ -17,9 +17,14 @@ content changes layer.
 
 ## PHP Flow
 
-`config/routes.php` resolves the current page, site or file model, the active
-language and the source content version. It uses the changes version when one
-exists and falls back to the latest version.
+`config/routes.php` resolves the current site, page, file, user or account
+model, the active language and the source content version. It uses the changes
+version when one exists and falls back to the latest version.
+
+Custom Blueprint Areas are handled through an optional route that calls
+`GrommasDietz\Areas\BlueprintAreas` only when the class is available. The route
+reviews values from the area view payload, derives field definitions from the
+area layout and saves fixes through the area's draft handling.
 
 `lib/Proofreader.php` applies rules in deterministic order:
 

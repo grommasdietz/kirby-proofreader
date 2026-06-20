@@ -1,6 +1,6 @@
 # Kirby Proofreader
 
-Kirby Proofreader adds a Panel button on Kirby CMS for reviewing typographic corrections in page, site and file metadata before applying them. Field changes are saved to Kirby's changes version, title fixes use Kirby's native title action and save immediately.
+Kirby Proofreader adds a Panel button on Kirby CMS for reviewing typographic corrections in content views before applying them. Field changes are saved to Kirby's changes version, title fixes use Kirby's native title action and save immediately.
 
 ![Cover image showing an example of the plugin in use](/.github/assets/hero-image.png)
 
@@ -20,7 +20,7 @@ composer require grommasdietz/kirby-proofreader
 
 ## Quickstart
 
-Add the button to a page, site or file blueprint:
+Add the button to a page, site, file, user or custom area blueprint:
 
 ```yaml
 buttons:

@@ -1,6 +1,6 @@
 # Usage
 
-Kirby Proofreader adds a Panel button for page, site and file views. It previews
+Kirby Proofreader adds a Panel button for Kirby content views. It previews
 typography fixes for eligible `text`, `textarea`, `writer`, `list`,
 `structure`, `blocks`, and `layout` content before saving field changes as
 unpublished changes. Blueprint definitions that use `extends` are resolved
@@ -8,6 +8,40 @@ before field eligibility is checked.
 
 Title fixes are shown as their own scope, selected by default and saved
 immediately via Kirby's native title action when applied.
+
+## Panel Button
+
+Add `proofreader: true` to blueprint `buttons` where the Kirby Panel renders
+view buttons:
+
+```yaml
+buttons:
+  proofreader: true
+  languages: true
+```
+
+The Panel button resolves the current view target from Kirby's Panel API path.
+It supports site, page, file, user and account views. File views include files
+owned by the site, pages, users and the current account.
+
+Custom Blueprint Areas are supported when
+`grommasdietz/kirby-blueprint-areas` is installed. Add the same button entry to
+the area blueprint:
+
+```yaml
+title: Settings
+
+buttons:
+  proofreader: true
+
+fields:
+  intro:
+    label: Intro
+    type: textarea
+```
+
+Area fixes use the area blueprint for field eligibility and are saved as area
+draft changes.
 
 ## Options for Kirby Proofreader
 

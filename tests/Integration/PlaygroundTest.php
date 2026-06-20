@@ -209,6 +209,195 @@ TXT);
         }
     }
 
+    public function testProofreaderRouteSupportsUserContent(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $blueprintDir = $root . '/playground/site/blueprints/users';
+        $blueprintFile = $blueprintDir . '/admin.yml';
+        $originalBlueprint = is_file($blueprintFile) ? file_get_contents($blueprintFile) : null;
+        $user = null;
+
+        if ($originalBlueprint === false) {
+            $originalBlueprint = null;
+        }
+
+        if (is_dir($blueprintDir) === false) {
+            mkdir($blueprintDir, 0777, true);
+        }
+
+        file_put_contents($blueprintFile, <<<YAML
+title: Admin
+
+buttons:
+  proofreader: true
+
+fields:
+  bio:
+    label: Bio
+    type: textarea
+YAML);
+
+        try {
+            $user = $this->kirby->users()->create([
+                'email'    => 'profile-user-' . uniqid() . '@kirby-proofreader.test',
+                'name'     => 'Profile User',
+                'role'     => 'admin',
+                'password' => 'test-password',
+                'content'  => [
+                    'bio' => 'Profile...',
+                ],
+            ]);
+
+            $response = $this->callProofreaderRoute(
+                'kirby-proofreader/users/' . rawurlencode($user->id()) . '/optimize',
+                [
+                    'preview' => true,
+                    'rules'   => ['ellipsis'],
+                    'fields'  => ['bio'],
+                ]
+            );
+            $data = $this->jsonResponse($response);
+
+            self::assertSame('ok', $data['status']);
+            self::assertSame(['bio'], array_unique(array_column($data['suggestions'], 'field')));
+            self::assertSame('Bio', $data['suggestions'][0]['fieldLabel']);
+
+            $response = $this->callProofreaderRoute(
+                'kirby-proofreader/users/' . rawurlencode($user->id()) . '/optimize',
+                [
+                    'preview' => false,
+                    'rules'   => ['ellipsis'],
+                    'fields'  => ['bio'],
+                ]
+            );
+            $data = $this->jsonResponse($response);
+            $language = $this->kirby->language('en') ?? 'default';
+            $updatedUser = $this->kirby->user($user->id());
+
+            self::assertSame('ok', $data['status']);
+            self::assertSame(['bio'], $data['changedFields']);
+            self::assertSame('Profile…', $data['diffs']['bio']['to']);
+            self::assertSame('Profile…', $updatedUser?->version('changes')->content($language)->get('bio')->value());
+        } finally {
+            $user?->delete();
+
+            if ($originalBlueprint !== null) {
+                file_put_contents($blueprintFile, $originalBlueprint);
+            } elseif (is_file($blueprintFile)) {
+                unlink($blueprintFile);
+            }
+
+            if (is_dir($blueprintDir) && count(scandir($blueprintDir) ?: []) === 2) {
+                rmdir($blueprintDir);
+            }
+        }
+    }
+
+    public function testProofreaderRouteSupportsBlueprintAreaContent(): void
+    {
+        $root = dirname(__DIR__, 2);
+        $siblingBlueprintAreas = dirname($root) . '/kirby-blueprint-areas';
+
+        if (is_dir($siblingBlueprintAreas) === false) {
+            $this->markTestSkipped('Sibling kirby-blueprint-areas checkout is not available.');
+        }
+
+        $pluginSymlink = $root . '/tests/.plugins/kirby-blueprint-areas';
+        if (is_link($pluginSymlink) === true || is_file($pluginSymlink) === true) {
+            unlink($pluginSymlink);
+        }
+
+        symlink($siblingBlueprintAreas, $pluginSymlink);
+
+        $this->bootKirby()->impersonate('kirby');
+
+        $areaDir = $root . '/playground/site/blueprints/areas';
+        $areaBlueprint = $areaDir . '/proofreader-area.yml';
+        $pageDir = $root . '/playground/content/proofreader-area-test';
+        $pageContent = $pageDir . '/about.en.txt';
+        $pageChanges = $pageDir . '/_changes/about.en.txt';
+
+        if (is_dir($areaDir) === false) {
+            mkdir($areaDir, 0777, true);
+        }
+
+        if (is_dir($pageDir) === false) {
+            mkdir($pageDir, 0777, true);
+        }
+
+        file_put_contents($areaBlueprint, <<<YAML
+title: Proofreader Area
+query: site.find("proofreader-area-test")
+
+buttons:
+  proofreader: true
+
+fields:
+  area_text:
+    label: Area text
+    type: text
+YAML);
+        file_put_contents($pageContent, <<<TXT
+Title: Proofreader Area Test
+
+----
+
+Area_text: Area...
+TXT);
+
+        try {
+            $response = $this->callProofreaderRoute(
+                'kirby-proofreader/areas/proofreader-area/optimize',
+                [
+                    'preview' => true,
+                    'rules'   => ['ellipsis'],
+                    'fields'  => ['area_text'],
+                ]
+            );
+            $data = $this->jsonResponse($response);
+
+            self::assertSame('ok', $data['status']);
+            self::assertSame(['area_text'], array_unique(array_column($data['suggestions'], 'field')));
+            self::assertSame('Area text', $data['suggestions'][0]['fieldLabel']);
+
+            $response = $this->callProofreaderRoute(
+                'kirby-proofreader/areas/proofreader-area/optimize',
+                [
+                    'preview' => false,
+                    'rules'   => ['ellipsis'],
+                    'fields'  => ['area_text'],
+                ]
+            );
+            $data = $this->jsonResponse($response);
+            $page = $this->kirby->page('proofreader-area-test');
+            $language = $this->kirby->language('en') ?? 'default';
+
+            self::assertSame('ok', $data['status']);
+            self::assertSame(['area_text'], $data['changedFields']);
+            self::assertSame('Area…', $data['diffs']['area_text']['to']);
+            self::assertSame('Area…', $page?->version('changes')->content($language)->get('area_text')->value());
+        } finally {
+            foreach ([$pageChanges, $pageContent, $areaBlueprint] as $fixture) {
+                if (is_file($fixture)) {
+                    unlink($fixture);
+                }
+            }
+
+            $changesDir = dirname($pageChanges);
+            if (is_dir($changesDir) && count(scandir($changesDir) ?: []) === 2) {
+                rmdir($changesDir);
+            }
+
+            if (is_dir($pageDir) && count(scandir($pageDir) ?: []) === 2) {
+                rmdir($pageDir);
+            }
+
+            if (is_link($pluginSymlink)) {
+                unlink($pluginSymlink);
+            }
+        }
+    }
+
     public function testOptionalDimensionRuleCanReviewPlaygroundContent(): void
     {
         $this->bootKirby([

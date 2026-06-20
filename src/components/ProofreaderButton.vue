@@ -28,38 +28,34 @@ export default {
 
   computed: {
     target() {
-      const path = this.$panel?.view?.path ?? "";
+      const props = this.$panel?.view?.props ?? {};
+      const apiPath = this.normalizePanelPath(props.api);
+      const areaMatch = apiPath?.match(
+        /^grommasdietz\/blueprint-areas\/blueprints\/([^/]+)$/
+      );
 
-      if (path === "site") {
-        return {
-          url: window.location.origin + "/kirby-proofreader/site/optimize",
-        };
-      }
-
-      const fileMatch = path.match(/^(?:files\/.+|.+\/files\/.+)$/);
-      if (fileMatch) {
-        const encodedPath = path.replace(/\//g, "+");
-
+      if (areaMatch) {
         return {
           url:
             window.location.origin +
-            "/kirby-proofreader/files/" +
-            encodedPath +
+            "/kirby-proofreader/areas/" +
+            encodeURIComponent(areaMatch[1]) +
             "/optimize",
         };
       }
 
-      const match = path.match(/^pages\/(.+)/);
-      if (match) {
-        const encodedId = match[1].replace(/\//g, "+");
+      const paths = [
+        apiPath,
+        this.normalizePanelPath(props.area?.meta?.modelPath),
+        this.normalizePanelPath(this.$panel?.view?.path),
+      ];
 
-        return {
-          url:
-            window.location.origin +
-            "/kirby-proofreader/pages/" +
-            encodedId +
-            "/optimize",
-        };
+      for (const path of paths) {
+        const target = this.targetForPanelPath(path);
+
+        if (target) {
+          return target;
+        }
       }
 
       return null;
@@ -77,6 +73,64 @@ export default {
   },
 
   methods: {
+    normalizePanelPath(value) {
+      if (typeof value !== "string" || value === "") {
+        return null;
+      }
+
+      return value.replace(/^\/+|\/+$/g, "");
+    },
+    proofreaderUrl(path) {
+      return window.location.origin + "/kirby-proofreader/" + path;
+    },
+    targetForPanelPath(path) {
+      if (!path) {
+        return null;
+      }
+
+      if (path === "site") {
+        return {
+          url: this.proofreaderUrl("site/optimize"),
+        };
+      }
+
+      if (path === "account") {
+        return {
+          url: this.proofreaderUrl("account/optimize"),
+        };
+      }
+
+      const fileMatch = path.match(
+        /^(?:files\/.+|(?:account|site|users\/[^/]+|pages\/.+)\/files\/.+)$/
+      );
+      if (fileMatch) {
+        const encodedPath = path.replace(/\//g, "+");
+
+        return {
+          url: this.proofreaderUrl("files/" + encodedPath + "/optimize"),
+        };
+      }
+
+      const userMatch = path.match(/^users\/([^/]+)$/);
+      if (userMatch) {
+        return {
+          url: this.proofreaderUrl(
+            "users/" + encodeURIComponent(userMatch[1]) + "/optimize"
+          ),
+        };
+      }
+
+      const match = path.match(/^pages\/(.+)/);
+      if (match) {
+        const encodedId = match[1].replace(/\//g, "+");
+
+        return {
+          url: this.proofreaderUrl("pages/" + encodedId + "/optimize"),
+        };
+      }
+
+      return null;
+    },
     clearReset() {
       if (this.resetTimerId !== null) {
         clearTimeout(this.resetTimerId);
