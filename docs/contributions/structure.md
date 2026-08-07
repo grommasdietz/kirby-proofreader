@@ -57,10 +57,4 @@ Only add directories that actually exist.
 
 ---
 
-## Environment and secrets
-
-Keep secrets in `playground/.env`. If `vlucas/phpdotenv` is installed, tests will load it automatically.
-
----
-
 Next: Continue with [Workflow](./workflow.md)

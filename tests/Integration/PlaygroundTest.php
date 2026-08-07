@@ -302,14 +302,9 @@ YAML);
             $this->markTestSkipped('Sibling kirby-blueprint-areas checkout is not available.');
         }
 
-        $pluginSymlink = $root . '/tests/.plugins/kirby-blueprint-areas';
-        if (is_link($pluginSymlink) === true || is_file($pluginSymlink) === true) {
-            unlink($pluginSymlink);
-        }
-
-        symlink($siblingBlueprintAreas, $pluginSymlink);
-
-        $this->bootKirby()->impersonate('kirby');
+        $this->bootKirby([], [
+            'kirby-blueprint-areas' => $siblingBlueprintAreas,
+        ])->impersonate('kirby');
 
         $areaDir = $root . '/playground/site/blueprints/areas';
         $areaBlueprint = $areaDir . '/proofreader-area.yml';
@@ -390,10 +385,6 @@ TXT);
 
             if (is_dir($pageDir) && count(scandir($pageDir) ?: []) === 2) {
                 rmdir($pageDir);
-            }
-
-            if (is_link($pluginSymlink)) {
-                unlink($pluginSymlink);
             }
         }
     }
