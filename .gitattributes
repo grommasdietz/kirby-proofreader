@@ -1,5 +1,4 @@
-# Keep the repo useful for development, but ship a minimal ZIP/Composer archive.
-# See Kirby's monolithic plugin setup recipe.
+# Keep the repository useful for development while GitHub tag archives and Composer exports contain only runtime files.
 
 # Git / GitHub
 .DS_Store export-ignore
@@ -13,10 +12,9 @@ playground/ export-ignore
 
 # Dev tooling
 .editorconfig export-ignore
-.gitmessage export-ignore
 .husky/ export-ignore
 .markdownlint.json export-ignore
-.npmrc export-ignore
+.node-version export-ignore
 .php-cs-fixer.cache export-ignore
 .php-cs-fixer.dist.php export-ignore
 .phpunit.cache/ export-ignore
@@ -25,10 +23,7 @@ playground/ export-ignore
 .vscode/ export-ignore
 commitlint.config.cjs export-ignore
 eslint.config.cjs export-ignore
-phpmd.xml.dist export-ignore
-phpunit.ci.xml export-ignore
-phpunit.dist.xml export-ignore
-kirbyup.config.js export-ignore
+phpunit.xml.dist export-ignore
 playwright.config.ts export-ignore
 postcss.config.cjs export-ignore
 psalm.xml.dist export-ignore
@@ -42,6 +37,7 @@ pnpm-workspace.yaml export-ignore
 test-results/ export-ignore
 tsconfig.json export-ignore
 vendor/ export-ignore
+kirby/ export-ignore
 
 # Markdown (development only)
 AGENTS.md export-ignore

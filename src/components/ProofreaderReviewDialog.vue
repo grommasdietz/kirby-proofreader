@@ -640,16 +640,6 @@ export default {
 </script>
 
 <style>
-@font-face {
-  font-display: swap;
-  font-family: hidden-characters;
-  font-style: normal;
-  font-weight: 400;
-  src: url("/media/plugins/grommasdietz/hidden-characters/fonts/hidden-characters.woff2")
-    format("woff2");
-  unicode-range: U+0020, U+00A0, U+2000-200A, U+202F, U+205F, U+E000-E003;
-}
-
 .k-dialog-portal:has(.proofreader-review-list) {
   --proofreader-dialog-inset: var(--spacing-1);
   --dialog-width: 60rem;

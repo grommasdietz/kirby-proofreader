@@ -1,3 +1,6 @@
+> [!NOTE]
+> Releases 1.9.0, 1.10.0 and 1.11.0 were published before the release workflow persisted generated changelog updates. Their generated notes remain available in the GitHub releases.
+
 # [1.8.0](https://github.com/grommasdietz/kirby-proofreader/compare/v1.7.0...v1.8.0) (2026-06-05)
 
 

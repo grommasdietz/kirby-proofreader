@@ -1,3 +1,4 @@
+import "./styles/hidden-characters-font.css";
 import { usePanel } from "kirbyuse";
 import ProofreaderButton from "./components/ProofreaderButton.vue";
 import ProofreaderReviewDialog from "./components/ProofreaderReviewDialog.vue";
