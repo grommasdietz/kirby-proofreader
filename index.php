@@ -1,12 +1,11 @@
 <?php
 
 use Kirby\Cms\App;
+use Kirby\Filesystem\F;
 
-$autoload = __DIR__ . '/vendor/autoload.php';
-
-if (is_file($autoload)) {
-    require_once $autoload;
-}
+F::loadClasses([
+    'GrommasDietz\\Proofreader\\Proofreader' => 'lib/Proofreader.php',
+], __DIR__);
 
 App::plugin('grommasdietz/proofreader', [
     'options' => [

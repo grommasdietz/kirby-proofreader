@@ -1,32 +1,35 @@
 {
-    "name": "grommasdietz/kirby-proofreader-playground",
-    "description": "Integration playground for Kirby Proofreader",
-    "license": "MIT",
-    "prefer-stable": true,
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../",
-            "options": {
-                "versions": {
-                    "grommasdietz/kirby-proofreader": "dev-main"
-                }
-            }
+  "name": "grommasdietz/kirby-proofreader-playground",
+  "description": "Integration playground for Kirby Proofreader",
+  "license": "MIT",
+  "prefer-stable": true,
+  "repositories": [
+    {
+      "type": "path",
+      "url": "../",
+      "options": {
+        "versions": {
+          "grommasdietz/kirby-proofreader": "dev-main"
         }
-    ],
-    "require": {
-        "php": "^8.2",
-        "grommasdietz/kirby-proofreader": "dev-main",
-        "grommasdietz/kirby-hidden-characters": "^2.0",
-        "getkirby/cms": "^5.2"
-    },
-    "require-dev": {
-        "getkirby/cli": "^1.9"
-    },
-    "config": {
-        "allow-plugins": {
-            "getkirby/composer-installer": true,
-            "php-http/discovery": true
-        }
+      }
     }
+  ],
+  "require": {
+    "php": "^8.2",
+    "grommasdietz/kirby-proofreader": "dev-main",
+    "grommasdietz/kirby-hidden-characters": "^2.0",
+    "getkirby/cms": "^5.2"
+  },
+  "require-dev": {
+    "getkirby/cli": "^1.9"
+  },
+  "config": {
+    "platform": {
+      "php": "8.2.0"
+    },
+    "allow-plugins": {
+      "getkirby/composer-installer": true,
+      "php-http/discovery": true
+    }
+  }
 }

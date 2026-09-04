@@ -16,7 +16,6 @@ jobs:
       github.event.pull_request.draft == false &&
       github.repository == 'grommasdietz/kirby-proofreader'
     runs-on: ubuntu-latest
-
     steps:
       - name: Fetch Dependabot metadata
         id: metadata

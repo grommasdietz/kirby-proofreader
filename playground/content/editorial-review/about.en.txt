@@ -27,7 +27,7 @@ Milestones:
 
 Notes:
 
-- 
+-
   label: Field preview
   scope: 'Panel pass - review'
   note: '<p>The note keeps "candidate changes" visible and records a 3. April check.</p>'
@@ -35,7 +35,7 @@ Notes:
   reference: https://kirby-proofreader.test
   checked: 2026-05-08
   mode: focused
-- 
+-
   label: Saved preview
   scope: 'Content pass - handoff'
   note: '<p>The note prepares "before and after" excerpts for a compact review.</p>'

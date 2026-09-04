@@ -19,10 +19,11 @@ abstract class TestCase extends BaseTestCase
      * Boots Kirby for the test suite. Pass overrides to tweak configuration.
      *
      * @param array<string,mixed> $overrides
+     * @param array<string,string> $additionalPlugins Optional plugin directory => absolute path map.
      */
-    protected function bootKirby(array $overrides = []): App
+    protected function bootKirby(array $overrides = [], array $additionalPlugins = []): App
     {
-        $this->kirby = TestEnvironment::boot($overrides);
+        $this->kirby = TestEnvironment::boot($overrides, $additionalPlugins);
 
         return $this->kirby;
     }

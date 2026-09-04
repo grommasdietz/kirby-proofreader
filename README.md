@@ -6,7 +6,7 @@ Kirby Proofreader adds a Panel button on Kirby CMS for reviewing typographic co
 
 ## Requirements
 
-- Kirby 5+
+- Kirby 5.2+
 - PHP 8.2+
 
 ## Installation
@@ -16,7 +16,7 @@ composer require grommasdietz/kirby-proofreader
 ```
 
 > [!TIP]
-> If you don’t use Composer, you can download this repository and copy it to `site/plugins/kirby-proofreader`.
+> For a manual install, download the **Source code (zip)** archive of an immutable GitHub release tag and copy it to `site/plugins/kirby-proofreader`.
 
 ## Quickstart
 
