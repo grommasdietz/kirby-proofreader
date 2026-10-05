@@ -6,7 +6,7 @@
   "packageManager": "pnpm@11.22.0",
   "scripts": {
     "setup": "pnpm install --frozen-lockfile && pnpm exec playwright install chromium",
-    "update:dev": "pnpm update --dev --prod",
+    "update:dev": "pnpm update --dev",
     "dev": "kirbyup serve src/index.js",
     "build": "kirbyup src/index.js",
     "build:check": "node tools/check-generated-assets.mjs index.js index.css",
@@ -22,8 +22,8 @@
     "test:browser": "pnpm exec playwright test",
     "test:browser:debug": "PLAYWRIGHT_SERVER_LOGS=1 pnpm exec playwright test --reporter=list",
     "test:browser:report": "pnpm exec playwright show-report playwright-report",
-    "verify": "node tools/run-checks.mjs",
-    "verify:all": "node tools/verify-all.mjs",
+    "verify": "pnpm run build:check && pnpm run lint && pnpm run test:bundle && pnpm run test:archive && pnpm run docs:verify && pnpm run test:hygiene && pnpm run test:browser",
+    "verify:all": "composer validate --strict --no-check-version && composer check-platform-reqs && composer run verify && composer run release:check && pnpm run verify && git diff --check",
     "prepare": "husky"
   },
   "devDependencies": {

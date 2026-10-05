@@ -50,8 +50,9 @@
       </div>
 
       <div class="proofreader-review-list">
-        <template v-for="group in fieldGroups" :key="group.field">
+        <template v-for="group in fieldGroups">
           <section
+            :key="group.field"
             class="proofreader-review-field"
             :data-scope="isTitleGroup(group) ? 'title' : 'content'"
             :data-selected="selectedCountForField(group) > 0"
