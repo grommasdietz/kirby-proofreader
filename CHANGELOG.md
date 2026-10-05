@@ -1,3 +1,10 @@
+## [1.11.1](https://github.com/grommasdietz/kirby-proofreader/compare/v1.11.0...v1.11.1) (2026-10-05)
+
+
+### Bug Fixes
+
+* restore builds and align maintenance workflow ([6563f77](https://github.com/grommasdietz/kirby-proofreader/commit/6563f77a9eb5ba512067ab4008a8eb694de7132f))
+
 > [!NOTE]
 > Releases 1.9.0, 1.10.0 and 1.11.0 were published before the release workflow persisted generated changelog updates. Their generated notes remain available in the GitHub releases.
 
