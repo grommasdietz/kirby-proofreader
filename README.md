@@ -4,6 +4,8 @@ Kirby Proofreader adds a Panel button on Kirby CMS for reviewing typographic co
 
 ![Cover image showing an example of the plugin in use](/.github/assets/hero-image.png)
 
+The playground disables `panel.vue.compiler` to exercise the plugin with Kirby’s runtime-only Vue build.
+
 ## Requirements
 
 - Kirby 5.2+
