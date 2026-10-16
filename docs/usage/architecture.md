@@ -50,7 +50,7 @@ stale trailing whitespace or `<br>` elements from paragraph ends.
 
 ## Field Coverage
 
-The plugin processes `text`, `textarea`, `writer`, `list`, `structure`,
+The plugin processes `text`, `textarea`, `writer`, `list`, `structure`, `entries`,
 `blocks` and `layout` fields. Writer, list and block HTML content is handled as
 text nodes so tags, links and protected code-like elements stay intact.
 

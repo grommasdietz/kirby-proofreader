@@ -4,8 +4,6 @@ Kirby Proofreader adds a Panel button on Kirby CMS for reviewing typographic co
 
 ![Cover image showing an example of the plugin in use](/.github/assets/hero-image.png)
 
-The playground disables `panel.vue.compiler` to exercise the plugin with Kirby’s runtime-only Vue build.
-
 ## Requirements
 
 - Kirby 5.2+
@@ -72,44 +70,7 @@ Quote characters, dash characters and dash spacing follow Kirby's native
 SmartyPants options when configured globally or per language. Single-language
 installs need SmartyPants configuration to enable quote rule.
 
-Default field coverage includes `text`, `textarea`, `writer`, `list`,
-`structure`, `entries`, `blocks` and `layout` fields. Custom field names or types can be included or excluded:
-
-```php
-return [
-    'grommasdietz.proofreader.fields' => [
-        'include' => [
-            'types' => [
-                'custom-writer' => 'html',
-                'custom-text' => 'plain',
-                'custom-structure' => 'structure',
-                'custom-entries' => 'entries',
-            ],
-            'names' => [
-                'intro' => 'plain',
-            ],
-        ],
-        'exclude' => [
-            'types' => ['text', 'textarea'],
-            'names' => ['intro'],
-        ],
-    ],
-];
-```
-
-Use `grommasdietz.proofreader.protect` to prevent specific text spans from
-being modified by any rule. The built-in `phone` preset protects international
-(`+49 89 …`) and domestic chained (`0800-123-4567`) numbers. Arbitrary regex
-patterns are accepted for other span types:
-
-```php
-return [
-    'grommasdietz.proofreader.protect' => [
-        'phone'      => true,
-        'skuPattern' => '/\bSKU-\d+-\d+\b/u',
-    ],
-];
-```
+See the [usage reference](docs/usage/index.md) for field coverage, custom rules and protected text spans.
 
 ### CLI
 
@@ -117,20 +78,8 @@ With the [Kirby CLI](https://github.com/getkirby/cli) installed, fixes can
 also be applied from the command line:
 
 ```bash
-# Preview suggestions (read-only)
 kirby proofreader:review projects/my-project
-
-# Fix a page (saved as unpublished changes)
 kirby proofreader:fix projects/my-project
-
-# Fix all pages and publish immediately
-kirby proofreader:fix --all --publish
-
-# Fix only one field across all pages
-kirby proofreader:fix --all --field=summary
-
-# Dry-run batch fix
-kirby proofreader:fix --all --dry-run
 ```
 
 See [docs/usage/index.md](docs/usage/index.md) for the full flag reference.
