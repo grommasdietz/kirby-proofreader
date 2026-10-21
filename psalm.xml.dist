@@ -21,6 +21,7 @@
 >
     <projectFiles>
         <directory name="config" />
+        <directory name="playground/site/blueprints/users" />
         <directory name="lib" />
         <file name="index.php" />
         <ignoreFiles>

@@ -1,0 +1,6 @@
+title: CLI Proofreader
+fields:
+  text:
+    type: writer
+  identifier:
+    type: text

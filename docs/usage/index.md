@@ -275,6 +275,17 @@ return [
 
 ## CLI
 
+Use `--users` to include all stored user profiles, or `--user=<id-or-email>`
+to target one account. `--all --users` combines pages and profiles. These flags
+only process blueprint content fields; account names, roles, passwords and other
+account settings are untouched. Missing user language files are skipped rather
+than filled from the default-language fallback. Review each language separately.
+
+```sh
+kirby proofreader:review --users --language=fr
+kirby proofreader:fix --user=abc123 --language=fr --field=text --dry-run
+```
+
 Kirby Proofreader registers two commands for the
 [Kirby CLI](https://github.com/getkirby/cli). Install the CLI first:
 
