@@ -26,7 +26,7 @@ Custom Blueprint Areas are handled through an optional route that calls
 reviews values from the area view payload, derives field definitions from the
 area layout and saves fixes through the area's draft handling.
 
-`lib/Proofreader.php` applies rules in deterministic order:
+`lib/Proofreader.php` applies the default rules in deterministic order:
 
 1. Unicode composition
 2. Ellipsis
@@ -34,19 +34,20 @@ area layout and saves fixes through the area's draft handling.
 4. Apostrophes
 5. Dash characters
 6. Spacing
-7. Optional dimensions, when enabled
-8. Optional paragraph cleanup, when enabled
 
 The dash character and spacing steps are intentionally separate. This lets the
 review dialog show a clear first suggestion for the dash glyph and a later
 suggestion for the language-specific spacing around existing or corrected
 dashes.
 
-The optional dimensions and paragraph cleanup rules are predefined but omitted
-from the default rule list. Projects can enable dimensions alongside the default
-rules when they want `x` in dimension values to become a multiplication sign.
-Paragraph cleanup runs on HTML fields only; it removes empty paragraphs and
-stale trailing whitespace or `<br>` elements from paragraph ends.
+Optional rules reuse the same ordered rule list and review/apply flow. Their
+behavior and ordering are documented in the [usage reference](index.md#optional-content-rules).
+
+`lib/HtmlText.php` groups text across inline elements and maps corrections back
+to the original text nodes without serializing tags or attributes. Block and
+protected-code boundaries keep unrelated quotations separate. HTML rules run
+in the same order as review suggestions. Short paragraph-ending word binding
+remains part of `spaces` and runs against the complete paragraph text.
 
 ## Field Coverage
 
@@ -61,7 +62,10 @@ unchanged.
 
 The built-in rules work without configuration. Quote characters, dash
 characters and dash spacing can also follow Kirby's native SmartyPants options,
-globally or from language definitions. Single-language installs only change
+globally or from language definitions. Exact language codes and native locale
+aliases win over base-language matches. Regional styles remain owned by Kirby's
+language definitions, and explicit HTML `lang` attributes select the passage
+language. Single-language installs only change
 quotes when global quote marks are configured. Apostrophe cleanup is a separate
 built-in rule so projects can keep it while disabling quote-pair conversion.
 Custom editorial rules belong in `grommasdietz.proofreader.rules`, where they

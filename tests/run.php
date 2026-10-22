@@ -34,6 +34,10 @@ try {
         throw new RuntimeException('Playground home page could not be loaded.');
     }
 
+    if (GrommasDietz\Proofreader\Proofreader::fixHtml('<p>"Hello <em>world</em>"</p>', ['quotes'], 'en') !== '<p>“Hello <em>world</em>”</p>') {
+        throw new RuntimeException('HTML typography failed without the development autoloader.');
+    }
+
     fwrite(STDOUT, "Runtime smoke test passed.\n");
 } catch (Throwable $exception) {
     fwrite(

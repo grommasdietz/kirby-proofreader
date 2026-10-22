@@ -149,4 +149,60 @@ test.describe("Proofreader review dialog", () => {
 
     await expect(page.locator(".proofreader-input-overlay")).toHaveCount(0);
   });
+
+  test("reviews and applies quotations across markup using passage languages", async ({ page }) => {
+    await login(page);
+    await page.goto("/panel/pages/editorial-review");
+    await page.locator('[title="Optimize typography"]').first().click();
+
+    const body = page.locator(".proofreader-review-field").filter({
+      has: page.locator(".proofreader-review-field-title", { hasText: "Body" }),
+    });
+    await expect(body).toBeVisible();
+    await expect(body.locator('[data-side="after"]').first()).toContainText("“An inline quote”");
+    await expect(body.locator('[data-side="after"]').first()).toContainText("„Ein Zitat“");
+
+    const applied = page.waitForResponse((response) =>
+      response.url().endsWith("/kirby-proofreader/pages/editorial-review/optimize") &&
+      response.request().postDataJSON()?.preview === false,
+    );
+    await body.getByRole("button", { name: "Apply", exact: true }).click();
+    const result = await (await applied).json();
+    expect(result.changedFields).toEqual(["body"]);
+    expect(result.diffs.body.to).toContain("“An <em>inline quote</em>”");
+    expect(result.diffs.body.to).toContain('<span lang="de">„Ein Zitat“</span>');
+    expect(result.diffs.body.to).toContain('href="https://kirby-proofreader.test"');
+  });
+
+  test("labels optional content rules in the review dialog", async ({ page }) => {
+    await login(page);
+    const rules = ["abbreviations", "primes", "currencies", "symbols"];
+    await page.route("**/kirby-proofreader/site/optimize", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          status: "ok",
+          preview: true,
+          availableRules: rules.map((name) => ({
+            name, builtin: true, label: null,
+          })),
+          suggestions: rules.map((rule) => ({
+            id: `description:${rule}`,
+            field: "description",
+            fieldLabel: "Description",
+            rule,
+            pathLabel: "Description",
+            previewBefore: "Before",
+            previewAfter: "After",
+          })),
+        }),
+      });
+    });
+    await page.goto("/panel/site");
+    await page.locator('[title="Optimize typography"]').first().click();
+    for (const label of ["Abbreviations", "Prime marks", "Currencies", "Symbols"]) {
+      await expect(page.locator(".proofreader-rule-toggle", { hasText: label })).toBeVisible();
+    }
+  });
 });

@@ -4,6 +4,7 @@ use Kirby\Cms\App;
 use Kirby\Filesystem\F;
 
 F::loadClasses([
+    'GrommasDietz\\Proofreader\\HtmlText' => 'lib/HtmlText.php',
     'GrommasDietz\\Proofreader\\Proofreader' => 'lib/Proofreader.php',
 ], __DIR__);
 

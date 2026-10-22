@@ -405,10 +405,10 @@ final class ProofreaderTest extends TestCase
         );
     }
 
-    public function testFixPunctuationSpacingKeepsFrenchHighPunctuationSpacing(): void
+    public function testFixPunctuationSpacingNormalisesFrenchHighPunctuationSpacing(): void
     {
         self::assertSame(
-            'Proofreader note !',
+            "Proofreader note\u{202F}!",
             Proofreader::fixPunctuationSpacing('Proofreader note !', 'fr_FR')
         );
         self::assertSame(
@@ -887,9 +887,9 @@ final class ProofreaderTest extends TestCase
 
         $result = Proofreader::processStructureRows($rows, $subFields);
 
-        self::assertSame('Review entry…', $result[0]['name']);
+        self::assertSame("Review\u{00A0}entry…", $result[0]['name']);
         self::assertSame("Editorial role{$dashSpace}—{$dashSpace}planning", $result[0]['role']);
-        self::assertSame('Documentation entry…', $result[1]['name']);
+        self::assertSame("Documentation\u{00A0}entry…", $result[1]['name']);
     }
 
     public function testProcessStructureRowsSkipsNonEligibleFields(): void

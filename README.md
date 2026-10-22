@@ -33,10 +33,9 @@ buttons:
 ### Options
 
 The default rule order is `unicode`, `ellipsis`, `quotes`, `apostrophes`,
-`dashes`, `spaces`. `dimensions` and `paragraphs` are predefined optional
-rules. `dimensions` handles values such as `5 x 5 cm`; `paragraphs` removes
-empty HTML paragraphs and stale trailing whitespace or `<br>` tags from
-paragraph ends.
+`dashes`, `spaces`. Optional rules include `dimensions`, `paragraphs`,
+`abbreviations`, `primes`, `currencies` and `symbols`. Short paragraph-ending
+words are joined by the existing `spaces` rule.
 Rules can be reordered, disabled or extended. Configure via
 `site/config/config.php`:
 
@@ -66,9 +65,11 @@ return [
 > The keyed `false` entry disables the built-in `quotes` rule. The keyed
 > `trademark` array adds a custom callback rule.
 
-Quote characters, dash characters and dash spacing follow Kirby's native
-SmartyPants options when configured globally or per language. Single-language
-installs need SmartyPants configuration to enable quote rule.
+Quote characters and spacing follow Kirby's native SmartyPants options when
+configured globally or per language. Regional styles belong in Kirby's language
+definitions. HTML `lang` attributes override the content language, and quotation
+pairs can span inline formatting. Single-language installs need SmartyPants
+configuration to enable the quote rule.
 
 See the [usage reference](docs/usage/index.md) for field coverage, custom rules and protected text spans.
 

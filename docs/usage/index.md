@@ -62,10 +62,8 @@ The default rule order is:
 ]
 ```
 
-Optional built-in `dimensions` and `paragraphs` rules are available but disabled
-by default. `dimensions` normalizes dimension separators such as `5 x 5 cm` to
-`5 × 5 cm`; `paragraphs` removes empty HTML paragraphs and stale trailing `<br>`
-tags or whitespace from paragraph ends.
+Optional built-in rules are listed below. Enable them in the same ordered rule
+list; they are disabled by default.
 
 You can override the enabled rules and their order with one option in
 `site/config/config.php`. String entries and keyed `true` entries use the
@@ -139,19 +137,70 @@ starts and ends, removes spaces before punctuation except French high
 punctuation, normalizes six-per-em spaces around en dashes, hair spaces around
 em dashes, narrow non-breaking spaces after ordinals, and non-breaking spaces
 after one-letter words and 2–4 letter sentence starters outside paragraph
-starts, and before 2–4 letter paragraph-ending words.
+starts, and before 2–5 letter paragraph-ending words. The existing exclusions
+`and`, `be` and `for` remain unchanged. In HTML, paragraph-ending words are
+measured across inline formatting, so an inline element's end is not mistaken
+for the paragraph end.
 
-The optional `dimensions` rule handles values such as `5 x 5 cm`. The optional
-`paragraphs` rule applies only to HTML fields. It removes empty `<p>` elements
-whose content is blank, `&nbsp;` or `<br>`, and removes trailing `<br>` elements
-and whitespace from paragraph ends.
+French punctuation spacing normalizes existing spaces before `:`, `;`, `!` and
+`?` to narrow non-breaking spaces. It does not insert a space where none was
+authored. Native SmartyPants `space.colon`, `space.semicolon` and `space.marks`
+options override this spacing, including an empty string when a language's
+convention calls for no space.
+
+### Optional content rules
+
+| Rule | Correction |
+| --- | --- |
+| `dimensions` | Converts dimension separators: `5 x 5 cm` → `5 × 5 cm`. |
+| `paragraphs` | Removes empty HTML paragraphs and stale trailing `<br>` elements or whitespace at paragraph ends. |
+| `abbreviations` | Joins recognized German abbreviations with narrow non-breaking spaces: `z. B.` → `z. B.`. |
+| `primes` | Converts measurement marks: `6' 2"` → `6′ 2″`, preserving paired quotations. |
+| `currencies` | Normalizes currency suffix spacing: `20€` → `20 €`, and existing prefix spacing. Prefixes without a space, such as `$10`, stay unchanged. |
+| `symbols` | Converts postfix `Brand(tm)` and `Label (r)` to `Brand™` and `Label®`, and `(c) 2026` to `© 2026`. Line-start enumeration labels stay unchanged. |
+
+The abbreviation rule recognizes `z. B.`, `d. h.`, `u. a.`, `u. U.`, `i. d. R.`,
+`u. a. m.`, `o. Ä.`, `z. T.` and `v. a.` in German content. It does not infer
+arbitrary initials or translate abbreviation styles in other languages.
+Currency spacing uses native SmartyPants `space.unit` when configured and a
+narrow non-breaking space otherwise. It does not relocate currency symbols or
+format numbers.
+
+Place `primes` before `quotes` when enabling both. The configured order is also
+the order shown in review suggestions:
+
+```php
+return [
+    'grommasdietz.proofreader.rules' => [
+        'unicode',
+        'ellipsis',
+        'primes',
+        'quotes',
+        'apostrophes',
+        'dashes',
+        'abbreviations',
+        'currencies',
+        'symbols',
+        'spaces',
+        'dimensions',
+        'paragraphs',
+    ],
+];
+```
+
+### Language definitions
 
 Quote characters, dash characters and dash spacing can also come from Kirby's
 native SmartyPants options. In multi-language installations, language-level
-`smartypants` options win over global options. In single-language
-installations, quote fixes are skipped unless global `smartypants` quote marks
+`smartypants` options win over global options. Exact language codes and declared
+locales are matched before the base language, treating `de-CH` and `de_CH` as
+equivalent identifiers. Regional quotation styles are configured in Kirby's
+language definitions; Proofreader does not maintain a regional style catalog.
+In single-language installations, quote fixes are skipped unless global `smartypants` quote marks
 are configured. The `apostrophes` rule normalizes straight apostrophes in words
-to `’` and can stay enabled when quote-pair conversion is disabled:
+to `’`, including recognized omissions such as `'tis`, German `'nen`, abbreviated
+decades such as `'90s`, and `Rock 'n' Roll`. It can stay enabled when quote-pair
+conversion is disabled:
 
 ```php
 return [
@@ -170,6 +219,13 @@ return [
 
 Only the Proofreader's configured rules are applied; this does not enable
 Kirby's full SmartyPants parser for content.
+
+In HTML, explicit `lang` attributes are inherited by nested elements and override
+the content language. An empty `lang` resets that inheritance. Quotation pairs
+can span inline elements such as `<em>` and `<a>`; their opening language selects
+the quotation style. Unpaired marks and pairs separated by paragraph or
+protected-code boundaries remain unchanged. Tags, attributes and links retain
+their authored markup.
 
 ### Fields
 

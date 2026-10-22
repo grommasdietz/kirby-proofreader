@@ -37,6 +37,10 @@ $en = [
     'panel.button.proofreader.rule.spaces'       => 'Spaces',
     'panel.button.proofreader.rule.dimensions'   => 'Dimensions',
     'panel.button.proofreader.rule.paragraphs'   => 'Paragraphs',
+    'panel.button.proofreader.rule.abbreviations' => 'Abbreviations',
+    'panel.button.proofreader.rule.primes'       => 'Prime marks',
+    'panel.button.proofreader.rule.currencies'   => 'Currencies',
+    'panel.button.proofreader.rule.symbols'      => 'Symbols',
 ];
 
 $de = [
@@ -74,6 +78,10 @@ $de = [
     'panel.button.proofreader.rule.spaces'       => 'Abstände',
     'panel.button.proofreader.rule.dimensions'   => 'Maße',
     'panel.button.proofreader.rule.paragraphs'   => 'Absätze',
+    'panel.button.proofreader.rule.abbreviations' => 'Abkürzungen',
+    'panel.button.proofreader.rule.primes'       => 'Maßzeichen',
+    'panel.button.proofreader.rule.currencies'   => 'Währungen',
+    'panel.button.proofreader.rule.symbols'      => 'Symbole',
 ];
 
 $fr = [
@@ -111,6 +119,10 @@ $fr = [
     'panel.button.proofreader.rule.spaces'       => 'Espaces',
     'panel.button.proofreader.rule.dimensions'   => 'Dimensions',
     'panel.button.proofreader.rule.paragraphs'   => 'Paragraphes',
+    'panel.button.proofreader.rule.abbreviations' => 'Abréviations',
+    'panel.button.proofreader.rule.primes'       => 'Symboles de mesure',
+    'panel.button.proofreader.rule.currencies'   => 'Devises',
+    'panel.button.proofreader.rule.symbols'      => 'Symboles',
 ];
 
 $es = [
@@ -148,6 +160,10 @@ $es = [
     'panel.button.proofreader.rule.spaces'       => 'Espacios',
     'panel.button.proofreader.rule.dimensions'   => 'Dimensiones',
     'panel.button.proofreader.rule.paragraphs'   => 'Párrafos',
+    'panel.button.proofreader.rule.abbreviations' => 'Abreviaturas',
+    'panel.button.proofreader.rule.primes'       => 'Signos de medida',
+    'panel.button.proofreader.rule.currencies'   => 'Monedas',
+    'panel.button.proofreader.rule.symbols'      => 'Símbolos',
 ];
 
 $translations = [

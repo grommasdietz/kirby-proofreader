@@ -20,6 +20,7 @@ const requiredEntries = [
   "config/routes.php",
   "config/translations.php",
   "lib/Proofreader.php",
+  "lib/HtmlText.php",
 ];
 const forbiddenPrefixes = [
   ".github/",

@@ -6,6 +6,7 @@ namespace GrommasDietz\Proofreader;
 
 use Kirby\Cms\App;
 use Kirby\Cms\Blueprint;
+use Kirby\Cms\Language;
 use Kirby\Data\Yaml;
 use Kirby\Toolkit\I18n;
 
@@ -25,6 +26,10 @@ final class Proofreader
         'spaces',
         'dimensions',
         'paragraphs',
+        'abbreviations',
+        'primes',
+        'currencies',
+        'symbols',
     ];
 
     /**
@@ -332,7 +337,7 @@ final class Proofreader
      */
     public static function fixQuotes(string $text, ?string $language = null): string
     {
-        return self::fixApostrophes(self::fixQuotePairs($text, $language));
+        return self::fixApostrophes(self::fixQuotePairs($text, $language), $language);
     }
 
     /**
@@ -340,34 +345,138 @@ final class Proofreader
      */
     public static function fixQuotePairs(string $text, ?string $language = null): string
     {
-        $quotes = self::quotesForLanguage($language);
+        return self::replaceTextChanges($text, self::quotePairChanges(
+            $text,
+            [['offset' => 0, 'length' => strlen($text), 'language' => $language]]
+        ));
+    }
 
-        if ($quotes === null) {
-            return $text;
+    /**
+     * @param list<array{offset:int, length:int, language:?string}> $nodes
+     * @return list<array{offset:int, length:int, value:string}>
+     */
+    private static function quotePairChanges(string $text, array $nodes): array
+    {
+        preg_match_all('/["\']|&(?:quot|apos|#0*3[49]|#x0*(?:22|27));/iu', $text, $matches, PREG_OFFSET_CAPTURE);
+        $pending = [];
+        $changes = [];
+
+        foreach ($matches[0] as [$source, $offset]) {
+            $quote = html_entity_decode($source, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            $before = substr($text, 0, $offset);
+            $after = substr($text, $offset + strlen($source));
+            $language = self::languageAtOffset($nodes, $offset);
+
+            if (self::isProtectedOffset($text, $offset)) {
+                continue;
+            }
+
+            if ($quote === "'" && (
+                preg_match('/\p{L}$/u', $before) === 1 && preg_match('/^\p{L}/u', $after) === 1
+                || self::isOpeningOmission($after, $language)
+                || preg_match('/(?:^|[^\p{L}])\'n$/iu', $before) === 1
+            )) {
+                continue;
+            }
+
+            if (isset($pending[$quote])) {
+                $opening = $pending[$quote];
+
+                if (strpbrk(substr($text, $opening['offset'], $offset - $opening['offset']), "\r\n") !== false) {
+                    unset($pending[$quote]);
+                } elseif (preg_match('/^(?:[\p{L}\p{N}])/u', $after) !== 1 && $offset > $opening['offset'] + $opening['length']) {
+                    $quotes = self::quotesForLanguage($opening['language']);
+                    if ($quotes !== null) {
+                        $changes[] = ['offset' => $opening['offset'], 'length' => $opening['length'], 'value' => $quotes[$quote === '"' ? 0 : 2]];
+                        $changes[] = ['offset' => $offset, 'length' => strlen($source), 'value' => $quotes[$quote === '"' ? 1 : 3]];
+                    }
+                    unset($pending[$quote]);
+                    continue;
+                }
+            }
+
+            if (preg_match('/[\p{L}\p{N}]$/u', $before) !== 1 && preg_match('/^[^\s]/u', $after) === 1) {
+                $pending[$quote] = ['offset' => $offset, 'length' => strlen($source), 'language' => $language];
+            }
         }
 
-        $result = preg_replace_callback(
-            '/"([^"\r\n]+)"/u',
-            static fn (array $m): string => $quotes[0] . $m[1] . $quotes[1],
-            $text
-        );
+        return $changes;
+    }
 
-        $text = $result ?? $text;
+    private static function isOpeningOmission(string $after, ?string $language): bool
+    {
+        if (preg_match('/^\d{2}(?:s|er(?:n)?)?(?![\p{L}\p{N}]|\')/u', $after) === 1 || preg_match('/^n\'(?!\p{L})/iu', $after) === 1) {
+            return true;
+        }
 
-        $result = preg_replace_callback(
-            "/(?<![\p{L}\p{N}])'([^'\r\n]+)'(?![\p{L}\p{N}])/u",
-            static fn (array $m): string => $quotes[2] . $m[1] . $quotes[3],
-            $text
-        );
+        $words = match (self::baseLanguageCode($language)) {
+            'de' => 'n|ne|nen|nem|ner|s',
+            'en' => 'tis|twas|twere|cause|em|til|till',
+            default => 'tis|twas',
+        };
 
-        return $result ?? $text;
+        // A matching closing mark makes this an ordinary quoted word.
+        return preg_match('/^(?:' . $words . ')(?![\p{L}\p{N}]|\')/iu', $after) === 1;
+    }
+
+    /**
+     * @param list<array{offset:int, length:int, language:?string}> $nodes
+     */
+    private static function languageAtOffset(array $nodes, int $offset): ?string
+    {
+        foreach ($nodes as $node) {
+            if ($offset >= $node['offset'] && $offset < $node['offset'] + $node['length']) {
+                return $node['language'];
+            }
+        }
+
+        return null;
+    }
+
+    private static function isProtectedOffset(string $text, int $offset): bool
+    {
+        foreach (self::configuredProtectPatterns() as $pattern) {
+            if ($pattern === '') {
+                continue;
+            }
+            if (@preg_match_all($pattern, $text, $matches, PREG_OFFSET_CAPTURE) === false) {
+                continue;
+            }
+            foreach ($matches[0] as [$match, $start]) {
+                if ($offset >= $start && $offset < $start + strlen($match)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param list<array{offset:int, length:int, value:string}> $changes
+     */
+    private static function replaceTextChanges(string $text, array $changes): string
+    {
+        usort($changes, static fn (array $a, array $b): int => $b['offset'] <=> $a['offset']);
+        foreach ($changes as $change) {
+            $text = substr_replace($text, $change['value'], $change['offset'], $change['length']);
+        }
+
+        return $text;
     }
 
     /**
      * Replaces apostrophes in words with the typographic apostrophe.
      */
-    public static function fixApostrophes(string $text): string
+    public static function fixApostrophes(string $text, ?string $language = null): string
     {
+        $text = preg_replace('/(?<=\p{L})(?:&apos;|&#0*39;|&#x0*27;)(?=\p{L})/iu', self::APOSTROPHE, $text) ?? $text;
+        $text = preg_replace('/(?<!\p{L})\'n\'(?!\p{L})/iu', '’n’', $text) ?? $text;
+        $text = preg_replace_callback(
+            '/(?<![\p{L}\p{N}])\'([\p{L}\p{N}][^\s]*)/u',
+            static fn (array $m): string => (self::isOpeningOmission($m[1], $language) ? '’' : "'") . $m[1],
+            $text
+        ) ?? $text;
         $protectedClosers = [];
         $text = preg_replace_callback(
             "/(?<![\p{L}\p{N}])'([^'\r\n]+)'(?![\p{L}\p{N}])/u",
@@ -450,25 +559,11 @@ final class Proofreader
     }
 
     /**
-     * Inserts a non-breaking space before 2–4 letter paragraph-ending words.
+     * Inserts a non-breaking space before 2–5 letter paragraph-ending words.
      */
     public static function fixTrailingNbsp(string $text): string
     {
-        $result = preg_replace_callback(
-            '/[ \t](\p{L}{2,4})([.!?]?)(?=$|\R)/um',
-            static function (array $m): string {
-                $word = $m[1];
-
-                if (in_array(strtolower($word), self::NBSP_EXCLUDED_WORDS, true)) {
-                    return $m[0];
-                }
-
-                return "\u{00A0}" . $word . $m[2];
-            },
-            $text
-        );
-
-        return $result ?? $text;
+        return self::replaceTextChanges($text, self::trailingNbspChanges($text));
     }
 
     /**
@@ -502,7 +597,21 @@ final class Proofreader
         $result = preg_replace('/[ \t]+([,.])/u', '$1', $text) ?? $text;
 
         if (self::isFrenchLanguage($language) === true) {
-            return $result;
+            $options = self::smartypantsOptionsForLanguage($language);
+
+            return preg_replace_callback(
+                '/(?:[\p{Zs}\t]|&nbsp;|&#0*160;|&#x0*a0;)+([;:!?])(?=$|[\p{Zs}\t\r\n\p{L}\p{P}])/iu',
+                static function (array $m) use ($options): string {
+                    $key = match ($m[1]) {
+                        ':' => 'space.colon',
+                        ';' => 'space.semicolon',
+                        default => 'space.marks',
+                    };
+
+                    return (self::smartypantsStringOption($options, $key) ?? "\u{202F}") . $m[1];
+                },
+                $result
+            ) ?? $result;
         }
 
         $result = preg_replace(
@@ -561,6 +670,125 @@ final class Proofreader
         );
 
         return $result ?? $text;
+    }
+
+    /**
+     * Joins recognized German multi-part abbreviations; identifiers and
+     * arbitrary initials are deliberately not inferred as abbreviations.
+     */
+    public static function fixAbbreviations(string $text, ?string $language = null): string
+    {
+        if (self::baseLanguageCode($language) !== 'de') {
+            return $text;
+        }
+
+        $abbreviations = ['i.d.R.', 'u.a.m.', 'z.B.', 'd.h.', 'u.a.', 'u.U.', 'o.Ä.', 'z.T.', 'v.a.'];
+        foreach ($abbreviations as $abbreviation) {
+            $parts = explode('.', rtrim($abbreviation, '.'));
+            $pattern = implode('\.[\p{Zs}\t]*', array_map(static fn (string $part): string => preg_quote($part, '~'), $parts)) . '\.';
+            $text = preg_replace_callback(
+                '~(?<![\p{L}\p{N}./@])' . $pattern . '(?![\p{L}\p{N}./@])~u',
+                static fn (array $m): string => preg_replace('/\.[\p{Zs}\t]*(?=\p{L})/u', ".\u{202F}", $m[0]) ?? $m[0],
+                $text
+            ) ?? $text;
+        }
+
+        return $text;
+    }
+
+    /**
+     * Converts numeric measurement marks, keeping marks belonging to quoted
+     * passages intact. Run before quotes when enabling both rules.
+     */
+    public static function fixPrimes(string $text): string
+    {
+        return self::replaceTextChanges($text, self::primeChanges($text));
+    }
+
+    /**
+     * @return list<array{offset:int, length:int, value:string}>
+     */
+    private static function primeChanges(string $text): array
+    {
+        $quoted = array_column(self::quotePairChanges($text, [
+            ['offset' => 0, 'length' => strlen($text), 'language' => 'en'],
+        ]), 'offset');
+        preg_match_all('/(?<![\p{L}\p{N}])(\d+(?:[.,]\d+)?)(\'\'|[\'"]|&(?:quot|apos|#0*3[49]|#x0*(?:22|27));)(?!\p{L})/iu', $text, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
+        $changes = [];
+
+        foreach ($matches as $match) {
+            [$mark, $offset] = $match[2];
+            if (!in_array($offset, $quoted, true) && !self::isProtectedOffset($text, $offset)) {
+                $changes[] = ['offset' => $offset, 'length' => strlen($mark), 'value' => html_entity_decode($mark, ENT_QUOTES | ENT_HTML5, 'UTF-8') === "'" ? '′' : '″'];
+            }
+        }
+
+        return $changes;
+    }
+
+    /**
+     * Normalizes suffix-currency spacing and existing prefix spacing. Prefixes
+     * authored without a space (e.g. $10) retain that notation.
+     */
+    public static function fixCurrencies(string $text, ?string $language = null): string
+    {
+        $space = self::smartypantsStringOption(self::smartypantsOptionsForLanguage($language), 'space.unit') ?? "\u{202F}";
+        $symbol = '(?:\p{Sc}|&[a-zA-Z0-9#]+;)';
+        $isCurrency = static fn (string $value): bool => preg_match('/^\p{Sc}$/u', html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8')) === 1;
+        $text = preg_replace_callback(
+            '/(?<![\p{L}\p{N}])(\d+(?:[.,]\d+)*)(?:[\p{Zs}\t]|&nbsp;)*(' . $symbol . ')(?![\p{L}\p{N}])/u',
+            static fn (array $m): string => $isCurrency($m[2]) ? $m[1] . $space . $m[2] : $m[0],
+            $text
+        ) ?? $text;
+
+        return preg_replace_callback(
+            '/(' . $symbol . ')(?:[\p{Zs}\t]|&nbsp;)+(?=\d)/u',
+            static fn (array $m): string => $isCurrency($m[1]) ? $m[1] . $space : $m[0],
+            $text
+        ) ?? $text;
+    }
+
+    /**
+     * Replaces explicit copyright notices and postfix symbol notation, keeping
+     * parenthesized enumeration labels at the start of a line intact.
+     */
+    public static function fixSymbols(string $text): string
+    {
+        $text = preg_replace('/(?<![\p{L}\p{N}])\(c\)[\p{Zs}\t]*(?=\d{4}\b)/iu', "©\u{00A0}", $text) ?? $text;
+        $text = preg_replace('/©[\p{Zs}\t]+(?=\d{4}\b)/u', "©\u{00A0}", $text) ?? $text;
+
+        return preg_replace_callback(
+            '/(?<=[\p{L}\p{N}])[ \t]*\((tm|r|c)\)(?![\p{L}\p{N}])/iu',
+            static fn (array $m): string => match (strtolower($m[1])) {
+                'tm' => '™',
+                'r' => '®',
+                default => '©',
+            },
+            $text
+        ) ?? $text;
+    }
+
+    /**
+     * @return list<array{offset:int, length:int, value:string}>
+     */
+    private static function trailingNbspChanges(string $text): array
+    {
+        preg_match_all(
+            '/(?<=\S)[ \t]+(\p{L}[\p{L}\p{M}]{1,4})([\p{Pe}\p{Pf}.!?,;:…]*)(?=[ \t]*(?:\R|$))/u',
+            $text,
+            $matches,
+            PREG_SET_ORDER | PREG_OFFSET_CAPTURE
+        );
+        $changes = [];
+
+        foreach ($matches as $match) {
+            [$source, $offset] = $match[0];
+            if (!in_array(strtolower($match[1][0]), self::NBSP_EXCLUDED_WORDS, true) && !self::isProtectedOffset($text, $offset) && !self::isProtectedOffset($text, $match[1][1])) {
+                $changes[] = ['offset' => $offset, 'length' => strlen($source) - strlen($match[1][0]) - strlen($match[2][0]), 'value' => "\u{00A0}"];
+            }
+        }
+
+        return $changes;
     }
 
     /**
@@ -636,91 +864,61 @@ final class Proofreader
         ?array $rules = null,
         ?string $language = null
     ): string {
-        if ($html === '') {
-            return $html;
-        }
+        foreach (self::normaliseRules($rules) as $rule) {
+            $custom = self::configuredRuleDefinitions()[$rule]['callback'] !== null;
 
-        $parts = preg_split('/(<[^>]+>)/u', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
-
-        if ($parts === false) {
-            return $html;
-        }
-
-        $skipDepth = 0;
-        $atParagraphStart = false;
-        $lastTextCharacter = null;
-        $out  = '';
-
-        foreach ($parts as $part) {
-            if (!str_starts_with($part, '<')) {
-                if ($skipDepth > 0) {
-                    $out .= $part;
-                    continue;
-                }
-
-                $fixed = self::fixText(
-                    $part,
-                    $rules,
-                    $language,
-                    false,
-                    $atParagraphStart,
-                    $atParagraphStart === false && in_array($lastTextCharacter, ['.', '!', '?'], true)
-                );
-                $out .= $fixed;
-
-                if (self::containsNonWhitespace($part)) {
-                    $atParagraphStart = false;
-                }
-
-                $lastTextCharacter = self::lastNonWhitespaceCharacter($fixed) ?? $lastTextCharacter;
+            if ($rule === 'paragraphs' && !$custom) {
+                $html = self::fixHtmlParagraphs($html);
                 continue;
             }
 
-            $out .= $part;
+            $html = HtmlText::transform($html, $language, static function (
+                string $text,
+                array $nodes,
+                bool $blockStart,
+                bool $blockEnd
+            ) use ($rule, $custom): array {
+                if ($rule === 'quotes' && !$custom) {
+                    return self::quotePairChanges($text, $nodes);
+                }
 
-            if (preg_match('/^<\s*\/\s*(' . self::PROTECTED_HTML_TAG_PATTERN . ')\b[^>]*>/i', $part)) {
-                $skipDepth = max(0, $skipDepth - 1);
-                continue;
-            }
+                if ($rule === 'primes' && !$custom) {
+                    return self::primeChanges($text);
+                }
 
-            $isSelfClosing = preg_match('/\/\s*>$/', $part) === 1;
-
-            if (self::isOpeningHtmlTag($part, self::PARAGRAPH_HTML_TAG_PATTERN)) {
-                $atParagraphStart = true;
+                $changes = [];
                 $lastTextCharacter = null;
-                continue;
-            }
+                foreach ($nodes as $node) {
+                    $part = substr($text, $node['offset'], $node['length']);
+                    $fixed = self::fixText(
+                        $part,
+                        [$rule],
+                        $node['language'],
+                        false,
+                        $blockStart,
+                        !$blockStart && in_array($lastTextCharacter, ['.', '!', '?'], true)
+                    );
 
-            if (self::isClosingHtmlTag($part, self::PARAGRAPH_HTML_TAG_PATTERN)) {
-                $atParagraphStart = false;
-                $lastTextCharacter = null;
-                continue;
-            }
+                    if ($part !== $fixed) {
+                        $changes[] = ['offset' => $node['offset'], 'length' => $node['length'], 'value' => $fixed];
+                    }
 
-            if (
-                $isSelfClosing === false &&
-                preg_match('/^<\s*(' . self::PROTECTED_HTML_TAG_PATTERN . ')\b[^>]*>/i', $part)
-            ) {
-                if ($atParagraphStart === true) {
-                    $atParagraphStart = false;
-                    $lastTextCharacter = null;
+                    if (self::containsNonWhitespace($part)) {
+                        $blockStart = false;
+                    }
+                    $lastTextCharacter = self::lastNonWhitespaceCharacter($fixed) ?? $lastTextCharacter;
                 }
 
-                $skipDepth++;
+                return $changes;
+            });
+
+            if ($rule === 'spaces' && !$custom) {
+                $html = self::fixHtmlParagraphEdgeSpaces($html);
+                $html = HtmlText::transform($html, $language, static fn (string $text, array $nodes, bool $blockStart, bool $blockEnd): array => $blockEnd ? self::trailingNbspChanges($text) : []);
             }
         }
 
-        $enabledRules = self::normaliseRules($rules);
-
-        if (in_array('spaces', $enabledRules, true)) {
-            $out = self::fixHtmlParagraphEdgeSpaces($out);
-        }
-
-        if (in_array('paragraphs', $enabledRules, true)) {
-            return self::fixHtmlParagraphs($out);
-        }
-
-        return $out;
+        return $html;
     }
 
     private static function removeEmptyHtmlParagraphs(string $html): string
@@ -751,7 +949,7 @@ final class Proofreader
 
     private static function trimHtmlParagraphEndBlanks(string $html): string
     {
-        $parts = preg_split('/(<[^>]+>)/u', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
+        $parts = HtmlText::split($html);
 
         if ($parts === false) {
             return $html;
@@ -825,7 +1023,7 @@ final class Proofreader
 
     private static function fixHtmlParagraphEdgeSpaces(string $html): string
     {
-        $parts = preg_split('/(<[^>]+>)/u', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
+        $parts = HtmlText::split($html);
 
         if ($parts === false) {
             return $html;
@@ -1308,7 +1506,7 @@ final class Proofreader
             'unicode'     => self::fixUnicodeComposition($text),
             'ellipsis'    => self::fixEllipsis($text),
             'quotes'      => self::fixQuotePairs($text, $language),
-            'apostrophes' => self::fixApostrophes($text),
+            'apostrophes' => self::fixApostrophes($text, $language),
             'dashes'      => self::fixDashCharacters($text, $language),
             'spaces'      => self::fixSpaces(
                 $text,
@@ -1319,6 +1517,10 @@ final class Proofreader
             ),
             'dimensions'  => self::fixDimensions($text),
             'paragraphs'  => $text,
+            'abbreviations' => self::fixAbbreviations($text, $language),
+            'primes' => self::fixPrimes($text),
+            'currencies' => self::fixCurrencies($text, $language),
+            'symbols' => self::fixSymbols($text),
             default       => $text,
         };
     }
@@ -1339,18 +1541,12 @@ final class Proofreader
             $text = self::fixParagraphEdgeSpaces($text);
         }
 
-        return self::fixOrdinalSpacing(
-            self::fixDashSpacing(
-                self::fixTrailingNbsp(
-                    self::fixLeadingNbsp(
-                        $text,
-                        $leadingNbspAtParagraphStart,
-                        $leadingNbspAfterSentence
-                    )
-                ),
-                $language
-            )
-        );
+        $text = self::fixOrdinalSpacing(self::fixDashSpacing(
+            self::fixLeadingNbsp($text, $leadingNbspAtParagraphStart, $leadingNbspAfterSentence),
+            $language
+        ));
+
+        return $trimParagraphEdges ? self::fixTrailingNbsp($text) : $text;
     }
 
     /**
@@ -1443,14 +1639,7 @@ final class Proofreader
                 return $options;
             }
 
-            $code = self::baseLanguageCode($language);
-            $languageObject = null;
-
-            if ($code === '' || $code === 'default') {
-                return $options;
-            }
-
-            $languageObject = $kirby->language($code);
+            $languageObject = self::languageDefinition($language);
 
             if ($languageObject === null) {
                 return $options;
@@ -1469,13 +1658,46 @@ final class Proofreader
     }
 
     /**
+     * Kirby language codes and their declared locales own regional typography.
+     * Match exact definitions before falling back to the base language.
+     */
+    private static function languageDefinition(?string $language): ?Language
+    {
+        $kirby = App::instance(lazy: true);
+        if ($kirby === null || !$kirby->multilang() || $language === null || $language === '' || $language === 'default') {
+            return null;
+        }
+
+        $normalize = static fn (string $code): string => strtolower(str_replace('_', '-', preg_replace('/[.@].*$/', '', $code) ?? $code));
+        $code = $normalize($language);
+        foreach ($kirby->languages() as $definition) {
+            if ($normalize($definition->code()) === $code) {
+                return $definition;
+            }
+        }
+        foreach ($kirby->languages() as $definition) {
+            $locale = $definition->locale(LC_CTYPE);
+            if (is_string($locale) && $normalize($locale) === $code) {
+                return $definition;
+            }
+        }
+        foreach ($kirby->languages() as $definition) {
+            if ($normalize($definition->code()) === self::baseLanguageCode($language)) {
+                return $definition;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * @param array<string, mixed> $options
      */
     private static function smartypantsStringOption(array $options, string $key): ?string
     {
         $value = $options[$key] ?? null;
 
-        if (!is_string($value) || $value === '') {
+        if (!is_string($value) || ($value === '' && !str_starts_with($key, 'space.'))) {
             return null;
         }
 

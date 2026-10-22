@@ -197,6 +197,10 @@ const RULE_LABELS = {
   spaces: "panel.button.proofreader.rule.spaces",
   dimensions: "panel.button.proofreader.rule.dimensions",
   paragraphs: "panel.button.proofreader.rule.paragraphs",
+  abbreviations: "panel.button.proofreader.rule.abbreviations",
+  primes: "panel.button.proofreader.rule.primes",
+  currencies: "panel.button.proofreader.rule.currencies",
+  symbols: "panel.button.proofreader.rule.symbols",
 };
 
 export default {

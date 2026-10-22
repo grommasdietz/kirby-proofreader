@@ -10,7 +10,7 @@ Summary: This review keeps compact samples for the proofreader panel, a 2025 - 2
 
 ----
 
-Body: <p>The playground follows one proofreader pass. It keeps "candidate changes" small, practical and easy to compare before a page is saved; one compact note says 2025-2026.</p><p>Open <a href="https://kirby-proofreader.test">kirby-proofreader.test</a> for a local reference.</p>
+Body: <p>The playground follows one proofreader pass. It keeps "candidate changes" small, practical and easy to compare before a page is saved; one compact note says 2025-2026.</p><p>Open <a href="https://kirby-proofreader.test">kirby-proofreader.test</a> for a local reference.</p><p>"An <em>inline quote</em>" stays visible. <span lang="de">"Ein Zitat"</span> uses its own language.</p>
 
 ----
 
