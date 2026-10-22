@@ -1,3 +1,10 @@
+# [1.13.0](https://github.com/grommasdietz/kirby-proofreader/compare/v1.12.0...v1.13.0) (2026-10-22)
+
+
+### Features
+
+* **typography:** improve content corrections and optional rules ([f436568](https://github.com/grommasdietz/kirby-proofreader/commit/f4365684e00cccae8168dbec86226e61cb762b71))
+
 # [1.12.0](https://github.com/grommasdietz/kirby-proofreader/compare/v1.11.1...v1.12.0) (2026-10-21)
 
 
