@@ -6,6 +6,7 @@ use GrommasDietz\Proofreader\Proofreader;
 use Kirby\Cms\App;
 use Kirby\Cms\Page;
 use Kirby\Cms\Site;
+use Kirby\Cms\User;
 
 /**
  * Resolves the language/ruleLanguage pair from a CLI language flag value.
@@ -32,7 +33,7 @@ $resolveCliLanguage = static function (App $kirby, ?string $langCode): array {
 /**
  * Applies typography fixes or dry-runs them for a single model.
  *
- * @param  Page|Site             $model
+ * @param  Page|Site|User             $model
  * @param  array{string|object, string|null, string|null} $languageTuple
  * @param  list<string>|null     $rules
  * @param  list<string>|null     $onlyFields
@@ -41,7 +42,7 @@ $resolveCliLanguage = static function (App $kirby, ?string $langCode): array {
  * @return array{changed:int, suggestions:int, title:string}
  */
 $processModel = static function (
-    Page|Site $model,
+    Page|Site|User $model,
     array $languageTuple,
     ?array $rules,
     ?array $onlyFields,
@@ -53,7 +54,9 @@ $processModel = static function (
     $changesVersion = $model->version('changes');
     $latestVersion  = $model->version('latest');
     $sourceVersion  = $changesVersion->exists($language) ? $changesVersion : $latestVersion;
-    $content        = $sourceVersion->content($language)->toArray();
+    $content        = $model instanceof User
+        ? ($sourceVersion->exists($language) ? ($sourceVersion->read($language) ?? []) : [])
+        : $sourceVersion->content($language)->toArray();
 
     /** @var list<string>|null $selectedRules */
     $selectedRules = $rules;
@@ -88,14 +91,14 @@ $processModel = static function (
             }
         }
 
-        $hasTitleChange = $titleKey !== null && array_key_exists($titleKey, $diffs);
-        $contentDiffs   = array_filter(
+        $hasTitleChange = $model instanceof User === false && $titleKey !== null && array_key_exists($titleKey, $diffs);
+        $contentDiffs   = $model instanceof User ? $diffs : array_filter(
             $diffs,
             static fn (string $key): bool => strtolower($key) !== 'title',
             ARRAY_FILTER_USE_KEY
         );
 
-        if ($hasTitleChange === true && $titleKey !== null) {
+        if ($model instanceof User === false && $hasTitleChange === true && $titleKey !== null) {
             $model          = $model->changeTitle((string) $fixed[$titleKey], $languageCode);
             $changesVersion = $model->version('changes');
         }
@@ -108,7 +111,7 @@ $processModel = static function (
 
     $modelTitle = $model instanceof Site
         ? 'site'
-        : (string) ($model->title());
+        : ($model instanceof User ? (string)$model->name() : (string)$model->title());
 
     return [
         'changed'     => count($diffs),
@@ -195,9 +198,11 @@ return [
     // proofreader:fix
     // -------------------------------------------------------------------------
     'proofreader:fix' => [
-        'description' => 'Apply typography fixes to one or more pages (or the site model)',
+        'description' => 'Apply typography fixes to pages, user profiles or the site model',
         'args'        => [
             'page' => $pageArg,
+            'users' => ['description' => 'Review/process all user profiles, optionally combined with --all', 'longPrefix' => 'users', 'noValue' => true],
+            'user' => ['description' => 'User ID or email to review/process', 'longPrefix' => 'user'],
             'all' => [
                 'description' => 'Process all pages on the site',
                 'longPrefix'  => 'all',
@@ -232,6 +237,8 @@ return [
             $kirby = App::instance();
 
             // --- flags -------------------------------------------------------
+            $users     = (bool)($cli->arg('users') ?? false);
+            $userId    = $optionalCliString($cli->arg('user'));
             $pageId    = (string) $cli->arg('page');
             $all       = (bool)   ($cli->arg('all')       ?? false);
             $children  = (bool)   ($cli->arg('children')  ?? false);
@@ -251,10 +258,24 @@ return [
             $languageTuple = $resolveCliLanguage($kirby, $langCode);
 
             // --- resolve target models ---------------------------------------
-            /** @var list<Page|Site> $models */
+            /** @var list<Page|Site|User> $models */
             $models = [];
 
-            if ($all) {
+            if (($users && ($userId !== null || $pageId !== '' || $children || $recursive)) || ($userId !== null && ($all || $pageId !== '' || $children || $recursive))) {
+                $cli->error('Use --user alone, or --users optionally combined with --all.');
+                return;
+            }
+
+            if ($users) {
+                $models = array_merge($all ? $collectAllPages($kirby) : [], $kirby->users()->values());
+            } elseif ($userId !== null) {
+                $user = $kirby->user($userId);
+                if ($user === null) {
+                    $cli->error('User not found: ' . $userId);
+                    return;
+                }
+                $models = [$user];
+            } elseif ($all) {
                 $models = $collectAllPages($kirby);
             } elseif ($pageId !== '') {
                 $page = $kirby->page($pageId);
@@ -316,9 +337,11 @@ return [
     // proofreader:review
     // -------------------------------------------------------------------------
     'proofreader:review' => [
-        'description' => 'Preview typography suggestions for one or more pages (or the site model) — read-only',
+        'description' => 'Preview typography suggestions for pages, user profiles or the site model — read-only',
         'args'        => [
             'page' => $pageArg,
+            'users' => ['description' => 'Review/process all user profiles, optionally combined with --all', 'longPrefix' => 'users', 'noValue' => true],
+            'user' => ['description' => 'User ID or email to review/process', 'longPrefix' => 'user'],
             'all' => [
                 'description' => 'Review all pages on the site',
                 'longPrefix'  => 'all',
@@ -342,6 +365,8 @@ return [
         'command' => static function ($cli) use ($resolveCliLanguage, $parseCliRules, $optionalCliString, $collectAllPages, $collectChildren, $collectRecursive): void {
             $kirby = App::instance();
 
+            $users     = (bool)($cli->arg('users') ?? false);
+            $userId    = $optionalCliString($cli->arg('user'));
             $pageId    = (string) $cli->arg('page');
             $all       = (bool)   ($cli->arg('all')       ?? false);
             $children  = (bool)   ($cli->arg('children')  ?? false);
@@ -355,11 +380,25 @@ return [
             [$language,, $ruleLanguage] = $resolveCliLanguage($kirby, $langCode);
 
             // --- resolve target models ---------------------------------------
-            /** @var list<Page|Site> $models */
+            /** @var list<Page|Site|User> $models */
             $models  = [];
-            $isBatch = $all || $children || $recursive;
+            $isBatch = $all || $children || $recursive || $users;
 
-            if ($all) {
+            if (($users && ($userId !== null || $pageId !== '' || $children || $recursive)) || ($userId !== null && ($all || $pageId !== '' || $children || $recursive))) {
+                $cli->error('Use --user alone, or --users optionally combined with --all.');
+                return;
+            }
+
+            if ($users) {
+                $models = array_merge($all ? $collectAllPages($kirby) : [], $kirby->users()->values());
+            } elseif ($userId !== null) {
+                $user = $kirby->user($userId);
+                if ($user === null) {
+                    $cli->error('User not found: ' . $userId);
+                    return;
+                }
+                $models = [$user];
+            } elseif ($all) {
                 $models = $collectAllPages($kirby);
             } elseif ($pageId !== '') {
                 $page = $kirby->page($pageId);
@@ -398,7 +437,9 @@ return [
                     $changesVersion = $model->version('changes');
                     $latestVersion  = $model->version('latest');
                     $sourceVersion  = $changesVersion->exists($language) ? $changesVersion : $latestVersion;
-                    $content        = $sourceVersion->content($language)->toArray();
+                    $content        = $model instanceof User
+                        ? ($sourceVersion->exists($language) ? ($sourceVersion->read($language) ?? []) : [])
+                        : $sourceVersion->content($language)->toArray();
 
                     $review = Proofreader::reviewFields(
                         $content,
@@ -417,7 +458,7 @@ return [
 
                     $title = $model instanceof Site
                         ? 'site'
-                        : (string) $model->title();
+                        : ($model instanceof User ? (string)$model->name() : (string)$model->title());
 
                     $cli->out("  [{$title}] {$count} suggestion(s)");
 
@@ -444,7 +485,9 @@ return [
             $changesVersion = $model->version('changes');
             $latestVersion  = $model->version('latest');
             $sourceVersion  = $changesVersion->exists($language) ? $changesVersion : $latestVersion;
-            $content        = $sourceVersion->content($language)->toArray();
+            $content        = $model instanceof User
+                ? ($sourceVersion->exists($language) ? ($sourceVersion->read($language) ?? []) : [])
+                : $sourceVersion->content($language)->toArray();
 
             $review = Proofreader::reviewFields(
                 $content,

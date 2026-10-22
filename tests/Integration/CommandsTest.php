@@ -7,6 +7,7 @@ namespace GrommasDietz\Proofreader\Tests\Integration;
 use GrommasDietz\Proofreader\Proofreader;
 use GrommasDietz\Proofreader\Tests\TestCase;
 use Kirby\Cms\Language;
+use Kirby\Cms\User;
 use Kirby\Filesystem\Dir;
 
 /**
@@ -455,6 +456,66 @@ PHP;
             self::assertStringNotContainsString('Title: CLI Proofreader Test…', $changes);
         } finally {
             Dir::remove($pageDir);
+        }
+    }
+
+    public function testKirbyCliCanReviewAndFixUserContentWithoutChangingAccountData(): void
+    {
+        $user = User::create([
+            'email' => 'cli-proofreader@example.com',
+            'password' => 'Test-password-1234',
+            'role' => 'proofreader',
+            'name' => 'CLI User...',
+            'content' => ['text' => '<p>Profile...</p>', 'identifier' => 'ISBN 978-3-123-45678-9'],
+        ]);
+        $root = $user->root();
+        $contentFile = $user->version('latest')->contentFile('en');
+        $credentialHash = hash_file('sha256', $root . '/index.php');
+        $original = file_get_contents($contentFile);
+
+        try {
+            $review = $this->runKirbyCli(['proofreader:review', '--users', '--language=en', '--rules=ellipsis']);
+            self::assertSame(0, $review['exitCode'], $review['output']);
+            self::assertStringContainsString('[CLI User...] 1 suggestion(s)', $review['output']);
+            self::assertSame($original, file_get_contents($contentFile));
+
+            $dryRun = $this->runKirbyCli(['proofreader:fix', '--user=' . $user->id(), '--language=en', '--rules=ellipsis', '--dry-run']);
+            self::assertSame(0, $dryRun['exitCode'], $dryRun['output']);
+            self::assertStringContainsString('1 field(s) would change', $dryRun['output']);
+            self::assertSame($original, file_get_contents($contentFile));
+
+            $fix = $this->runKirbyCli(['proofreader:fix', '--user=' . $user->email(), '--language=en', '--rules=ellipsis', '--field=text', '--publish']);
+            self::assertSame(0, $fix['exitCode'], $fix['output']);
+            self::assertStringContainsString('1 field(s) fixed', $fix['output']);
+            $saved = \Kirby\Data\Data::read($contentFile, 'txt');
+            self::assertSame('<p>Profile…</p>', $saved['text']);
+            self::assertSame('ISBN 978-3-123-45678-9', $saved['identifier']);
+            self::assertSame($credentialHash, hash_file('sha256', $root . '/index.php'));
+        } finally {
+            Dir::remove($root);
+        }
+    }
+
+    public function testKirbyCliDoesNotCreateMissingUserLanguageFromFallback(): void
+    {
+        $user = User::create([
+            'email' => 'cli-missing-language@example.com',
+            'password' => 'Test-password-1234',
+            'role' => 'proofreader',
+            'content' => ['text' => '<p>Profile...</p>'],
+        ]);
+        $root = $user->root();
+
+        try {
+            $result = $this->runKirbyCli(['proofreader:fix', '--users', '--language=de', '--rules=ellipsis', '--publish']);
+            self::assertSame(0, $result['exitCode'], $result['output']);
+            self::assertFileDoesNotExist($user->version('latest')->contentFile('de'));
+            self::assertFileDoesNotExist($user->version('changes')->contentFile('de'));
+
+            $conflict = $this->runKirbyCli(['proofreader:review', '--users', '--user=' . $user->id()]);
+            self::assertStringContainsString('Use --user alone', $conflict['output']);
+        } finally {
+            Dir::remove($root);
         }
     }
 

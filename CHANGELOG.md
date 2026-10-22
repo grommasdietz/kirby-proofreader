@@ -1,3 +1,10 @@
+# [1.12.0](https://github.com/grommasdietz/kirby-proofreader/compare/v1.11.1...v1.12.0) (2026-10-21)
+
+
+### Features
+
+* **cli:** review and fix user profile content ([7402cd6](https://github.com/grommasdietz/kirby-proofreader/commit/7402cd6b5dd721c6d9347a6aaa1359a951a149ad))
+
 ## [1.11.1](https://github.com/grommasdietz/kirby-proofreader/compare/v1.11.0...v1.11.1) (2026-10-05)
 
 
