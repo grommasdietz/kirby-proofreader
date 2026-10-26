@@ -34,8 +34,7 @@ buttons:
 
 The default rule order is `unicode`, `ellipsis`, `quotes`, `apostrophes`,
 `dashes`, `spaces`. Optional rules include `dimensions`, `paragraphs`,
-`abbreviations`, `primes`, `currencies` and `symbols`. Short paragraph-ending
-words are joined by the existing `spaces` rule.
+`abbreviations`, `primes`, `currencies` and `symbols`.
 Rules can be reordered, disabled or extended. Configure via
 `site/config/config.php`:
 
