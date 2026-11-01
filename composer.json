@@ -49,6 +49,7 @@
   },
   "scripts": {
     "setup": [
+      "@php tools/playground-secrets.php",
       "composer install -d playground",
       "composer install"
     ],
