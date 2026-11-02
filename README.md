@@ -30,59 +30,7 @@ buttons:
   settings: true
 ```
 
-### Options
-
-The default rule order is `unicode`, `ellipsis`, `quotes`, `apostrophes`,
-`dashes`, `spaces`. Optional rules include `dimensions`, `paragraphs`,
-`abbreviations`, `primes`, `currencies` and `symbols`.
-Rules can be reordered, disabled or extended. Configure via
-`site/config/config.php`:
-
-```php
-return [
-    'grommasdietz.proofreader.rules' => [
-        'unicode',
-        'ellipsis',
-        'quotes' => false,
-        'apostrophes',
-        'dashes',
-        'spaces',
-        'dimensions',
-        'paragraphs',
-        'trademark' => [
-            'label' => 'Trademark',
-            'callback' => static fn (string $text): string => str_replace(
-                'Label TM',
-                'Label™',
-                $text
-            ),
-        ],
-    ],
-];
-```
-
-> The keyed `false` entry disables the built-in `quotes` rule. The keyed
-> `trademark` array adds a custom callback rule.
-
-Quote characters and spacing follow Kirby's native SmartyPants options when
-configured globally or per language. Regional styles belong in Kirby's language
-definitions. HTML `lang` attributes override the content language, and quotation
-pairs can span inline formatting. Single-language installs need SmartyPants
-configuration to enable the quote rule.
-
-See the [usage reference](docs/usage/index.md) for field coverage, custom rules and protected text spans.
-
-### CLI
-
-With the [Kirby CLI](https://github.com/getkirby/cli) installed, fixes can
-also be applied from the command line:
-
-```bash
-kirby proofreader:review projects/my-project
-kirby proofreader:fix projects/my-project
-```
-
-See [docs/usage/index.md](docs/usage/index.md) for the full flag reference.
+See [usage](docs/usage/index.md) for rule configuration, language-aware corrections, protected spans and CLI review/fix commands.
 
 ### Documentation
 
