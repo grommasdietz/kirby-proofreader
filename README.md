@@ -14,7 +14,7 @@ Kirby Proofreader adds a Panel button on Kirby CMS for reviewing typographic co
 ## Installation
 
 ```bash
-composer require grommasdietz/kirby-proofreader
+composer require grommasdietz/kirby-proofreader:dev-compat/kirby-6
 ```
 
 > [!TIP]
