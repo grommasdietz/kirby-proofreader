@@ -1,18 +1,20 @@
 # Kirby Proofreader
 
+> Kirby 6 preview branch. The stable Kirby 5 release remains on `main`. Requires PHP 8.3+ and Node 24 for development.
+
 Kirby Proofreader adds a Panel button on Kirby CMS for reviewing typographic corrections in content views before applying them. Field changes are saved to Kirby's changes version, title fixes use Kirby's native title action and save immediately.
 
 ![Cover image showing an example of the plugin in use](/.github/assets/hero-image.png)
 
 ## Requirements
 
-- Kirby 5.2+
-- PHP 8.2+
+- Kirby 6
+- PHP 8.3+
 
 ## Installation
 
 ```bash
-composer require grommasdietz/kirby-proofreader
+composer require grommasdietz/kirby-proofreader:dev-compat/kirby-6
 ```
 
 > [!TIP]

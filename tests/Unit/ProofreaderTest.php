@@ -6,7 +6,7 @@ namespace GrommasDietz\Proofreader\Tests\Unit;
 
 use GrommasDietz\Proofreader\Proofreader;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\TestCase;
+use GrommasDietz\Proofreader\Tests\TestCase;
 
 final class ProofreaderTest extends TestCase
 {
@@ -37,6 +37,7 @@ final class ProofreaderTest extends TestCase
 
     public function testReviewFieldsMatchesDashedContentKeysToUnderscoredBlueprintFields(): void
     {
+        $this->bootKirby();
         $review = Proofreader::reviewFields(
             ['portrait-layout' => "steht fu\u{0308}r"],
             ['portrait_layout' => ['label' => 'Portrait', 'type' => 'text']],
@@ -577,7 +578,7 @@ final class ProofreaderTest extends TestCase
 
         $result = Proofreader::fixFields($fields, $blueprint, ['ellipsis', 'dashes']);
 
-        self::assertSame("- Award…\n- 2020 – 2021\n", $result['awards']);
+        self::assertSame(['Award…', '2020 – 2021'], \Kirby\Data\Yaml::decode($result['awards']));
     }
 
     public function testReviewFieldsReturnsEntriesSuggestions(): void

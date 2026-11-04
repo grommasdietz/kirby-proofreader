@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GrommasDietz\Proofreader;
 
 use Kirby\Cms\App;
-use Kirby\Cms\Blueprint;
+use Kirby\Blueprint\Blueprint;
 use Kirby\Cms\Language;
 use Kirby\Data\Yaml;
 use Kirby\Toolkit\I18n;

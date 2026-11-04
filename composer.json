@@ -1,12 +1,12 @@
 {
   "name": "grommasdietz/kirby-proofreader",
-  "description": "Typographic suggestions for Kirby CMS",
+  "description": "Typographic suggestions for Kirby\u00a0CMS",
   "version": "1.13.0",
   "type": "kirby-plugin",
   "license": "MIT",
   "authors": [
     {
-      "name": "Grommas Dietz",
+      "name": "Grommas\u00a0Dietz",
       "email": "info@grommas-dietz.com",
       "homepage": "https://grommas-dietz.com",
       "role": "Developer"
@@ -29,14 +29,15 @@
     }
   },
   "require": {
-    "php": "^8.2",
+    "php": "^8.3",
     "getkirby/composer-installer": "^1.2"
   },
   "require-dev": {
     "phpunit/phpunit": "^12.5",
     "vimeo/psalm": "^6.19.1",
     "friendsofphp/php-cs-fixer": "^3.93",
-    "getkirby/cms": "^5.2"
+    "getkirby/cms": "^6.0@beta",
+    "symfony/yaml": "7.4.23 as 7.4.21"
   },
   "config": {
     "optimize-autoloader": true,
@@ -78,5 +79,13 @@
     "post-update-cmd": "@notices:generate",
     "update:dev": "@composer update phpunit/phpunit vimeo/psalm friendsofphp/php-cs-fixer getkirby/cms --with-all-dependencies",
     "playground:update": "@composer --working-dir=playground update --with-all-dependencies"
+  },
+  "extra": {
+    "kirby": {
+      "compatible": "^6.0"
+    }
+  },
+  "conflict": {
+    "getkirby/cms": "<6.0 || >=7.0"
   }
 }
