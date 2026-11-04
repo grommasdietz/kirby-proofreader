@@ -198,30 +198,11 @@ $collectAreaFields = static function (array $layout): array {
                 continue;
             }
 
-            $sections = $column['sections'] ?? [];
-            if (is_array($sections) === false) {
-                continue;
-            }
-
-            foreach ($sections as $section) {
-                if (is_array($section) === false || ($section['type'] ?? null) !== 'fields') {
+            foreach (($column['fields'] ?? []) as $name => $field) {
+                if (is_array($field) === false) {
                     continue;
                 }
-
-                $sectionFields = $section['rawFields'] ?? $section['fields'] ?? [];
-                if (is_array($sectionFields) === false) {
-                    continue;
-                }
-
-                foreach ($sectionFields as $fieldName => $field) {
-                    if (is_array($field) === false) {
-                        continue;
-                    }
-
-                    $normalized = strtolower((string)$fieldName);
-                    $field['name'] = $normalized;
-                    $fields[$normalized] = $field;
-                }
+                $fields[(string) $name] = $field;
             }
         }
     }
