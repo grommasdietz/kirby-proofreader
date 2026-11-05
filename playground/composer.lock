@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b21e818e168b8029e23b83f3c71e4aa1",
+    "content-hash": "72a584107345d30c647aec7b97cf7d30",
     "packages": [
         {
             "name": "christian-riesen/base32",
@@ -122,16 +122,16 @@
         },
         {
             "name": "composer/semver",
-            "version": "3.5.2",
+            "version": "3.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/composer/semver.git",
-                "reference": "9dfce66f1e97360ea5e6d3e38ab14277e4cc591e"
+                "reference": "d92543b7ede9c4ec6b59853cefb061e39866d2cf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/composer/semver/zipball/9dfce66f1e97360ea5e6d3e38ab14277e4cc591e",
-                "reference": "9dfce66f1e97360ea5e6d3e38ab14277e4cc591e",
+                "url": "https://api.github.com/repos/composer/semver/zipball/d92543b7ede9c4ec6b59853cefb061e39866d2cf",
+                "reference": "d92543b7ede9c4ec6b59853cefb061e39866d2cf",
                 "shasum": ""
             },
             "require": {
@@ -183,7 +183,7 @@
             "support": {
                 "irc": "ircs://irc.libera.chat:6697/composer",
                 "issues": "https://github.com/composer/semver/issues",
-                "source": "https://github.com/composer/semver/tree/3.5.2"
+                "source": "https://github.com/composer/semver/tree/3.6.0"
             },
             "funding": [
                 {
@@ -195,8 +195,8 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-10-22T15:37:26+00:00",
-            "published-time": "2026-10-22T15:38:04+00:00"
+            "time": "2026-10-29T09:13:34+00:00",
+            "published-time": "2026-10-29T09:14:11+00:00"
         },
         {
             "name": "erusev/parsedown",
@@ -319,16 +319,16 @@
         },
         {
             "name": "filp/whoops",
-            "version": "2.18.7",
+            "version": "2.19.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/filp/whoops.git",
-                "reference": "50670ba239926c50f2073e868f6672f775cd57ec"
+                "reference": "84e33631273138ac103d045dc02b0fb7e5485582"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/filp/whoops/zipball/50670ba239926c50f2073e868f6672f775cd57ec",
-                "reference": "50670ba239926c50f2073e868f6672f775cd57ec",
+                "url": "https://api.github.com/repos/filp/whoops/zipball/84e33631273138ac103d045dc02b0fb7e5485582",
+                "reference": "84e33631273138ac103d045dc02b0fb7e5485582",
                 "shasum": ""
             },
             "require": {
@@ -378,7 +378,7 @@
             ],
             "support": {
                 "issues": "https://github.com/filp/whoops/issues",
-                "source": "https://github.com/filp/whoops/tree/2.18.7"
+                "source": "https://github.com/filp/whoops/tree/2.19.2"
             },
             "funding": [
                 {
@@ -386,27 +386,27 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-10-18T13:17:38+00:00",
-            "published-time": "2026-10-18T13:33:07+00:00"
+            "time": "2026-11-03T23:38:01+00:00",
+            "published-time": "2026-11-03T23:39:05+00:00"
         },
         {
             "name": "getkirby/cms",
-            "version": "6.0.0-beta.2",
+            "version": "6.0.0-beta.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/getkirby/kirby.git",
-                "reference": "e8d0e5d79d6cf40454f61f79cd18f3aed8c2ed26"
+                "reference": "2c49497ca4ddf33a8f85bd563e580b3e01f021fa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/getkirby/kirby/zipball/e8d0e5d79d6cf40454f61f79cd18f3aed8c2ed26",
-                "reference": "e8d0e5d79d6cf40454f61f79cd18f3aed8c2ed26",
+                "url": "https://api.github.com/repos/getkirby/kirby/zipball/2c49497ca4ddf33a8f85bd563e580b3e01f021fa",
+                "reference": "2c49497ca4ddf33a8f85bd563e580b3e01f021fa",
                 "shasum": ""
             },
             "require": {
                 "christian-riesen/base32": "2.0.1",
                 "claviska/simpleimage": "4.4.2",
-                "composer/semver": "3.5.2",
+                "composer/semver": "3.6.0",
                 "erusev/parsedown": "1.8.0",
                 "erusev/parsedown-extra": "0.9.0",
                 "ext-ctype": "*",
@@ -420,7 +420,7 @@
                 "ext-mbstring": "*",
                 "ext-openssl": "*",
                 "ext-simplexml": "*",
-                "filp/whoops": "2.18.7",
+                "filp/whoops": "2.19.2",
                 "getkirby/composer-installer": "^1.2.1",
                 "laminas/laminas-escaper": "2.18.0",
                 "lbuchs/webauthn": "^2.2",
@@ -428,8 +428,8 @@
                 "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
                 "phpmailer/phpmailer": "7.1.1",
                 "symfony/polyfill-intl-idn": "1.43.0",
-                "symfony/polyfill-mbstring": "1.43.0",
-                "symfony/yaml": "7.4.21"
+                "symfony/polyfill-mbstring": "1.43.3",
+                "symfony/yaml": "7.4.23"
             },
             "suggest": {
                 "ext-apcu": "Support for the Apcu cache driver",
@@ -487,8 +487,8 @@
                     "type": "custom"
                 }
             ],
-            "time": "2026-10-26T17:01:21+00:00",
-            "published-time": "2026-10-26T17:04:07+00:00"
+            "time": "2026-11-05T14:26:18+00:00",
+            "published-time": "2026-11-05T14:29:19+00:00"
         },
         {
             "name": "getkirby/composer-installer",
@@ -544,12 +544,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/grommasdietz/kirby-hidden-characters.git",
-                "reference": "7e88f3279d6d309e88063d1048e94485438490af"
+                "reference": "9ee4039074b6e1762b79f8b41727b63956a1834a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/grommasdietz/kirby-hidden-characters/zipball/7e88f3279d6d309e88063d1048e94485438490af",
-                "reference": "7e88f3279d6d309e88063d1048e94485438490af",
+                "url": "https://api.github.com/repos/grommasdietz/kirby-hidden-characters/zipball/9ee4039074b6e1762b79f8b41727b63956a1834a",
+                "reference": "9ee4039074b6e1762b79f8b41727b63956a1834a",
                 "shasum": ""
             },
             "require": {
@@ -563,6 +563,7 @@
                 "friendsofphp/php-cs-fixer": "^3.93",
                 "getkirby/cms": "^6.0@beta",
                 "phpunit/phpunit": "^12.5",
+                "symfony/yaml": "7.4.23 as 7.4.21",
                 "vimeo/psalm": "^6.19.1"
             },
             "type": "kirby-plugin",
@@ -597,8 +598,8 @@
                 "issues": "https://github.com/grommasdietz/kirby-hidden-characters/issues",
                 "source": "https://github.com/grommasdietz/kirby-hidden-characters"
             },
-            "time": "2026-11-04T19:02:59+00:00",
-            "published-time": "2026-11-04T19:03:05+00:00"
+            "time": "2026-11-05T13:33:31+00:00",
+            "published-time": "2026-11-05T13:33:40+00:00"
         },
         {
             "name": "grommasdietz/kirby-proofreader",
@@ -606,7 +607,7 @@
             "dist": {
                 "type": "path",
                 "url": "..",
-                "reference": "8975da84724fb6732c9c0ebbff9d6d4b08f971a1"
+                "reference": "ad0442ff43336b881c2c5c85d15f430dedd5a235"
             },
             "require": {
                 "getkirby/composer-installer": "^1.2",
@@ -619,7 +620,6 @@
                 "friendsofphp/php-cs-fixer": "^3.93",
                 "getkirby/cms": "^6.0@beta",
                 "phpunit/phpunit": "^12.5",
-                "symfony/yaml": "7.4.23 as 7.4.21",
                 "vimeo/psalm": "^6.19.1"
             },
             "type": "kirby-plugin",
@@ -1413,16 +1413,16 @@
         },
         {
             "name": "symfony/polyfill-mbstring",
-            "version": "v1.43.0",
+            "version": "v1.43.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-mbstring.git",
-                "reference": "4d5d331bf731e0aedbc6b2f5e61135b7b7996a72"
+                "reference": "122889ed24dc000165bcbfd77ec412f15cbdfc6a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/4d5d331bf731e0aedbc6b2f5e61135b7b7996a72",
-                "reference": "4d5d331bf731e0aedbc6b2f5e61135b7b7996a72",
+                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/122889ed24dc000165bcbfd77ec412f15cbdfc6a",
+                "reference": "122889ed24dc000165bcbfd77ec412f15cbdfc6a",
                 "shasum": ""
             },
             "require": {
@@ -1474,7 +1474,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.43.0"
+                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.43.3"
             },
             "funding": [
                 {
@@ -1494,8 +1494,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-09-24T15:19:04+00:00",
-            "published-time": "2026-09-30T10:23:35+00:00"
+            "time": "2026-10-28T09:35:49+00:00",
+            "published-time": "2026-10-28T10:07:45+00:00"
         },
         {
             "name": "symfony/yaml",
@@ -1640,7 +1640,8 @@
                     "type": "custom"
                 }
             ],
-            "time": "2026-07-02T12:54:04+00:00"
+            "time": "2026-07-02T12:54:04+00:00",
+            "published-time": "2026-07-02T12:56:49+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
@@ -1768,7 +1769,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-10-25T21:35:21+00:00"
+            "time": "2026-10-25T21:35:21+00:00",
+            "published-time": "2026-10-25T21:37:23+00:00"
         },
         {
             "name": "guzzlehttp/promises",
@@ -1852,7 +1854,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-10-18T12:46:59+00:00"
+            "time": "2026-10-18T12:46:59+00:00",
+            "published-time": "2026-10-18T12:47:39+00:00"
         },
         {
             "name": "guzzlehttp/psr7",
@@ -1971,7 +1974,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-10-17T23:49:46+00:00"
+            "time": "2026-10-17T23:49:46+00:00",
+            "published-time": "2026-10-17T23:51:00+00:00"
         },
         {
             "name": "league/climate",
@@ -2037,7 +2041,8 @@
                 "issues": "https://github.com/thephpleague/climate/issues",
                 "source": "https://github.com/thephpleague/climate/tree/3.12.0"
             },
-            "time": "2026-08-27T08:24:22+00:00"
+            "time": "2026-08-27T08:24:22+00:00",
+            "published-time": "2026-08-27T08:25:39+00:00"
         },
         {
             "name": "psr/http-client",
@@ -2089,7 +2094,8 @@
             "support": {
                 "source": "https://github.com/php-fig/http-client"
             },
-            "time": "2023-09-23T14:17:50+00:00"
+            "time": "2023-09-23T14:17:50+00:00",
+            "published-time": "2023-09-23T14:18:12+00:00"
         },
         {
             "name": "psr/http-factory",
@@ -2144,7 +2150,8 @@
             "support": {
                 "source": "https://github.com/php-fig/http-factory"
             },
-            "time": "2024-04-15T12:06:14+00:00"
+            "time": "2024-04-15T12:06:14+00:00",
+            "published-time": "2024-05-10T07:32:19+00:00"
         },
         {
             "name": "psr/http-message",
@@ -2197,7 +2204,8 @@
             "support": {
                 "source": "https://github.com/php-fig/http-message/tree/2.0"
             },
-            "time": "2023-04-04T09:54:51+00:00"
+            "time": "2023-04-04T09:54:51+00:00",
+            "published-time": "2023-04-04T09:55:35+00:00"
         },
         {
             "name": "ralouphie/getallheaders",
@@ -2241,7 +2249,8 @@
                 "issues": "https://github.com/ralouphie/getallheaders/issues",
                 "source": "https://github.com/ralouphie/getallheaders/tree/develop"
             },
-            "time": "2019-03-08T08:55:37+00:00"
+            "time": "2019-03-08T08:55:37+00:00",
+            "published-time": "2019-03-08T09:01:32+00:00"
         },
         {
             "name": "seld/cli-prompt",
@@ -2296,7 +2305,8 @@
                 "issues": "https://github.com/Seldaek/cli-prompt/issues",
                 "source": "https://github.com/Seldaek/cli-prompt/tree/1.0.4"
             },
-            "time": "2020-12-15T21:32:01+00:00"
+            "time": "2020-12-15T21:32:01+00:00",
+            "published-time": "2020-12-15T21:34:21+00:00"
         },
         {
             "name": "symfony/polyfill-php80",
@@ -2380,17 +2390,11 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-09-25T15:50:05+00:00"
+            "time": "2026-09-25T15:50:05+00:00",
+            "published-time": "2026-09-30T10:23:35+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "symfony/yaml",
-            "version": "7.4.23.0",
-            "alias": "7.4.21",
-            "alias_normalized": "7.4.21.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
         "getkirby/cms": 10,
