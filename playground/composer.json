@@ -21,7 +21,7 @@
     "getkirby/cms": "^5.2"
   },
   "require-dev": {
-    "getkirby/cli": "^1.9"
+    "getkirby/cli": "^2.0"
   },
   "config": {
     "platform": {
