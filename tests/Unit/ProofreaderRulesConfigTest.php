@@ -9,6 +9,39 @@ use GrommasDietz\Proofreader\Tests\TestCase;
 
 final class ProofreaderRulesConfigTest extends TestCase
 {
+    public function testNumericRangesHaveIndependentSpacing(): void
+    {
+        $this->bootKirby(['options' => [
+            'languages' => false,
+            'smartypants' => [
+                'space.range' => '&#8239;',
+                'space.endash' => '&thinsp;',
+                'space.emdash' => '&thinsp;',
+                'space.multiplication' => '&thinsp;',
+            ],
+        ]]);
+
+        self::assertSame(
+            "2010\u{202F}–\u{202F}2020; Wort\u{2009}–\u{2009}Wort; Text\u{2009}—\u{2009}Text",
+            Proofreader::fixDashes('2010-2020; Wort – Wort; Text - Text')
+        );
+        self::assertSame("5\u{2009}×\u{2009}5 cm", Proofreader::fixDimensions('5 x 5 cm'));
+    }
+
+    public function testEmptyRangeSpacingAndConfiguredEnThoughtDashAreSupported(): void
+    {
+        $this->bootKirby(['options' => [
+            'languages' => false,
+            'smartypants' => [
+                'emdash' => '&ndash;',
+                'space.range' => '',
+                'space.endash' => '&thinsp;',
+            ],
+        ]]);
+
+        self::assertSame("2010–2020; Wort\u{200A}–\u{200A}Wort", Proofreader::fixDashes('2010-2020; Wort - Wort'));
+    }
+
     public function testNativeSmartypantsOptionsDefineQuotesAndDashSpacing(): void
     {
         $this->bootKirby([
@@ -82,7 +115,7 @@ final class ProofreaderRulesConfigTest extends TestCase
             ],
         ]);
 
-        $space = "\u{2006}";
+        $space = "\u{202F}";
         $nbsp = "\u{00A0}";
 
         self::assertSame(
@@ -435,7 +468,7 @@ final class ProofreaderRulesConfigTest extends TestCase
             ],
         ]);
 
-        $rangeSpace = "\u{2006}";
+        $rangeSpace = "\u{202F}";
 
         // Two-group range (year) must still receive en dash
         self::assertSame(
@@ -457,7 +490,7 @@ final class ProofreaderRulesConfigTest extends TestCase
         // SKU code must pass through dashes unchanged; surrounding text is fixed
         $result = Proofreader::fix('Order SKU-100-200 from 2020-2025', ['dashes', 'spaces']);
 
-        $rangeSpace = "\u{2006}";
+        $rangeSpace = "\u{202F}";
 
         self::assertStringContainsString('SKU-100-200', $result);
         self::assertStringContainsString("2020{$rangeSpace}–{$rangeSpace}2025", $result);
@@ -486,7 +519,7 @@ final class ProofreaderRulesConfigTest extends TestCase
             ],
         ]);
 
-        $rangeSpace = "\u{2006}";
+        $rangeSpace = "\u{202F}";
 
         // With preset disabled, chained numbers still get en-dash treatment
         self::assertSame(

@@ -32,6 +32,11 @@ buttons:
 
 See [usage](docs/usage/index.md) for rule configuration, language-aware corrections, protected spans and CLI review/fix commands.
 
+Numeric ranges, word dashes and dimensions can use separate language-owned
+spacing settings; see the [language configuration and upgrade notes](docs/usage/index.md#language-definitions).
+
+Integrations can use the shared [typography profile API](docs/usage/typography.md).
+
 ### Documentation
 
 Full reference for [usage](docs/usage/index.md), [contributions](docs/contributions/index.md) and [maintenance](docs/maintenance/index.md) lives in [documentation](docs/index.md).

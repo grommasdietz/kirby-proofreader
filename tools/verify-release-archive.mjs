@@ -21,6 +21,7 @@ const requiredEntries = [
   "config/translations.php",
   "lib/Proofreader.php",
   "lib/HtmlText.php",
+  "lib/Typography.php",
 ];
 const forbiddenPrefixes = [
   ".github/",

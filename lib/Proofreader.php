@@ -6,7 +6,6 @@ namespace GrommasDietz\Proofreader;
 
 use Kirby\Cms\App;
 use Kirby\Cms\Blueprint;
-use Kirby\Cms\Language;
 use Kirby\Data\Yaml;
 use Kirby\Toolkit\I18n;
 
@@ -50,28 +49,7 @@ final class Proofreader
         ],
     ];
     private const DEFAULT_RULES = ['unicode', 'ellipsis', 'quotes', 'apostrophes', 'dashes', 'spaces'];
-    private const EN_DASH_SPACE = "\u{2006}";
-    private const EM_DASH_SPACE = "\u{200A}";
-    private const MULTIPLICATION_SPACE = "\u{2006}";
     private const APOSTROPHE = '’';
-
-    /**
-     * @var array{range:string, break:string}
-     */
-    private const DASH_CHARACTERS = ['range' => '–', 'break' => '—'];
-
-    /**
-     * Locale-aware dash spacing definitions. Kirby's language definitions don't
-     * expose typography spacing conventions, so this stays plugin-owned.
-     *
-     * @var array<string, array{range:string, break:string}>
-     */
-    private const DASH_SPACING = [
-        'default' => ['range' => self::EN_DASH_SPACE, 'break' => self::EM_DASH_SPACE],
-        'en'      => ['range' => self::EN_DASH_SPACE, 'break' => self::EM_DASH_SPACE],
-        'de'      => ['range' => self::EN_DASH_SPACE, 'break' => self::EM_DASH_SPACE],
-        'fr'      => ['range' => self::EN_DASH_SPACE, 'break' => self::EM_DASH_SPACE],
-    ];
 
     /**
      * Fallback map for common Latin decomposed sequences when ext-intl or the
@@ -173,18 +151,6 @@ final class Proofreader
     private const HTML_EMPTY_PARAGRAPH_CONTENT_PATTERN = '(?:[\p{Zs}\t\r\n]|&nbsp;?|&#0*160;?|&#x0*a0;?|<br\b[^>]*>)*';
 
     /**
-     * Locale quote definitions: double open/close, single open/close.
-     *
-     * @var array<string, array{0:string, 1:string, 2:string, 3:string}>
-     */
-    private const QUOTES = [
-        'default' => ['“', '”', '‘', '’'],
-        'en'      => ['“', '”', '‘', '’'],
-        'de'      => ['„', '“', '‚', '‘'],
-        'fr'      => ["«\u{202F}", "\u{202F}»", '‹', '›'],
-    ];
-
-    /**
      * Words that should never get automatic NBSPs, even in sentence-start or
      * paragraph-end contexts.
      *
@@ -241,7 +207,8 @@ final class Proofreader
     /**
      * Replaces hyphens/dashes with the correct typographic dash and spacing.
      *
-     * - Numeric context: en dash with six-per-em spaces (U+2006)
+     * - Numeric context: en dash with narrow no-break spaces (U+202F)
+     * - Existing en dashes between words: thin spaces (U+2009)
      * - Word context: em dash with hair spaces (U+200A)
      *
      * Already-correct en/em-dashes are also normalised if the context
@@ -249,7 +216,9 @@ final class Proofreader
      */
     public static function fixDashes(string $text, ?string $language = null): string
     {
-        return self::fixDashSpacing(self::fixDashCharacters($text, $language), $language);
+        return self::withTypographyProfiles(static function () use ($text, $language): string {
+            return self::fixDashSpacing(self::fixDashCharacters($text, $language), $language);
+        });
     }
 
     /**
@@ -258,44 +227,7 @@ final class Proofreader
      */
     public static function fixDashCharacters(string $text, ?string $language = null): string
     {
-        $dash = self::dashCharactersForLanguage($language);
-
-        $result = preg_replace_callback(
-            '/(?<![\p{L}\p{N}])(\d+(?:[\p{Zs}\t]*[-–—][\p{Zs}\t]*\d+)+)(?![\p{L}\p{N}])/u',
-            static function (array $m) use ($dash): string {
-                return preg_replace_callback(
-                    '/([\p{Zs}\t]*)[-–—]([\p{Zs}\t]*)/u',
-                    static fn (array $inner): string => $inner[1] . $dash['range'] . $inner[2],
-                    $m[0]
-                ) ?? $m[0];
-            },
-            $text
-        ) ?? $text;
-
-        $result = preg_replace_callback(
-            '/(\S+)(?:([\p{Zs}\t]+)-([\p{Zs}\t]+)|([\p{Zs}\t]*)([–—])([\p{Zs}\t]*))(\S+)/u',
-            static function (array $m) use ($dash): string {
-                $left  = $m[1];
-                $right = $m[7];
-                $spaceBefore = $m[2] !== '' ? $m[2] : $m[4];
-                $spaceAfter  = $m[3] !== '' ? $m[3] : $m[6];
-
-                if (is_numeric($left) && is_numeric($right)) {
-                    return $left . $spaceBefore . $dash['range'] . $spaceAfter . $right;
-                }
-
-                $existingDash = $m[5] ?? '';
-
-                if ($existingDash === '–' || $existingDash === $dash['range']) {
-                    return $left . $spaceBefore . $dash['range'] . $spaceAfter . $right;
-                }
-
-                return $left . $spaceBefore . $dash['break'] . $spaceAfter . $right;
-            },
-            $result
-        );
-
-        return $result ?? $text;
+        return self::replaceTextChanges($text, self::dashChanges($text, $language, true));
     }
 
     /**
@@ -303,33 +235,107 @@ final class Proofreader
      */
     public static function fixDashSpacing(string $text, ?string $language = null): string
     {
-        $spacing = self::dashSpacingForLanguage($language);
-        $dash = self::dashCharactersForLanguage($language);
-        $dashPattern = implode(
-            '|',
-            array_map(
-                static fn (string $char): string => preg_quote($char, '/'),
-                array_values(array_unique(['–', '—', $dash['range'], $dash['break']]))
-            )
-        );
+        return self::replaceTextChanges($text, self::dashChanges($text, $language, false));
+    }
 
-        if ($dashPattern === '') {
-            return $text;
+    /**
+     * Only operator characters and adjacent spaces are changed. Numeric tokens
+     * remain in their own HTML nodes, even when formatting splits a range.
+     *
+     * @return list<array{offset:int, length:int, value:string, anchor?:int}>
+     */
+    private static function dashChanges(string $text, ?string $language, bool $characters): array
+    {
+        $profile = self::typography($language);
+        $range = $profile->definition('range');
+        $thought = $profile->definition('thought');
+        $word = $profile->definition('word');
+        $symbols = array_values(array_unique(['–', '—', $range['character'], $thought['character'], ...($characters ? ['-'] : [])]));
+        $pattern = implode('|', array_map(static fn (string $value): string => preg_quote($value, '~'), $symbols));
+        preg_match_all('~(?<before>[\p{Zs}\t]*)(?<dash>' . $pattern . ')(?<after>[\p{Zs}\t]*)~u', $text, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
+        $numeric = self::numericDashOffsets($text, $characters ? $symbols : array_values(array_unique(['–', $range['character']])));
+        $changes = [];
+
+        foreach ($matches as $match) {
+            [$before, $beforeOffset] = $match['before'];
+            [$dash, $offset] = $match['dash'];
+            [$after, $afterOffset] = $match['after'];
+            if ($beforeOffset === 0 || $afterOffset + strlen($after) === strlen($text)) {
+                continue;
+            }
+            if (preg_match('/\S$/u', substr($text, 0, $beforeOffset)) !== 1 || preg_match('/^\S/u', substr($text, $afterOffset + strlen($after))) !== 1) {
+                continue;
+            }
+
+            if (isset($numeric[$offset])) {
+                $definition = $range;
+            } elseif ($dash === '-') {
+                if (!$characters || $before === '' || $after === '') {
+                    continue;
+                }
+                $definition = $thought;
+            } elseif ($dash === $thought['character']) {
+                // A configured en thought dash retains its semantic spacing.
+                $definition = $thought;
+            } elseif ($dash === '–' || $dash === $word['character']) {
+                $definition = $word;
+            } else {
+                $definition = $thought;
+            }
+
+            if ($characters) {
+                self::addTextChange($changes, $dash, $offset, $definition['character']);
+            } else {
+                self::addTextChange($changes, $before, $beforeOffset, $definition['before'], $offset);
+                self::addTextChange($changes, $after, $afterOffset, $definition['after'], $offset);
+            }
         }
 
-        $result = preg_replace_callback(
-            '/(\S)[\p{Zs}\t]*(' . $dashPattern . ')[\p{Zs}\t]*(?=\S)/u',
-            static function (array $m) use ($spacing, $dash): string {
-                $space = in_array($m[2], ['–', $dash['range']], true)
-                    ? $spacing['range']
-                    : $spacing['break'];
+        return $changes;
+    }
 
-                return $m[1] . $space . $m[2] . $space;
-            },
-            $text
-        );
+    /**
+     * @param list<string> $symbols
+     * @return array<int, true>
+     */
+    private static function numericDashOffsets(string $text, array $symbols): array
+    {
+        $number = '[+−-]?\d+(?:[.,:]\d+)*';
+        $dash = implode('|', array_map(static fn (string $value): string => preg_quote($value, '~'), $symbols));
+        preg_match_all('~(?<![\p{L}\p{N}_.,:])' . $number . '[\p{Zs}\t]*(?<dash>' . $dash . ')[\p{Zs}\t]*(?=' . $number . '(?![\p{L}\p{N}_]|[.,:]\d))~u', $text, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
+        preg_match_all('/\b\d{4}-\d{2}-\d{2}(?!\d)/u', $text, $dates, PREG_OFFSET_CAPTURE);
+        $offsets = [];
+        foreach ($matches as $match) {
+            $offset = $match['dash'][1];
+            preg_match('/[\p{L}\p{N}_.,:+−–—-]*$/u', substr($text, 0, $offset), $left);
+            preg_match('/^[\p{L}\p{N}_.,:+−–—-]*/u', substr($text, $offset + strlen($match['dash'][0])), $right);
+            if (preg_match('/\p{L}/u', ($left[0] ?? '') . ($right[0] ?? '')) === 1) {
+                continue;
+            }
+            foreach ($dates[0] as [$date, $start]) {
+                if ($offset >= $start && $offset < $start + strlen($date)) {
+                    continue 2;
+                }
+            }
+            $offsets[$offset] = true;
+        }
 
-        return $result ?? $text;
+        return $offsets;
+    }
+
+    /**
+     * @param list<array{offset:int, length:int, value:string, anchor?:int}> $changes
+     */
+    private static function addTextChange(array &$changes, string $original, int $offset, string $value, ?int $anchor = null): void
+    {
+        if ($original === $value) {
+            return;
+        }
+        $change = ['offset' => $offset, 'length' => strlen($original), 'value' => $value];
+        if ($anchor !== null) {
+            $change['anchor'] = $anchor;
+        }
+        $changes[] = $change;
     }
 
     /**
@@ -453,11 +459,11 @@ final class Proofreader
     }
 
     /**
-     * @param list<array{offset:int, length:int, value:string}> $changes
+     * @param list<array{offset:int, length:int, value:string, anchor?:int}> $changes
      */
     private static function replaceTextChanges(string $text, array $changes): string
     {
-        usort($changes, static fn (array $a, array $b): int => $b['offset'] <=> $a['offset']);
+        usort($changes, static fn (array $a, array $b): int => ($b['offset'] <=> $a['offset']) ?: ($b['length'] <=> $a['length']));
         foreach ($changes as $change) {
             $text = substr_replace($text, $change['value'], $change['offset'], $change['length']);
         }
@@ -643,33 +649,41 @@ final class Proofreader
     /**
      * Replaces dimension separators like "5 x 5 cm" with a multiplication sign.
      */
-    public static function fixDimensions(string $text): string
+    public static function fixDimensions(string $text, ?string $language = null): string
     {
+        return self::replaceTextChanges($text, self::dimensionChanges($text, $language));
+    }
+
+    /** @return list<array{offset:int, length:int, value:string, anchor?:int}> */
+    private static function dimensionChanges(string $text, ?string $language): array
+    {
+        $profile = self::typography($language);
+        $definition = $profile->definition('dimension');
         $number = '\d+(?:[.,]\d+)?';
-        $unitSpace = '[\p{Zs}\t]*';
-        $unit = implode(
-            '|',
-            array_map(static fn (string $value): string => preg_quote($value, '/'), self::DIMENSION_UNITS)
-        );
+        $unit = '(?:' . implode('|', array_map(static fn (string $value): string => preg_quote($value, '~'), self::DIMENSION_UNITS)) . ')';
+        $quantity = $number . '(?:[\p{Zs}\t]*' . $unit . ')?';
+        preg_match_all('~(?<![\p{L}\p{N}_])' . $quantity . '(?:[\p{Zs}\t]*[xX×][\p{Zs}\t]*' . $quantity . ')+(?![\p{L}\p{N}_]|[.,:]\d)~u', $text, $chains, PREG_OFFSET_CAPTURE);
+        $changes = [];
 
-        $result = preg_replace_callback(
-            '/(?<![\p{L}\p{N}])(' . $number . ')(' . $unitSpace . '(?:' . $unit . '))?[\p{Zs}\t]*[xX×][\p{Zs}\t]*(' . $number . ')(' . $unitSpace . '(?:' . $unit . '))?(?=$|[\p{Zs}\t\p{P}])/u',
-            static function (array $m): string {
-                $leftUnit = $m[2] ?? '';
-                $rightUnit = $m[4] ?? '';
+        foreach ($chains[0] as [$chain, $chainOffset]) {
+            preg_match_all('~' . $quantity . '(?<before>[\p{Zs}\t]*)(?<operator>[xX×])(?<after>[\p{Zs}\t]*)(?=' . $quantity . ')~u', $chain, $operators, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
+            foreach ($operators as $operator) {
+                $anchor = $chainOffset + $operator['operator'][1];
+                self::addTextChange($changes, $operator['before'][0], $chainOffset + $operator['before'][1], $definition['before'], $anchor);
+                self::addTextChange($changes, $operator['operator'][0], $anchor, $definition['character']);
+                self::addTextChange($changes, $operator['after'][0], $chainOffset + $operator['after'][1], $definition['after'], $anchor);
+            }
 
-                return $m[1]
-                    . $leftUnit
-                    . self::MULTIPLICATION_SPACE
-                    . '×'
-                    . self::MULTIPLICATION_SPACE
-                    . $m[3]
-                    . $rightUnit;
-            },
-            $text
-        );
+            // Respect an explicit unit style; otherwise retain authored spacing.
+            if ($profile->option('space.unit') !== null) {
+                preg_match_all('~' . $number . '(?<space>[\p{Zs}\t]*)(?<unit>' . $unit . ')(?!\p{L})~u', $chain, $units, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
+                foreach ($units as $match) {
+                    self::addTextChange($changes, $match['space'][0], $chainOffset + $match['space'][1], $profile->definition('unit')['before'], $chainOffset + $match['unit'][1]);
+                }
+            }
+        }
 
-        return $result ?? $text;
+        return $changes;
     }
 
     /**
@@ -821,7 +835,9 @@ final class Proofreader
         ?array $rules = null,
         ?string $language = null
     ): string {
-        return self::fixText($text, $rules, $language, true, true, false);
+        return self::withTypographyProfiles(static function () use ($text, $rules, $language): string {
+            return self::fixText($text, $rules, $language, true, true, false);
+        });
     }
 
     /**
@@ -864,61 +880,143 @@ final class Proofreader
         ?array $rules = null,
         ?string $language = null
     ): string {
-        foreach (self::normaliseRules($rules) as $rule) {
-            $custom = self::configuredRuleDefinitions()[$rule]['callback'] !== null;
+        return self::withTypographyProfiles(static function () use ($html, $rules, $language): string {
+            foreach (self::normaliseRules($rules) as $rule) {
+                $custom = self::configuredRuleDefinitions()[$rule]['callback'] !== null;
 
-            if ($rule === 'paragraphs' && !$custom) {
-                $html = self::fixHtmlParagraphs($html);
-                continue;
+                if ($rule === 'paragraphs' && !$custom) {
+                    $html = self::fixHtmlParagraphs($html);
+                    continue;
+                }
+
+                $html = HtmlText::transform($html, $language, static function (
+                    string $text,
+                    array $nodes,
+                    bool $blockStart,
+                    bool $blockEnd
+                ) use ($rule, $custom): array {
+                    if ($rule === 'quotes' && !$custom) {
+                        return self::quotePairChanges($text, $nodes);
+                    }
+
+                    if ($rule === 'primes' && !$custom) {
+                        return self::primeChanges($text);
+                    }
+
+                    if (!$custom && in_array($rule, ['dashes', 'dimensions'], true)) {
+                        return self::inlineTypographyChanges($text, $nodes, $rule);
+                    }
+
+                    $changes = [];
+                    $lastTextCharacter = null;
+                    foreach ($nodes as $node) {
+                        $part = substr($text, $node['offset'], $node['length']);
+                        $fixed = self::fixText(
+                            $part,
+                            [$rule],
+                            $node['language'],
+                            false,
+                            $blockStart,
+                            !$blockStart && in_array($lastTextCharacter, ['.', '!', '?'], true)
+                        );
+
+                        if ($part !== $fixed) {
+                            $changes[] = ['offset' => $node['offset'], 'length' => $node['length'], 'value' => $fixed];
+                        }
+
+                        if (self::containsNonWhitespace($part)) {
+                            $blockStart = false;
+                        }
+                        $lastTextCharacter = self::lastNonWhitespaceCharacter($fixed) ?? $lastTextCharacter;
+                    }
+
+                    return $changes;
+                });
+
+                if ($rule === 'spaces' && !$custom) {
+                    $html = HtmlText::transform($html, $language, static fn (string $text, array $nodes): array => self::inlineTypographyChanges($text, $nodes, 'dashSpacing'));
+                    $html = self::fixHtmlParagraphEdgeSpaces($html);
+                    $html = HtmlText::transform($html, $language, static fn (string $text, array $nodes, bool $blockStart, bool $blockEnd): array => $blockEnd ? self::trailingNbspChanges($text) : []);
+                }
             }
 
-            $html = HtmlText::transform($html, $language, static function (
-                string $text,
-                array $nodes,
-                bool $blockStart,
-                bool $blockEnd
-            ) use ($rule, $custom): array {
-                if ($rule === 'quotes' && !$custom) {
-                    return self::quotePairChanges($text, $nodes);
-                }
+            return $html;
+        });
+    }
 
-                if ($rule === 'primes' && !$custom) {
-                    return self::primeChanges($text);
-                }
-
-                $changes = [];
-                $lastTextCharacter = null;
-                foreach ($nodes as $node) {
-                    $part = substr($text, $node['offset'], $node['length']);
-                    $fixed = self::fixText(
-                        $part,
-                        [$rule],
-                        $node['language'],
-                        false,
-                        $blockStart,
-                        !$blockStart && in_array($lastTextCharacter, ['.', '!', '?'], true)
-                    );
-
-                    if ($part !== $fixed) {
-                        $changes[] = ['offset' => $node['offset'], 'length' => $node['length'], 'value' => $fixed];
-                    }
-
-                    if (self::containsNonWhitespace($part)) {
-                        $blockStart = false;
-                    }
-                    $lastTextCharacter = self::lastNonWhitespaceCharacter($fixed) ?? $lastTextCharacter;
-                }
-
-                return $changes;
-            });
-
-            if ($rule === 'spaces' && !$custom) {
-                $html = self::fixHtmlParagraphEdgeSpaces($html);
-                $html = HtmlText::transform($html, $language, static fn (string $text, array $nodes, bool $blockStart, bool $blockEnd): array => $blockEnd ? self::trailingNbspChanges($text) : []);
+    /**
+     * @param list<array{offset:int, length:int, language:?string}> $nodes
+     * @return list<array{offset:int, length:int, value:string, anchor?:int}>
+     */
+    private static function inlineTypographyChanges(string $text, array $nodes, string $rule): array
+    {
+        /** @var list<array{offset:int, length:int, language:?string}> $groups */
+        $groups = [];
+        foreach ($nodes as $node) {
+            $last = array_key_last($groups);
+            if ($last !== null && $groups[$last]['language'] === $node['language']) {
+                $groups[$last]['length'] += $node['length'];
+            } else {
+                $groups[] = $node;
             }
         }
 
-        return $html;
+        $changes = [];
+        $segments = self::unprotectedSegments($text);
+        foreach ($groups as $group) {
+            foreach ($segments as $segment) {
+                $start = max($group['offset'], $segment['offset']);
+                $end = min($group['offset'] + $group['length'], $segment['offset'] + $segment['length']);
+                if ($start >= $end) {
+                    continue;
+                }
+                $value = substr($text, $start, $end - $start);
+                $edits = match ($rule) {
+                    'dashes' => self::dashChanges($value, $group['language'], true),
+                    'dimensions' => self::dimensionChanges($value, $group['language']),
+                    default => self::dashChanges($value, $group['language'], false),
+                };
+                foreach ($edits as $edit) {
+                    $edit['offset'] += $start;
+                    if (isset($edit['anchor'])) {
+                        $edit['anchor'] += $start;
+                    }
+                    $changes[] = $edit;
+                }
+            }
+        }
+
+        return $changes;
+    }
+
+    /** @return list<array{offset:int, length:int}> */
+    private static function unprotectedSegments(string $text): array
+    {
+        $ranges = [];
+        foreach (self::configuredProtectPatterns() as $pattern) {
+            if ($pattern === '' || @preg_match_all($pattern, $text, $matches, PREG_OFFSET_CAPTURE) === false) {
+                continue;
+            }
+            foreach ($matches[0] as [$value, $offset]) {
+                if ($value !== '') {
+                    $ranges[] = ['start' => $offset, 'end' => $offset + strlen($value)];
+                }
+            }
+        }
+        usort($ranges, static fn (array $a, array $b): int => $a['start'] <=> $b['start']);
+        $segments = [];
+        $offset = 0;
+        foreach ($ranges as $range) {
+            if ($range['start'] > $offset) {
+                $segments[] = ['offset' => $offset, 'length' => $range['start'] - $offset];
+            }
+            $offset = max($offset, $range['end']);
+        }
+        if ($offset < strlen($text)) {
+            $segments[] = ['offset' => $offset, 'length' => strlen($text) - $offset];
+        }
+
+        return $segments;
     }
 
     private static function removeEmptyHtmlParagraphs(string $html): string
@@ -1515,7 +1613,7 @@ final class Proofreader
                 $leadingNbspAtParagraphStart,
                 $leadingNbspAfterSentence
             ),
-            'dimensions'  => self::fixDimensions($text),
+            'dimensions'  => self::fixDimensions($text, $language),
             'paragraphs'  => $text,
             'abbreviations' => self::fixAbbreviations($text, $language),
             'primes' => self::fixPrimes($text),
@@ -1549,67 +1647,10 @@ final class Proofreader
         return $trimParagraphEdges ? self::fixTrailingNbsp($text) : $text;
     }
 
-    /**
-     * @return array{range:string, break:string}
-     */
-    private static function dashCharactersForLanguage(?string $language): array
-    {
-        $options = self::smartypantsOptionsForLanguage($language);
-
-        return [
-            'range' => self::smartypantsStringOption($options, 'endash') ?? self::DASH_CHARACTERS['range'],
-            'break' => self::smartypantsStringOption($options, 'emdash') ?? self::DASH_CHARACTERS['break'],
-        ];
-    }
-
-    /**
-     * @return array{range:string, break:string}
-     */
-    private static function dashSpacingForLanguage(?string $language): array
-    {
-        $code = self::baseLanguageCode($language !== null ? $language : 'default');
-        $fallback = self::DASH_SPACING[$code] ?? self::DASH_SPACING['default'];
-        $options = self::smartypantsOptionsForLanguage($language);
-
-        return [
-            'range' => self::smartypantsStringOption($options, 'space.endash') ?? $fallback['range'],
-            'break' => self::smartypantsStringOption($options, 'space.emdash') ?? $fallback['break'],
-        ];
-    }
-
-    /**
-     * @return array{0:string, 1:string, 2:string, 3:string}|null
-     */
+    /** @return array{0:string, 1:string, 2:string, 3:string}|null */
     private static function quotesForLanguage(?string $language): ?array
     {
-        $code = self::baseLanguageCode($language);
-        $fallback = self::QUOTES[$code] ?? null;
-        $options = self::smartypantsOptionsForLanguage($language);
-
-        if ($fallback === null) {
-            $doubleOpen = self::smartypantsStringOption($options, 'doublequote.open');
-            $doubleClose = self::smartypantsStringOption($options, 'doublequote.close');
-            $singleOpen = self::smartypantsStringOption($options, 'singlequote.open');
-            $singleClose = self::smartypantsStringOption($options, 'singlequote.close');
-
-            if (
-                $doubleOpen === null ||
-                $doubleClose === null ||
-                $singleOpen === null ||
-                $singleClose === null
-            ) {
-                return null;
-            }
-
-            return [$doubleOpen, $doubleClose, $singleOpen, $singleClose];
-        }
-
-        return [
-            self::smartypantsStringOption($options, 'doublequote.open') ?? $fallback[0],
-            self::smartypantsStringOption($options, 'doublequote.close') ?? $fallback[1],
-            self::smartypantsStringOption($options, 'singlequote.open') ?? $fallback[2],
-            self::smartypantsStringOption($options, 'singlequote.close') ?? $fallback[3],
-        ];
+        return self::typography($language)->quotes();
     }
 
     private static function isFrenchLanguage(?string $language): bool
@@ -1624,84 +1665,47 @@ final class Proofreader
         return preg_replace('/[_-].*$/', '', $code) ?? $code;
     }
 
-    /**
-     * @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     private static function smartypantsOptionsForLanguage(?string $language): array
     {
-        $options = self::optionValue('smartypants', []);
-        $options = is_array($options) ? $options : [];
-
-        try {
-            $kirby = App::instance(lazy: true);
-
-            if ($kirby === null || $kirby->multilang() === false) {
-                return $options;
-            }
-
-            $languageObject = self::languageDefinition($language);
-
-            if ($languageObject === null) {
-                return $options;
-            }
-
-            $languageOptions = $languageObject->smartypants();
-
-            if (is_array($languageOptions) === false) {
-                return $options;
-            }
-
-            return array_replace($options, $languageOptions);
-        } catch (\Throwable) {
-            return $options;
-        }
+        return self::typography($language)->options();
     }
 
-    /**
-     * Kirby language codes and their declared locales own regional typography.
-     * Match exact definitions before falling back to the base language.
-     */
-    private static function languageDefinition(?string $language): ?Language
-    {
-        $kirby = App::instance(lazy: true);
-        if ($kirby === null || !$kirby->multilang() || $language === null || $language === '' || $language === 'default') {
-            return null;
-        }
-
-        $normalize = static fn (string $code): string => strtolower(str_replace('_', '-', preg_replace('/[.@].*$/', '', $code) ?? $code));
-        $code = $normalize($language);
-        foreach ($kirby->languages() as $definition) {
-            if ($normalize($definition->code()) === $code) {
-                return $definition;
-            }
-        }
-        foreach ($kirby->languages() as $definition) {
-            $locale = $definition->locale(LC_CTYPE);
-            if (is_string($locale) && $normalize($locale) === $code) {
-                return $definition;
-            }
-        }
-        foreach ($kirby->languages() as $definition) {
-            if ($normalize($definition->code()) === self::baseLanguageCode($language)) {
-                return $definition;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * @param array<string, mixed> $options
-     */
+    /** @param array<string, mixed> $options */
     private static function smartypantsStringOption(array $options, string $key): ?string
     {
-        $value = $options[$key] ?? null;
+        return Typography::stringOption($options, $key);
+    }
 
-        if (!is_string($value) || ($value === '' && !str_starts_with($key, 'space.'))) {
-            return null;
+    /** @var array<string, Typography>|null Operation-local snapshots, cleared in finally. */
+    private static ?array $typographyProfiles = null;
+
+    private static function typography(?string $language): Typography
+    {
+        if (self::$typographyProfiles === null) {
+            return Typography::forLanguage($language);
         }
 
-        return html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        return self::$typographyProfiles[$language ?? ''] ??= Typography::forLanguage($language);
+    }
+
+    /**
+     * @template T
+     * @param callable():T $operation
+     * @return T
+     */
+    private static function withTypographyProfiles(callable $operation): mixed
+    {
+        if (self::$typographyProfiles !== null) {
+            return $operation();
+        }
+
+        self::$typographyProfiles = [];
+        try {
+            return $operation();
+        } finally {
+            self::$typographyProfiles = null;
+        }
     }
 
     /**
@@ -1896,31 +1900,33 @@ final class Proofreader
         ?string $language = null,
         ?array $onlyFields = null
     ): array {
-        $blueprintFields = self::normaliseBlueprintFields($blueprintFields, true);
-        $fixed = [];
-        $selectedFields = $onlyFields === null
-            ? null
-            : array_map(static fn (string $field): string => self::fieldLookupKey($field), $onlyFields);
+        return self::withTypographyProfiles(static function () use ($fields, $blueprintFields, $rules, $language, $onlyFields): array {
+            $blueprintFields = self::normaliseBlueprintFields($blueprintFields, true);
+            $fixed = [];
+            $selectedFields = $onlyFields === null
+                ? null
+                : array_map(static fn (string $field): string => self::fieldLookupKey($field), $onlyFields);
 
-        foreach ($fields as $key => $value) {
-            $lkey = self::fieldLookupKey((string) $key);
-            $bp = $blueprintFields[$lkey] ?? [];
+            foreach ($fields as $key => $value) {
+                $lkey = self::fieldLookupKey((string) $key);
+                $bp = $blueprintFields[$lkey] ?? [];
 
-            if ($selectedFields !== null && !in_array($lkey, $selectedFields, true)) {
-                $fixed[$key] = $value;
-                continue;
+                if ($selectedFields !== null && !in_array($lkey, $selectedFields, true)) {
+                    $fixed[$key] = $value;
+                    continue;
+                }
+
+                $format = self::fieldFormatFor((string) $key, $bp);
+
+                if ($format !== null) {
+                    $fixed[$key] = self::fixFieldValue($value, $format, $bp, $rules, $language);
+                } else {
+                    $fixed[$key] = $value;
+                }
             }
 
-            $format = self::fieldFormatFor((string) $key, $bp);
-
-            if ($format !== null) {
-                $fixed[$key] = self::fixFieldValue($value, $format, $bp, $rules, $language);
-            } else {
-                $fixed[$key] = $value;
-            }
-        }
-
-        return $fixed;
+            return $fixed;
+        });
     }
 
     /**
@@ -1939,25 +1945,27 @@ final class Proofreader
         ?string $language = null,
         ?array $onlyFields = null
     ): array {
-        $enabledRules = self::normaliseRules($rules);
+        return self::withTypographyProfiles(static function () use ($fields, $blueprintFields, $rules, $language, $onlyFields): array {
+            $enabledRules = self::normaliseRules($rules);
 
-        return [
-            'rules'       => $enabledRules,
-            'suggestions' => self::collectFieldSuggestions(
-                $fields,
-                $blueprintFields,
-                $enabledRules,
-                $language,
-                $onlyFields
-            ),
-            'fixed'       => self::fixFields(
-                $fields,
-                $blueprintFields,
-                $enabledRules,
-                $language,
-                $onlyFields
-            ),
-        ];
+            return [
+                'rules'       => $enabledRules,
+                'suggestions' => self::collectFieldSuggestions(
+                    $fields,
+                    $blueprintFields,
+                    $enabledRules,
+                    $language,
+                    $onlyFields
+                ),
+                'fixed'       => self::fixFields(
+                    $fields,
+                    $blueprintFields,
+                    $enabledRules,
+                    $language,
+                    $onlyFields
+                ),
+            ];
+        });
     }
 
     /**

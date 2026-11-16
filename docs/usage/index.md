@@ -134,8 +134,8 @@ spacing: number ranges use en dashes, spaced hyphens in text use em dashes,
 and existing en dashes in word ranges are kept as en dashes. The `spaces` rule
 then collapses repeated regular spaces, removes regular spaces at paragraph
 starts and ends, removes spaces before punctuation except French high
-punctuation, normalizes six-per-em spaces around en dashes, hair spaces around
-em dashes, narrow non-breaking spaces after ordinals, and non-breaking spaces
+punctuation, normalizes narrow no-break spaces around numeric ranges, thin spaces around
+word en dashes, hair spaces around em dashes, narrow non-breaking spaces after ordinals, and non-breaking spaces
 after one-letter words and 2–4 letter sentence starters outside paragraph
 starts, and before 2–5 letter paragraph-ending words. The existing exclusions
 `and`, `be` and `for` remain unchanged. In HTML, paragraph-ending words are
@@ -152,7 +152,7 @@ convention calls for no space.
 
 | Rule | Correction |
 | --- | --- |
-| `dimensions` | Converts dimension separators: `5 x 5 cm` → `5 × 5 cm`. |
+| `dimensions` | Converts dimension separators: `5 x 5 cm` → `5 × 5 cm`. |
 | `paragraphs` | Removes empty HTML paragraphs and stale trailing `<br>` elements or whitespace at paragraph ends. |
 | `abbreviations` | Joins recognized German abbreviations with narrow non-breaking spaces: `z. B.` → `z. B.`. |
 | `primes` | Converts measurement marks: `6' 2"` → `6′ 2″`, preserving paired quotations. |
@@ -213,9 +213,32 @@ return [
         'endash' => '&ndash;',
         'space.emdash' => '&hairsp;',
         'space.endash' => '&thinsp;',
+        'space.range' => '&#8239;',
+        'space.multiplication' => '&#8239;',
     ],
 ];
 ```
+
+`space.range` controls recognized numeric endpoints independently of word en
+dashes (`space.endash`). Without `space.range`, an explicitly configured legacy
+`space.endash` still controls both; without either, numeric ranges use U+202F
+and word en dashes use U+2009. `space.multiplication` controls the optional
+`dimensions` rule and defaults to U+202F. These two keys are Proofreader
+extensions to the language's SmartyPants settings. Empty space values are
+supported, for example `'space.range' => ''` for unspaced number ranges.
+
+Detection covers numeric endpoints, including decimals and times. It does not
+infer semantic ranges from place names or arbitrary word pairs; those retain
+breakable word-dash spacing. Keep identifier and phone protection enabled where
+needed. The defaults describe a house style, not universal German, English or
+French publishing rules. Choose German thought dashes with `'emdash' => '&ndash;'`
+and matching `space.endash`/`space.emdash` settings if that is the project style.
+
+When upgrading, add `space.range` explicitly to each language definition if
+numeric ranges should use different spacing from word en dashes. Review the new
+suggestions before applying them: fallback numeric and multiplication spacing
+changed from U+2006 to U+202F, and fallback word-en-dash spacing from U+2006 to
+U+2009. Existing stored content is not rewritten on upgrade.
 
 Only the Proofreader's configured rules are applied; this does not enable
 Kirby's full SmartyPants parser for content.
@@ -226,6 +249,11 @@ can span inline elements such as `<em>` and `<a>`; their opening language select
 the quotation style. Unpaired marks and pairs separated by paragraph or
 protected-code boundaries remain unchanged. Tags, attributes and links retain
 their authored markup.
+
+Editor integrations can share the public `Typography` resolver. See
+[typography profiles and regional extensions](typography.md) for its API,
+dimension/unit spacing, cross-inline corrections and a tested, opt-in French
+punctuation example. Client-specific regional settings stay in language files.
 
 ### Fields
 

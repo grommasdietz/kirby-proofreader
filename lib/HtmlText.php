@@ -31,7 +31,7 @@ final class HtmlText
     }
 
     /**
-     * @param callable(string, list<array{offset:int, length:int, language:?string}>, bool, bool):list<array{offset:int, length:int, value:string}> $transform
+     * @param callable(string, list<array{offset:int, length:int, language:?string}>, bool, bool):list<array{offset:int, length:int, value:string, anchor?:int}> $transform
      */
     public static function transform(string $html, ?string $language, callable $transform): string
     {
@@ -55,9 +55,20 @@ final class HtmlText
                     static fn (array $node): array => ['offset' => $node['offset'], 'length' => $node['length'], 'language' => $node['language']],
                     $nodes
                 ), $blockStart, $blockEnd);
-                usort($changes, static fn (array $a, array $b): int => $b['offset'] <=> $a['offset']);
+                usort($changes, static fn (array $a, array $b): int => ($b['offset'] <=> $a['offset']) ?: ($b['length'] <=> $a['length']));
 
                 foreach ($changes as $change) {
+                    if ($change['length'] === 0) {
+                        // New spaces stay with the operator/unit that owns them.
+                        $anchor = $change['anchor'] ?? $change['offset'];
+                        foreach ($nodes as $node) {
+                            if ($anchor >= $node['offset'] && $anchor < $node['offset'] + $node['length']) {
+                                $parts[$node['part']] = substr_replace($parts[$node['part']], $change['value'], $change['offset'] - $node['offset'], 0);
+                                break;
+                            }
+                        }
+                        continue;
+                    }
                     $inserted = false;
 
                     foreach ($nodes as $node) {

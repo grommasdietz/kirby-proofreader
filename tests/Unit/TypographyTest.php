@@ -83,6 +83,23 @@ final class TypographyTest extends TestCase
         self::assertSame('Bonjour!', Proofreader::fixPunctuationSpacing('Bonjour!', 'fr'));
     }
 
+    public function testRangeAndDimensionSpacingFollowInlineLanguageOverrides(): void
+    {
+        $this->bootKirby(['options' => [
+            'smartypants' => ['space.range' => '', 'space.multiplication' => ''],
+            'grommasdietz.proofreader.rules' => ['spaces', 'dimensions'],
+        ]]);
+        $this->kirby->languages(false)->append(new Language([
+            'code' => 'de-ch',
+            'smartypants' => ['space.range' => '&#8239;', 'space.multiplication' => '&thinsp;'],
+        ]));
+
+        $input = '<p lang="de-CH">2010–2020; 50 x 50 cm</p><p lang="en">2010–2020; 50 x 50 cm</p>';
+        $expected = "<p lang=\"de-CH\">2010\u{202F}–\u{202F}2020; 50\u{2009}×\u{2009}50\u{00A0}cm</p><p lang=\"en\">2010–2020; 50×50\u{00A0}cm</p>";
+
+        self::assertSame($expected, Proofreader::fixHtml($input, ['spaces', 'dimensions'], 'en'));
+    }
+
     #[DataProvider('optionalExamples')]
     public function testOptionalContentRules(string $rule, string $input, string $expected, ?string $language = null): void
     {

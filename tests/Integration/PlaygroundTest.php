@@ -421,7 +421,7 @@ TXT);
         self::assertSame(['summary'], array_unique(array_column($data['suggestions'], 'field')));
     }
 
-    public function testProofreaderRouteCanIncludeConfiguredFieldNames(): void
+    public function testProofreaderRoutePreservesIsoDatesInIncludedFields(): void
     {
         $this->bootKirby([
             'options' => [
@@ -448,8 +448,8 @@ TXT);
         $data = $this->jsonResponse($response);
 
         self::assertSame('ok', $data['status']);
-        self::assertSame(['date'], array_unique(array_column($data['suggestions'], 'field')));
-        self::assertSame(['date'], $data['changedFields']);
+        self::assertSame([], $data['suggestions']);
+        self::assertSame([], $data['changedFields']);
     }
 
     public function testProofreaderRouteHonorsConfiguredFieldExcludes(): void

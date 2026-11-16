@@ -93,7 +93,7 @@ final class ProofreaderTest extends TestCase
 
     public static function dashProvider(): array
     {
-        $rangeSpace = "\u{2006}";
+        $rangeSpace = "\u{202F}";
         $dashSpace  = "\u{200A}";
 
         return [
@@ -104,19 +104,41 @@ final class ProofreaderTest extends TestCase
             'numeric range em-dash'   => ['2010 — 2020', "2010{$rangeSpace}–{$rangeSpace}2020"],
             'word context hyphen'     => ['draft - review', "draft{$dashSpace}—{$dashSpace}review"],
             'word context compact em-dash' => ['draft—review', "draft{$dashSpace}—{$dashSpace}review"],
-            'word context en-dash'    => ['draft – review', "draft{$rangeSpace}–{$rangeSpace}review"],
+            'word context en-dash'    => ['draft – review', "draft\u{2009}–\u{2009}review"],
             'word context em-dash'    => ['draft — review', "draft{$dashSpace}—{$dashSpace}review"],
-            'intended place range en-dash' => ['Hamburg – Bremen', "Hamburg{$rangeSpace}–{$rangeSpace}Bremen"],
+            'intended place range en-dash' => ['Hamburg – Bremen', "Hamburg\u{2009}–\u{2009}Bremen"],
             'no surrounding spaces'   => ['well-known', 'well-known'],
             'hyphen mid-word'         => ['self-aware', 'self-aware'],
             'multiple dashes'         => ['a - b and 1 - 2', "a{$dashSpace}—{$dashSpace}b and 1{$rangeSpace}–{$rangeSpace}2"],
             'numeric chain three parts' => ['0800-123-4567', "0800{$rangeSpace}–{$rangeSpace}123{$rangeSpace}–{$rangeSpace}4567"],
+            'decimal range' => ['1,5 – 2,5', "1,5{$rangeSpace}–{$rangeSpace}2,5"],
+            'time range' => ['10:30–12:00', "10:30{$rangeSpace}–{$rangeSpace}12:00"],
+            'sentence after range' => ['2010–2020.', "2010{$rangeSpace}–{$rangeSpace}2020."],
+            'number beside word' => ['2020 – heute', "2020\u{2009}–\u{2009}heute"],
+            'word beside number' => ['heute – 2020', "heute\u{2009}–\u{2009}2020"],
+            'alphanumeric identifiers' => ['A2–B4', "A2\u{2009}–\u{2009}B4"],
+            'number with suffix' => ['2–4th', "2\u{2009}–\u{2009}4th"],
+            'signed range' => ['−5–−3', "−5{$rangeSpace}–{$rangeSpace}−3"],
+            'ASCII signed range' => ['-5--3', "-5{$rangeSpace}–{$rangeSpace}-3"],
+            'ISO date' => ['2026-11-16', '2026-11-16'],
+            'ISO timestamp' => ['2026-11-16T12:30', '2026-11-16T12:30'],
+            'identifier' => ['SKU-2-3', 'SKU-2-3'],
+            'minus sign' => ['5 − 3', '5 − 3'],
         ];
+    }
+
+    public function testDashSpacingIsIdempotentWithMixedContexts(): void
+    {
+        $fixed = Proofreader::fixDashSpacing('2010–2020; Wort – Wort; 10:30–12:00; Text—Text');
+
+        self::assertSame($fixed, Proofreader::fixDashSpacing($fixed));
+        self::assertSame(4, substr_count($fixed, "\u{202F}"));
+        self::assertSame(2, substr_count($fixed, "\u{2009}"));
     }
 
     public function testDashCharactersAndDashSpacingCanRunSeparately(): void
     {
-        $rangeSpace = "\u{2006}";
+        $rangeSpace = "\u{202F}";
         $dashSpace  = "\u{200A}";
 
         self::assertSame(
@@ -136,7 +158,7 @@ final class ProofreaderTest extends TestCase
             Proofreader::fix('Range 2010–2020', ['spaces'])
         );
         self::assertSame(
-            "Route Hamburg{$rangeSpace}–{$rangeSpace}Bremen",
+            "Route Hamburg\u{2009}–\u{2009}Bremen",
             Proofreader::fix('Route Hamburg – Bremen', ['dashes', 'spaces'])
         );
     }
@@ -419,7 +441,7 @@ final class ProofreaderTest extends TestCase
 
     public function testFixDimensionsNormalisesMultiplicationSigns(): void
     {
-        $space = "\u{2006}";
+        $space = "\u{202F}";
 
         self::assertSame(
             "Frame 5{$space}×{$space}5 cm",
@@ -550,7 +572,7 @@ final class ProofreaderTest extends TestCase
 
     public function testFixFieldsAppliesFixHtmlToListField(): void
     {
-        $rangeSpace = "\u{2006}";
+        $rangeSpace = "\u{202F}";
         $fields    = ['items' => '<ul><li>Check...</li><li>2025 - 2026</li></ul>'];
         $blueprint = ['items' => ['type' => 'list']];
         $result    = Proofreader::fixFields($fields, $blueprint);
@@ -794,7 +816,7 @@ final class ProofreaderTest extends TestCase
 
     public function testFixHtmlFixesDashesInTextNodes(): void
     {
-        $rangeSpace = "\u{2006}";
+        $rangeSpace = "\u{202F}";
         $input    = '<p>2020 - 2024</p>';
         $expected = "<p>2020{$rangeSpace}–{$rangeSpace}2024</p>";
 

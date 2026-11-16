@@ -24,6 +24,7 @@
         <directory name="playground/site/blueprints/users" />
         <directory name="lib" />
         <file name="index.php" />
+        <file name="docs/examples/french-punctuation.php" />
         <ignoreFiles>
             <directory name="vendor" />
         </ignoreFiles>
