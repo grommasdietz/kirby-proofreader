@@ -195,6 +195,5 @@ protected spans remain untouched.
 The core adds no markup of its own. Projects that wrap prices, for example in a
 Writer mark or a frontend `no-break` span, apply that wrapper in their own code
 around the corrected text, e.g. `Proofreader::fix($price, ['currencies'], $language)`.
-The `noBreak` argument of `fixHtml()` from 1.14.0 is deprecated and ignored.
 Date normalization needs a separate, explicit policy for input formats and
 ambiguous day/month order.

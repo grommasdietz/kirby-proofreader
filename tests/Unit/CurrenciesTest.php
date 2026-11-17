@@ -76,8 +76,6 @@ final class CurrenciesTest extends TestCase
         self::assertSame("<p>1<em>.234</em>,56\u{202F}€</p>", Proofreader::fixHtml('<p>1<em>,234</em>.56 €</p>', null, 'de'));
         self::assertSame('<p>12.50<span lang="de"> €</span></p>', Proofreader::fixHtml('<p>12.50<span lang="de"> €</span></p>', null, 'en'));
         self::assertSame('<p>12.50<br>€</p>', Proofreader::fixHtml('<p>12.50<br>€</p>', null, 'de'));
-        // Deprecated 1.14.0 option: accepted for compatibility, adds no markup.
-        self::assertSame("<p>12,50\u{202F}€</p>", Proofreader::fixHtml('<p>12.50 €</p>', null, 'de', true));
     }
 
     public function testLegacyUnitSpacingIsInheritedAndPricesCannotGainBreakableSpaces(): void

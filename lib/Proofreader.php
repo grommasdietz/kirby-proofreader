@@ -931,15 +931,11 @@ final class Proofreader
      * Tags are preserved.
      *
      * @param list<string>|null $rules
-     * @param bool $noBreak Deprecated since 1.14.1 and ignored: the core adds no
-     *                      project markup; wrap prices in project code instead.
-     * @psalm-suppress UnusedParam
      */
     public static function fixHtml(
         string $html,
         ?array $rules = null,
-        ?string $language = null,
-        bool $noBreak = false
+        ?string $language = null
     ): string {
         return self::withTypographyProfiles(static function () use ($html, $rules, $language): string {
             foreach (self::normaliseRules($rules) as $rule) {

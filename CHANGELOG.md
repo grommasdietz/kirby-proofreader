@@ -1,23 +1,3 @@
-## [1.14.1](https://github.com/grommasdietz/kirby-proofreader/compare/v1.14.0...v1.14.1) (2026-11-17)
-
-
-### Bug Fixes
-
-* **currencies:** leave nonbreaking markup to projects ([f4ac5d4](https://github.com/grommasdietz/kirby-proofreader/commit/f4ac5d4c9174e7235eeec9a05386d853d789ab63))
-
-# [1.14.0](https://github.com/grommasdietz/kirby-proofreader/compare/v1.13.0...v1.14.0) (2026-11-17)
-
-
-### Bug Fixes
-
-* **panel:** report success after the view reload ([66e7c49](https://github.com/grommasdietz/kirby-proofreader/commit/66e7c49d0e54a77edd3e9036aab46e7c37dd2896))
-
-
-### Features
-
-* **currencies:** localize price decimals and bind currency spacing ([09432f5](https://github.com/grommasdietz/kirby-proofreader/commit/09432f53440dcc7714860f5c8bcb0adf047732b8))
-* **typography:** share language profiles across integrations ([0ec2709](https://github.com/grommasdietz/kirby-proofreader/commit/0ec2709db6fa53f1d955ca19d5acfd4eb5ce4c25))
-
 # [1.13.0](https://github.com/grommasdietz/kirby-proofreader/compare/v1.12.0...v1.13.0) (2026-10-22)
 
 
