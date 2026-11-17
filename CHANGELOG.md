@@ -3,7 +3,6 @@
 
 ### Bug Fixes
 
-* **currencies:** leave nonbreaking markup to projects ([f4ac5d4](https://github.com/grommasdietz/kirby-proofreader/commit/f4ac5d4c9174e7235eeec9a05386d853d789ab63))
 * **panel:** report success after the view reload ([66e7c49](https://github.com/grommasdietz/kirby-proofreader/commit/66e7c49d0e54a77edd3e9036aab46e7c37dd2896))
 
 
