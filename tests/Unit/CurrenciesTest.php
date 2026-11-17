@@ -49,24 +49,19 @@ final class CurrenciesTest extends TestCase
         ];
     }
 
-    public function testWriterMarkupRequiresAllowedMarkAndReviewMatchesApply(): void
+    public function testFieldsShareThePlainNonbreakingResultAndReviewMatchesApply(): void
     {
         $fields = [
-            'marked' => ['type' => 'writer', 'marks' => ['italic', 'nobreak']],
-            'unmarked' => ['type' => 'writer', 'marks' => ['italic']],
+            'writer' => ['type' => 'writer', 'marks' => ['italic', 'nobreak']],
             'plain' => ['type' => 'text'],
             'price' => ['type' => 'number'],
         ];
-        $input = ['marked' => '<p>12.50 €</p>', 'unmarked' => '<p>12.50 €</p>', 'plain' => '12.50 €', 'price' => '12.50'];
-        $expected = [
-            'marked' => "<p><span class=\"no-break\">12,50\u{200A}€</span></p>",
-            'unmarked' => "<p>12,50\u{202F}€</p>",
-            'plain' => "12,50\u{202F}€",
-            'price' => '12.50',
-        ];
+        $input = ['writer' => '<p>12.50 €</p>', 'plain' => '12.50 €', 'price' => '12.50'];
+        // The core adds no project markup; Writer marks are a project extension.
+        $expected = ['writer' => "<p>12,50\u{202F}€</p>", 'plain' => "12,50\u{202F}€", 'price' => '12.50'];
         $review = Proofreader::reviewFields($input, $fields, null, 'de');
         self::assertSame($expected, $review['fixed']);
-        self::assertCount(3, $review['suggestions']);
+        self::assertCount(2, $review['suggestions']);
         self::assertSame($expected, Proofreader::fixFields($input, $fields, null, 'de'));
         self::assertSame([], Proofreader::reviewFields($expected, $fields, null, 'de')['suggestions']);
     }
@@ -74,16 +69,18 @@ final class CurrenciesTest extends TestCase
     public function testInlineMarkupLanguagesAndExistingMarksStayIntact(): void
     {
         $input = '<p title="12.50 €"><span class="no-break" lang="de"><em>12.50 €</em></span> <a href="page://price">12,50 €</a></p><code>12.50 €</code>';
-        $expected = "<p title=\"12.50 €\"><span class=\"no-break\" lang=\"de\"><em>12,50\u{200A}€</em></span> <a href=\"page://price\"><span class=\"no-break\">12.50\u{200A}€</span></a></p><code>12.50 €</code>";
-        self::assertSame($expected, Proofreader::fixHtml($input, null, 'en', true));
-        self::assertSame($expected, Proofreader::fixHtml($expected, null, 'en', true));
-        self::assertSame("<p><em>12,50</em>\u{202F}€</p>", Proofreader::fixHtml('<p><em>12.50</em> €</p>', null, 'de', true));
-        self::assertSame("<p>1<em>.234</em>,56\u{202F}€</p>", Proofreader::fixHtml('<p>1<em>,234</em>.56 €</p>', null, 'de', true));
-        self::assertSame('<p>12.50<span lang="de"> €</span></p>', Proofreader::fixHtml('<p>12.50<span lang="de"> €</span></p>', null, 'en', true));
-        self::assertSame('<p>12.50<br>€</p>', Proofreader::fixHtml('<p>12.50<br>€</p>', null, 'de', true));
+        $expected = "<p title=\"12.50 €\"><span class=\"no-break\" lang=\"de\"><em>12,50\u{202F}€</em></span> <a href=\"page://price\">12.50\u{202F}€</a></p><code>12.50 €</code>";
+        self::assertSame($expected, Proofreader::fixHtml($input, null, 'en'));
+        self::assertSame($expected, Proofreader::fixHtml($expected, null, 'en'));
+        self::assertSame("<p><em>12,50</em>\u{202F}€</p>", Proofreader::fixHtml('<p><em>12.50</em> €</p>', null, 'de'));
+        self::assertSame("<p>1<em>.234</em>,56\u{202F}€</p>", Proofreader::fixHtml('<p>1<em>,234</em>.56 €</p>', null, 'de'));
+        self::assertSame('<p>12.50<span lang="de"> €</span></p>', Proofreader::fixHtml('<p>12.50<span lang="de"> €</span></p>', null, 'en'));
+        self::assertSame('<p>12.50<br>€</p>', Proofreader::fixHtml('<p>12.50<br>€</p>', null, 'de'));
+        // Deprecated 1.14.0 option: accepted for compatibility, adds no markup.
+        self::assertSame("<p>12,50\u{202F}€</p>", Proofreader::fixHtml('<p>12.50 €</p>', null, 'de', true));
     }
 
-    public function testLegacyUnitSpacingIsInheritedAndPlainTextCannotGainBreakableHairSpaces(): void
+    public function testLegacyUnitSpacingIsInheritedAndPricesCannotGainBreakableSpaces(): void
     {
         $this->bootKirby(['options' => ['smartypants' => ['space.unit' => '&nbsp;']]]);
         self::assertSame("12,50\u{00A0}€", Proofreader::fixCurrencies('12.50 €', 'de'));
@@ -99,8 +96,9 @@ final class CurrenciesTest extends TestCase
         $this->kirby->languages(false)->append(new Language([
             'code' => 'de-ch', 'smartypants' => ['decimal.currency' => '.', 'space.currency' => '&thinsp;'],
         ]));
-        self::assertSame("<p><span class=\"no-break\">12.50\u{2009}€</span></p>", Proofreader::fixHtml('<p>12,50 €</p>', null, 'de-CH', true));
+        // A breakable configured gap falls back to U+202F so prices stay together.
+        self::assertSame("<p>12.50\u{202F}€</p>", Proofreader::fixHtml('<p>12,50 €</p>', null, 'de-CH'));
         self::assertSame('[[12.50 €]]', Proofreader::fix('[[12.50 €]]', null, 'de'));
-        self::assertSame('<p>[[<em>12.50</em> €]]</p>', Proofreader::fixHtml('<p>[[<em>12.50</em> €]]</p>', null, 'de', true));
+        self::assertSame('<p>[[<em>12.50</em> €]]</p>', Proofreader::fixHtml('<p>[[<em>12.50</em> €]]</p>', null, 'de'));
     }
 }

@@ -358,7 +358,7 @@ final class Proofreader
     }
 
     /**
-     * @param list<array{offset:int, length:int, language:?string, noBreak?:bool}> $nodes
+     * @param list<array{offset:int, length:int, language:?string}> $nodes
      * @return list<array{offset:int, length:int, value:string}>
      */
     private static function quotePairChanges(string $text, array $nodes): array
@@ -426,7 +426,7 @@ final class Proofreader
     }
 
     /**
-     * @param list<array{offset:int, length:int, language:?string, noBreak?:bool}> $nodes
+     * @param list<array{offset:int, length:int, language:?string}> $nodes
      */
     private static function languageAtOffset(array $nodes, int $offset): ?string
     {
@@ -740,17 +740,16 @@ final class Proofreader
         return $changes;
     }
 
-    /** Normalize explicit prices; plain text always keeps a nonbreaking unit gap. */
+    /** Normalize explicit prices: localized decimals and a nonbreaking currency gap. */
     public static function fixCurrencies(string $text, ?string $language = null): string
     {
         return self::replaceTextChanges($text, self::currencyChanges($text, $language));
     }
 
     /**
-     * @param list<array{offset:int, length:int, language:?string, noBreak?:bool}> $nodes
      * @return list<array{offset:int, length:int, value:string, anchor?:int}>
      */
-    private static function currencyChanges(string $text, ?string $language, array $nodes = [], bool $noBreak = false): array
+    private static function currencyChanges(string $text, ?string $language): array
     {
         $gap = '(?:[\p{Zs}\t]|&(?:nbsp|thinsp|hairsp);|&#(?:0*(?:160|8239|8201|8202)|x0*(?:a0|202f|2009|200a));)*';
         $currency = '(?:\p{Sc}|(?i:&(?:euro|pound|yen|cent|curren|dollar);|&#(?:0*(?:36|162|163|164|165|8364)|x0*(?:24|a2|a3|a4|a5|20ac));)|EUR|USD|GBP|CHF|JPY|CAD|AUD)';
@@ -779,26 +778,14 @@ final class Proofreader
             if (!is_string($amount) || !is_string($space)) {
                 continue;
             }
-            $owner = null;
-            foreach ($nodes as $node) {
-                if ($offset >= $node['offset'] && $offset + strlen($price) <= $node['offset'] + $node['length']) {
-                    $owner = $node;
-                    break;
-                }
-            }
             $profile = self::typography($language);
-            $wrapped = $owner !== null && ($noBreak || ($owner['noBreak'] ?? false));
-            $unitSpace = $profile->option('space.currency') ?? $profile->option('space.unit') ?? ($wrapped ? "\u{200A}" : "\u{202F}");
-            // Breakable spaces need a mark; plain text retains a protected gap.
-            if (!$wrapped && $unitSpace !== '' && !in_array($unitSpace, ["\u{00A0}", "\u{202F}"], true)) {
+            $unitSpace = $profile->option('space.currency') ?? $profile->option('space.unit') ?? "\u{202F}";
+            // Prices never break: a breakable configured space becomes U+202F.
+            if ($unitSpace !== '' && !in_array($unitSpace, ["\u{00A0}", "\u{202F}"], true)) {
                 $unitSpace = "\u{202F}";
             }
             $formatted = self::currencyNumber($amount, $language);
             $gapValue = $prefix && $space === '' ? '' : $unitSpace;
-            if ($wrapped && !($owner['noBreak'] ?? false)) {
-                $changes[] = ['offset' => $offset, 'length' => strlen($price), 'value' => '<span class="no-break">' . ($prefix ? $symbol . $gapValue . $formatted : $formatted . $gapValue . $symbol) . '</span>'];
-                continue;
-            }
             // Replace separators only, so split emphasis and links keep their text.
             preg_match_all('/[.,]/', $amount, $separators, PREG_OFFSET_CAPTURE);
             foreach ($separators[0] as [$separator, $position]) {
@@ -831,14 +818,6 @@ final class Proofreader
             return $number;
         }
         return $parts[1] . str_replace($group, $decimal === ',' ? '.' : ',', $integer) . $decimal . $parts[4];
-    }
-
-    /** @param array<string, mixed> $blueprint */
-    private static function allowsNoBreak(array $blueprint): bool
-    {
-        return ($blueprint['type'] ?? null) === 'writer'
-            && is_array($blueprint['marks'] ?? null)
-            && in_array('nobreak', $blueprint['marks'], true);
     }
 
     /**
@@ -949,10 +928,12 @@ final class Proofreader
     /**
      * Applies typography fixes to text nodes inside an HTML string.
      *
-     * Tags are preserved. With $noBreak, the currencies rule may add the
-     * Writer nobreak mark. Plain HTML callers must explicitly opt into it.
+     * Tags are preserved.
      *
      * @param list<string>|null $rules
+     * @param bool $noBreak Deprecated since 1.14.1 and ignored: the core adds no
+     *                      project markup; wrap prices in project code instead.
+     * @psalm-suppress UnusedParam
      */
     public static function fixHtml(
         string $html,
@@ -960,7 +941,7 @@ final class Proofreader
         ?string $language = null,
         bool $noBreak = false
     ): string {
-        return self::withTypographyProfiles(static function () use ($html, $rules, $language, $noBreak): string {
+        return self::withTypographyProfiles(static function () use ($html, $rules, $language): string {
             foreach (self::normaliseRules($rules) as $rule) {
                 $custom = self::configuredRuleDefinitions()[$rule]['callback'] !== null;
 
@@ -974,7 +955,7 @@ final class Proofreader
                     array $nodes,
                     bool $blockStart,
                     bool $blockEnd
-                ) use ($rule, $custom, $noBreak): array {
+                ) use ($rule, $custom): array {
                     if ($rule === 'quotes' && !$custom) {
                         return self::quotePairChanges($text, $nodes);
                     }
@@ -984,7 +965,7 @@ final class Proofreader
                     }
 
                     if (!$custom && in_array($rule, ['dashes', 'dimensions', 'currencies'], true)) {
-                        return self::inlineTypographyChanges($text, $nodes, $rule, $noBreak);
+                        return self::inlineTypographyChanges($text, $nodes, $rule);
                     }
 
                     $changes = [];
@@ -1025,10 +1006,10 @@ final class Proofreader
     }
 
     /**
-     * @param list<array{offset:int, length:int, language:?string, noBreak?:bool}> $nodes
+     * @param list<array{offset:int, length:int, language:?string}> $nodes
      * @return list<array{offset:int, length:int, value:string, anchor?:int}>
      */
-    private static function inlineTypographyChanges(string $text, array $nodes, string $rule, bool $noBreak = false): array
+    private static function inlineTypographyChanges(string $text, array $nodes, string $rule): array
     {
         /** @var list<array{offset:int, length:int, language:?string}> $groups */
         $groups = [];
@@ -1054,10 +1035,7 @@ final class Proofreader
                 $edits = match ($rule) {
                     'dashes' => self::dashChanges($value, $group['language'], true),
                     'dimensions' => self::dimensionChanges($value, $group['language']),
-                    'currencies' => self::currencyChanges($value, $group['language'], array_map(
-                        static fn (array $node): array => array_replace($node, ['offset' => $node['offset'] - $start]),
-                        $nodes
-                    ), $noBreak),
+                    'currencies' => self::currencyChanges($value, $group['language']),
                     default => self::dashChanges($value, $group['language'], false),
                 };
                 foreach ($edits as $edit) {
@@ -2118,7 +2096,7 @@ final class Proofreader
     ): mixed {
         return match ($format) {
             'plain'     => is_string($value) ? self::fix($value, $rules, $language) : $value,
-            'html'      => is_string($value) ? self::fixHtml($value, $rules, $language, self::allowsNoBreak($fieldBlueprint)) : $value,
+            'html'      => is_string($value) ? self::fixHtml($value, $rules, $language) : $value,
             'structure' => self::fixStructureValue($value, $fieldBlueprint, $rules, $language),
             'entries'   => self::fixEntriesValue($value, $fieldBlueprint, $rules, $language),
             'blocks'    => self::fixBlocksValue($value, $fieldBlueprint, $rules, $language),
@@ -2152,8 +2130,7 @@ final class Proofreader
                 $path,
                 $pathLabel,
                 $rules,
-                $language,
-                self::allowsNoBreak($fieldBlueprint)
+                $language
             );
         }
 
@@ -2214,15 +2191,14 @@ final class Proofreader
         string $path,
         string $pathLabel,
         array $rules,
-        ?string $language,
-        bool $noBreak = false
+        ?string $language
     ): array {
         $suggestions = [];
         $current = $value;
 
         foreach ($rules as $rule) {
             $next = $format === 'html'
-                ? self::fixHtml($current, [$rule], $language, $noBreak)
+                ? self::fixHtml($current, [$rule], $language)
                 : self::fix($current, [$rule], $language);
 
             if ($next !== $current) {
