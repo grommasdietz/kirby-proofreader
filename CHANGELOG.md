@@ -1,3 +1,10 @@
+## [1.14.1](https://github.com/grommasdietz/kirby-proofreader/compare/v1.14.0...v1.14.1) (2026-11-17)
+
+
+### Bug Fixes
+
+* **currencies:** leave nonbreaking markup to projects ([f4ac5d4](https://github.com/grommasdietz/kirby-proofreader/commit/f4ac5d4c9174e7235eeec9a05386d853d789ab63))
+
 # [1.14.0](https://github.com/grommasdietz/kirby-proofreader/compare/v1.13.0...v1.14.0) (2026-11-17)
 
 
