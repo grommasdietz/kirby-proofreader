@@ -172,6 +172,62 @@ test.describe("Proofreader review dialog", () => {
     expect(result.diffs.body.to).toContain("“An <em>inline quote</em>”");
     expect(result.diffs.body.to).toContain('<span lang="de">„Ein Zitat“</span>');
     expect(result.diffs.body.to).toContain('href="https://kirby-proofreader.test"');
+    await expect(page.locator(".k-writer .ProseMirror").filter({
+      hasText: "“An inline quote”",
+    })).toHaveCount(1);
+  });
+
+  test("refreshes fields immediately and waits for reload", async ({ page }) => {
+    await login(page);
+    await page.goto("/panel/pages/editorial-review");
+    const result = await page.locator('[title="Optimize typography"]').first().evaluate(async (element) => {
+      type Component = {
+        $parent?: Component;
+        $panel: { view: { reload: () => Promise<unknown> } };
+        fetchOptimize: () => Promise<unknown>;
+        runOptimize: () => Promise<void>;
+        loading: boolean;
+        success: boolean;
+      };
+      const root = element as HTMLElement & { __vue__?: Component };
+      let component = root.__vue__;
+      while (component && typeof component.runOptimize !== "function") {
+        component = component.$parent;
+      }
+      if (!component) throw new Error("Proofreader button component missing");
+      const button = component;
+      const originalFetch = button.fetchOptimize;
+      const originalReload = button.$panel.view.reload;
+      let reloads = 0;
+      let finishReload: (() => void) | undefined;
+      button.fetchOptimize = async () => ({
+        res: { ok: true }, json: { status: "ok" },
+      });
+      button.$panel.view.reload = () => {
+        reloads++;
+        return new Promise<void>((resolve) => { finishReload = resolve; });
+      };
+      try {
+        const apply = button.runOptimize();
+        await Promise.resolve();
+        const pending = {
+          reloads, loading: button.loading, success: button.success,
+        };
+        finishReload?.();
+        await apply;
+        return {
+          pending,
+          completed: { loading: button.loading, success: button.success },
+        };
+      } finally {
+        button.fetchOptimize = originalFetch;
+        button.$panel.view.reload = originalReload;
+      }
+    });
+    expect(result.pending).toEqual({
+      reloads: 1, loading: true, success: false,
+    });
+    expect(result.completed).toEqual({ loading: false, success: true });
   });
 
   test("labels optional content rules in the review dialog", async ({ page }) => {

@@ -247,9 +247,6 @@ export default {
       this.success = false;
       this.error = false;
 
-      const minDelay = 200;
-      const start = Date.now();
-
       try {
         const { res, json } = await this.fetchOptimize({
           preview: false,
@@ -257,20 +254,13 @@ export default {
           fields: payload.fields ?? null,
         });
 
-        // Enforce minimum visible loading duration
-        const elapsed = Date.now() - start;
-        if (elapsed < minDelay) {
-          await new Promise((r) => setTimeout(r, minDelay - elapsed));
-        }
-
         if (res.ok && json?.status === "ok") {
+          // Refresh the saved fields before announcing completion. The native
+          // reload updates Writer content and marks in the same response.
+          await this.$panel.view.reload();
           this.success = true;
           this.loading = false;
           this.scheduleReset(3000);
-          // Short delay lets the editor see the success label before the reload.
-          window.setTimeout(() => {
-            this.$panel.view.reload();
-          }, 800);
         } else {
           this.showError();
         }

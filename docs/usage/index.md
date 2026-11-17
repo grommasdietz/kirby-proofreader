@@ -43,6 +43,12 @@ fields:
 Area fixes use the area blueprint for field eligibility and are saved as area
 draft changes.
 
+Applying fixes reloads the native Panel view immediately after the save request.
+The button remains busy until that reload finishes and then reports success.
+Writer content and supported marks arrive together; there is no delayed DOM
+injection or post-save timer. The preview scan keeps its short minimum loading
+indicator, which does not delay applying saved changes.
+
 ## Options for Kirby Proofreader
 
 Set plugin options in `site/config/config.php`.
