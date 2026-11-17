@@ -58,9 +58,7 @@ $processModel = static function (
         ? ($sourceVersion->exists($language) ? ($sourceVersion->read($language) ?? []) : [])
         : $sourceVersion->content($language)->toArray();
 
-    /** @var list<string>|null $selectedRules */
     $selectedRules = $rules;
-    /** @var list<string>|null $selectedFields */
     $selectedFields = $onlyFields;
 
     $review = Proofreader::reviewFields(

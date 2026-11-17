@@ -1,53 +1,31 @@
-# Agent guide (AI + human)
+# Agent guide
 
-This is the canonical workflow guide for working on the Kirby Proofreader plugin.
+Repository guide for the Kirby Proofreader plugin.
 
----
+## Kirby Proofreader rules
 
-## Golden rules
+- **Keep it ready-to-install.** Composer and GitHub tag-archive installs must work without running `composer` or `npm`. Keep committed build outputs and the PHP dependencies those installs need.
+- Plugin entry: `index.php` registers `App::plugin('grommasdietz/proofreader', ...)`; PHP code lives under `lib/` (`GrommasDietz\\Proofreader\\`).
+- Panel source: `src/` (including `src/components/**`) builds with `kirbyup` into `index.js`/`index.css`.
+- Playground: `playground/` is the self-contained Kirby site for integration and browser tests. Add the smallest useful fixtures under `playground/site/**`.
+- Never wrap imports in `try/catch`.
+- Static analysis: when you add plugin folders (blueprints, config, translations, snippets, templates, resources, or `playground/site/plugins/gd-*` fixtures), include them in `psalm.xml.dist`.
+- Use `tests/bootstrap.php`, `tests/TestCase.php` and `tests/Support/TestEnvironment.php` to boot the playground quickly. Run `pnpm run test:browser` when Panel behavior changes.
+- Write docs in `docs/` and update contributor documentation when development commands or workflows change. Call out intentionally skipped suites in commit or PR notes.
 
-- **Keep it ready-to-install.** Composer and GitHub tag-archive installs must work without running `composer` or `npm`. Keep committed build outputs (`index.js`, `index.css`); don’t edit compiled assets by hand.
-- **Don’t commit local artifacts.** No `.DS_Store`, no local symlinks, no runtime data from `playground/site/*`, no caches.
-- **Single source of truth.** This file is the authoritative convention guide; other docs may link here instead of duplicating rules.
+<!-- shared:kirby-plugin-workflow — identical in every Grommas Dietz Kirby plugin repository. Change it in kirby-plugin first, then copy it unchanged. -->
 
----
+## Shared workflow
 
-## Repo essentials
+- Do not commit local state: credentials, environment files, accounts, sessions, caches, databases, test reports, local plugin links or installed dependencies.
+- Committed Panel assets such as `index.js` and `index.css` are build output. Edit `src/`, rebuild with `pnpm run build` and commit the result.
+- Use Conventional Commits and focused diffs. Keep source, tests, translations, documentation and generated assets aligned.
+- Keep public classes, options, routes, commands, stored data and blueprint handles stable unless a change intentionally breaks them.
+- Add regression coverage for fixes. Keep fixtures deterministic and fictional, and never contact real services in default tests.
+- Panel copy uses sentences or commas. Avoid semicolons and centered dots as separators.
+- Prefer Kirby's built-in Panel icons. Add namespaced Remix Icon glyphs only when Kirby has no suitable icon.
+- Install with `composer run setup` and `pnpm run setup`. Before handing over changes, run `composer run verify` and `pnpm run verify`, or `pnpm run verify:all` where the repository defines it. Use the focused lint, Psalm, test and build commands while iterating.
+- Keep the README a short user-facing quickstart. Follow [STYLE_GUIDE.md](STYLE_GUIDE.md) and the [documentation guidance](docs/contributions/documentation.md).
+- This file is canonical. Assistants such as Copilot read it directly, so do not add per-assistant instruction files.
 
-- Plugin entry: `index.php` registers `App::plugin('grommasdietz/proofreader', ...)`, PHP code lives under `lib/` (`GrommasDietz\\Proofreader\\`).
-- Panel source: `src/` (including `src/components/**`) built with `kirbyup` into `index.js`/`index.css`. Rebuild with `pnpm build` after UI changes and commit the outputs.
-- Playground: `playground/` is the self-contained Kirby site for integration and browser tests.
-- Conventions: use Conventional Commit messages, keep diffs small, keep docs aligned with behavior, and never wrap imports in `try/catch`.
-- Static analysis coverage: when you add plugin folders (blueprints, config, translations, snippets, templates, resources, or `playground/site/plugins/gd-*` fixtures), include them in `psalm.xml.dist`.
-
----
-
-## Coding expectations
-
-- Prefer small, focused diffs and keep public APIs stable unless a change explicitly requires a break.
-- Keep repo artifacts shippable: don’t drop committed build outputs or PHP dependencies needed for GitHub tag-archive installs.
-- Add the smallest useful fixtures under `playground/site/**` when tests need them.
-- Update docs when behavior or CLI flags change.
-
----
-
-## Testing and QA
-
-- Prereqs: `composer run setup`, `pnpm run setup` (installs the Playwright Chromium browser).
-- Run `composer test` for PHP changes; add `composer psalm` when you touch PHP logic. Use `composer run verify` for the full PHP sweep.
-- Run `pnpm lint` for JS/Panel changes; run `pnpm test:browser` when Panel/Playwright behavior changes. Use `pnpm run verify` for the full generated-asset, lint, documentation, hygiene and browser sweep.
-- Add or extend PHPUnit/Playwright coverage for new behavior; include regression tests for bug fixes. Use `tests/bootstrap.php`, `tests/TestCase.php`, and `tests/Support/TestEnvironment.php` to boot the playground quickly.
-- Call out intentionally skipped suites in commit/PR notes and ensure no generated files or runtime artifacts land in Git.
-
----
-
-## Docs
-
-- Write docs in `docs` folder. Follow [STYLE_GUIDE.md](STYLE_GUIDE.md) and [docs/contributions/documentation.md](docs/contributions/documentation.md). Keep README/docs in sync with behavior.
-- Keep the README focused on first use. Update contributor documentation when development commands or workflows change.
-
----
-
-## AI usage
-
-- Treat this file as canonical. Per-assistant guides (Copilot) only add tool-specific prompting tips and should point back here.
+<!-- /shared:kirby-plugin-workflow -->
