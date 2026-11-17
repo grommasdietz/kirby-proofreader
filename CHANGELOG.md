@@ -1,4 +1,9 @@
-# [1.14.0](https://github.com/grommasdietz/kirby-proofreader/compare/v1.13.0...v1.14.0) (2026-11-17)
+## [1.14.2](https://github.com/grommasdietz/kirby-proofreader/compare/v1.13.0...v1.14.2) (2026-11-17)
+
+Replaces the withdrawn 1.14.0 and 1.14.1 releases. Packagist keeps stable version
+references immutable, including soft-deleted versions; 1.14.2 publishes the final
+implementation under a fresh tag. Currency corrections use nonbreaking Unicode
+spacing without adding project-specific markup.
 
 
 ### Bug Fixes

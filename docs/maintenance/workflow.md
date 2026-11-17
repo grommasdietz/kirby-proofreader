@@ -23,3 +23,10 @@ pnpm verify
 ```
 
 The manual installation download is GitHub's automatic archive for the immutable release tag. `.gitattributes` filters development files from that archive; no custom ZIP artifact is built or uploaded.
+
+Published stable versions must never be reused or re-tagged. Packagist locks their
+source and distribution references, even after a maintainer soft-deletes a version.
+Recover from a withdrawn release by publishing a fresh version higher than every
+previously published version, including withdrawn ones. Verify that Packagist's
+source reference matches the new GitHub tag before updating consumers. See
+[Packagist's version immutability policy](https://packagist.org/about/version-immutability).
