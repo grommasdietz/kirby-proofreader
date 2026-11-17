@@ -31,7 +31,7 @@ final class HtmlText
     }
 
     /**
-     * @param callable(string, list<array{offset:int, length:int, language:?string}>, bool, bool):list<array{offset:int, length:int, value:string, anchor?:int}> $transform
+     * @param callable(string, list<array{offset:int, length:int, language:?string, noBreak:bool}>, bool, bool):list<array{offset:int, length:int, value:string, anchor?:int}> $transform
      */
     public static function transform(string $html, ?string $language, callable $transform): string
     {
@@ -41,9 +41,9 @@ final class HtmlText
             return $html;
         }
 
-        /** @var list<array{name:string, language:?string}> $stack */
+        /** @var list<array{name:string, language:?string, noBreak:bool}> $stack */
         $stack = [];
-        /** @var list<array{part:int, offset:int, length:int, language:?string}> $nodes */
+        /** @var list<array{part:int, offset:int, length:int, language:?string, noBreak:bool}> $nodes */
         $nodes = [];
         $text = '';
         $blockStart = false;
@@ -52,7 +52,7 @@ final class HtmlText
         $flush = static function (bool $blockEnd = false) use (&$parts, &$nodes, &$text, &$blockStart, $transform): void {
             if ($nodes !== []) {
                 $changes = $transform($text, array_map(
-                    static fn (array $node): array => ['offset' => $node['offset'], 'length' => $node['length'], 'language' => $node['language']],
+                    static fn (array $node): array => ['offset' => $node['offset'], 'length' => $node['length'], 'language' => $node['language'], 'noBreak' => $node['noBreak']],
                     $nodes
                 ), $blockStart, $blockEnd);
                 usort($changes, static fn (array $a, array $b): int => ($b['offset'] <=> $a['offset']) ?: ($b['length'] <=> $a['length']));
@@ -103,6 +103,7 @@ final class HtmlText
                         'offset' => strlen($text),
                         'length' => strlen($part),
                         'language' => $stack === [] ? $language : $stack[array_key_last($stack)]['language'],
+                        'noBreak' => ($stack === [] ? false : $stack[array_key_last($stack)]['noBreak']),
                     ];
                     $text .= $part;
                 }
@@ -151,18 +152,22 @@ final class HtmlText
             }
 
             $current = $stack === [] ? $language : $stack[array_key_last($stack)]['language'];
+            $noBreak = ($stack === [] ? false : $stack[array_key_last($stack)]['noBreak']);
             preg_match_all('~\s+([^\s=/>]+)(?:\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s>]+)))?~u', $part, $attributes, PREG_SET_ORDER | PREG_UNMATCHED_AS_NULL);
+            $hasLanguage = false;
             foreach ($attributes as $attribute) {
                 $attributeName = strtolower($attribute[1] ?? '');
-                if (in_array($attributeName, ['lang', 'xml:lang'], true)) {
+                if ($attributeName === 'class') {
+                    $classes = preg_split('/\s+/', html_entity_decode($attribute[2] ?? $attribute[3] ?? $attribute[4] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8')) ?: [];
+                    $noBreak = $noBreak || in_array('no-break', $classes, true);
+                }
+                if ($attributeName === 'lang' || ($attributeName === 'xml:lang' && !$hasLanguage)) {
                     $current = html_entity_decode($attribute[2] ?? $attribute[3] ?? $attribute[4] ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8');
-                    if ($attributeName === 'lang') {
-                        break;
-                    }
+                    $hasLanguage = $attributeName === 'lang';
                 }
             }
 
-            $stack[] = ['name' => $name, 'language' => $current];
+            $stack[] = ['name' => $name, 'language' => $current, 'noBreak' => $noBreak];
         }
 
         $flush(true);

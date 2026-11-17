@@ -168,3 +168,35 @@ changed only when reviewed corrections are applied.
 ---
 
 Return to [usage](index.md#language-definitions).
+
+## Prices and Writer marks
+
+Enable the optional `currencies` rule to normalize explicit currency amounts.
+German uses a decimal comma and English a decimal point. `12.50 €` becomes
+`12,50 €` in German; `1.234,56 EUR` becomes `1,234.56 EUR` in English.
+Other languages retain their numeric spelling unless `decimal.currency` is
+configured in their `smartypants` profile (`','` or `'.'`). Regional definitions
+can override this choice, for example `de-CH` with `decimal.currency => '.'`.
+
+The rule recognizes currency symbols (including HTML entities) and the codes
+EUR, USD, GBP, CHF, JPY, CAD and AUD. It preserves prefix/suffix order, compact
+prefixes such as `$12.50`, authored precision and whole amounts. Only clear
+one- or two-digit fractions are converted; a lone three-digit group is kept
+because its meaning is ambiguous. Bare numbers, dates and numeric fields are
+not localized by this rule. Use structured values for calculations.
+
+Plain text uses U+202F, a narrow nonbreaking space. For Writer fields whose
+resolved blueprint explicitly allows `marks: [nobreak, ...]`, corrections and
+review suggestions instead use `<span class="no-break">12,50 €</span>` with
+U+200A (hair space). `space.currency` controls this gap inside a nonbreaking
+mark and accepts an empty string; an explicit `space.unit` is its legacy fallback.
+Without a mark, breakable spaces use U+202F instead. Existing marks are reused. Frontends must
+supply `.no-break { white-space: nowrap; hyphens: none; }`.
+
+`Proofreader::fixHtml($html, ['currencies'], $language, noBreak: true)` opts into
+the same markup for generated frontend prices. Its default is `false`, so
+ordinary HTML fields do not acquire unsupported Writer marks. Split inline
+prices such as `<em>12.50</em> €` retain their markup and use a narrow nonbreaking
+gap. Code elements, attributes, language boundaries and configured protected
+spans remain untouched. Date normalization needs a separate, explicit policy
+for input formats and ambiguous day/month order.

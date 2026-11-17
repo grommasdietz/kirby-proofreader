@@ -156,7 +156,7 @@ convention calls for no space.
 | `paragraphs` | Removes empty HTML paragraphs and stale trailing `<br>` elements or whitespace at paragraph ends. |
 | `abbreviations` | Joins recognized German abbreviations with narrow non-breaking spaces: `z. B.` → `z. B.`. |
 | `primes` | Converts measurement marks: `6' 2"` → `6′ 2″`, preserving paired quotations. |
-| `currencies` | Normalizes currency suffix spacing: `20€` → `20 €`, and existing prefix spacing. Prefixes without a space, such as `$10`, stay unchanged. |
+| `currencies` | Localizes explicit price decimals in German/English and binds currency spacing: `12.50€` → `12,50 €` in German. Writer fields allowing `nobreak` use a hair space inside the mark. Compact prefixes keep their position. See [Prices](typography.md#prices-and-writer-marks). |
 | `symbols` | Converts postfix `Brand(tm)` and `Label (r)` to `Brand™` and `Label®`, and `(c) 2026` to `© 2026`. Line-start enumeration labels stay unchanged. |
 
 The abbreviation rule recognizes `z. B.`, `d. h.`, `u. a.`, `u. U.`, `i. d. R.`,

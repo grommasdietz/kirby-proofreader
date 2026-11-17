@@ -358,7 +358,7 @@ final class Proofreader
     }
 
     /**
-     * @param list<array{offset:int, length:int, language:?string}> $nodes
+     * @param list<array{offset:int, length:int, language:?string, noBreak?:bool}> $nodes
      * @return list<array{offset:int, length:int, value:string}>
      */
     private static function quotePairChanges(string $text, array $nodes): array
@@ -426,7 +426,7 @@ final class Proofreader
     }
 
     /**
-     * @param list<array{offset:int, length:int, language:?string}> $nodes
+     * @param list<array{offset:int, length:int, language:?string, noBreak?:bool}> $nodes
      */
     private static function languageAtOffset(array $nodes, int $offset): ?string
     {
@@ -740,26 +740,105 @@ final class Proofreader
         return $changes;
     }
 
-    /**
-     * Normalizes suffix-currency spacing and existing prefix spacing. Prefixes
-     * authored without a space (e.g. $10) retain that notation.
-     */
+    /** Normalize explicit prices; plain text always keeps a nonbreaking unit gap. */
     public static function fixCurrencies(string $text, ?string $language = null): string
     {
-        $space = self::smartypantsStringOption(self::smartypantsOptionsForLanguage($language), 'space.unit') ?? "\u{202F}";
-        $symbol = '(?:\p{Sc}|&[a-zA-Z0-9#]+;)';
-        $isCurrency = static fn (string $value): bool => preg_match('/^\p{Sc}$/u', html_entity_decode($value, ENT_QUOTES | ENT_HTML5, 'UTF-8')) === 1;
-        $text = preg_replace_callback(
-            '/(?<![\p{L}\p{N}])(\d+(?:[.,]\d+)*)(?:[\p{Zs}\t]|&nbsp;)*(' . $symbol . ')(?![\p{L}\p{N}])/u',
-            static fn (array $m): string => $isCurrency($m[2]) ? $m[1] . $space . $m[2] : $m[0],
-            $text
-        ) ?? $text;
+        return self::replaceTextChanges($text, self::currencyChanges($text, $language));
+    }
 
-        return preg_replace_callback(
-            '/(' . $symbol . ')(?:[\p{Zs}\t]|&nbsp;)+(?=\d)/u',
-            static fn (array $m): string => $isCurrency($m[1]) ? $m[1] . $space : $m[0],
-            $text
-        ) ?? $text;
+    /**
+     * @param list<array{offset:int, length:int, language:?string, noBreak?:bool}> $nodes
+     * @return list<array{offset:int, length:int, value:string, anchor?:int}>
+     */
+    private static function currencyChanges(string $text, ?string $language, array $nodes = [], bool $noBreak = false): array
+    {
+        $gap = '(?:[\p{Zs}\t]|&(?:nbsp|thinsp|hairsp);|&#(?:0*(?:160|8239|8201|8202)|x0*(?:a0|202f|2009|200a));)*';
+        $currency = '(?:\p{Sc}|(?i:&(?:euro|pound|yen|cent|curren|dollar);|&#(?:0*(?:36|162|163|164|165|8364)|x0*(?:24|a2|a3|a4|a5|20ac));)|EUR|USD|GBP|CHF|JPY|CAD|AUD)';
+        $number = '[+−-]?\d+(?:[.,]\d+)*';
+        $pattern = '~(?<![\p{L}\p{N}_/.,+-])(?:(?<prefix>' . $currency . ')(?<prefixGap>' . $gap . ')(?<prefixNumber>' . $number . ')|(?<suffixNumber>' . $number . ')(?<suffixGap>' . $gap . ')(?<suffix>' . $currency . '))(?![\p{L}\p{N}_/]|[.,]\d)~u';
+        preg_match_all($pattern, $text, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE | PREG_UNMATCHED_AS_NULL);
+        $changes = [];
+        foreach ($matches as $match) {
+            [$price, $offset] = $match[0];
+            if (!is_string($price)) {
+                continue;
+            }
+            $prefix = $match['prefix'][0] !== null;
+            $symbol = $match[$prefix ? 'prefix' : 'suffix'][0];
+            if (!is_string($symbol)) {
+                continue;
+            }
+            if (preg_match('/^\p{Sc}$/u', html_entity_decode($symbol, ENT_QUOTES | ENT_HTML5, 'UTF-8')) !== 1 && !in_array($symbol, ['EUR', 'USD', 'GBP', 'CHF', 'JPY', 'CAD', 'AUD'], true)) {
+                continue;
+            }
+            if (self::isProtectedOffset($text, $offset) || self::isProtectedOffset($text, $offset + strlen($price) - 1)) {
+                continue;
+            }
+            [$amount, $amountOffset] = $match[$prefix ? 'prefixNumber' : 'suffixNumber'];
+            [$space, $spaceOffset] = $match[$prefix ? 'prefixGap' : 'suffixGap'];
+            if (!is_string($amount) || !is_string($space)) {
+                continue;
+            }
+            $owner = null;
+            foreach ($nodes as $node) {
+                if ($offset >= $node['offset'] && $offset + strlen($price) <= $node['offset'] + $node['length']) {
+                    $owner = $node;
+                    break;
+                }
+            }
+            $profile = self::typography($language);
+            $wrapped = $owner !== null && ($noBreak || ($owner['noBreak'] ?? false));
+            $unitSpace = $profile->option('space.currency') ?? $profile->option('space.unit') ?? ($wrapped ? "\u{200A}" : "\u{202F}");
+            // Breakable spaces need a mark; plain text retains a protected gap.
+            if (!$wrapped && $unitSpace !== '' && !in_array($unitSpace, ["\u{00A0}", "\u{202F}"], true)) {
+                $unitSpace = "\u{202F}";
+            }
+            $formatted = self::currencyNumber($amount, $language);
+            $gapValue = $prefix && $space === '' ? '' : $unitSpace;
+            if ($wrapped && !($owner['noBreak'] ?? false)) {
+                $changes[] = ['offset' => $offset, 'length' => strlen($price), 'value' => '<span class="no-break">' . ($prefix ? $symbol . $gapValue . $formatted : $formatted . $gapValue . $symbol) . '</span>'];
+                continue;
+            }
+            // Replace separators only, so split emphasis and links keep their text.
+            preg_match_all('/[.,]/', $amount, $separators, PREG_OFFSET_CAPTURE);
+            foreach ($separators[0] as [$separator, $position]) {
+                if ($separator !== $formatted[$position]) {
+                    $changes[] = ['offset' => $amountOffset + $position, 'length' => 1, 'value' => $formatted[$position]];
+                }
+            }
+            if ($space !== $gapValue) {
+                $changes[] = ['offset' => $spaceOffset, 'length' => strlen($space), 'value' => $gapValue, 'anchor' => $prefix ? $offset : $spaceOffset + strlen($space)];
+            }
+        }
+        return $changes;
+    }
+
+    /** Convert only recognizable one/two-digit fractions; preserve ambiguous amounts. */
+    private static function currencyNumber(string $number, ?string $language): string
+    {
+        $base = self::baseLanguageCode($language);
+        $decimal = self::typography($language)->option('decimal.currency') ?? match ($base) {
+            'de' => ',',
+            'en' => '.',
+            default => null,
+        };
+        if (!in_array($decimal, [',', '.'], true) || preg_match('/^([+−-]?)(\d+(?:[.,]\d+)*)([.,])(\d{1,2})$/u', $number, $parts) !== 1) {
+            return $number;
+        }
+        $group = $parts[3] === ',' ? '.' : ',';
+        $integer = $parts[2];
+        if (str_contains($integer, $parts[3]) || (str_contains($integer, $group) && preg_match('/^\d{1,3}(?:' . preg_quote($group, '/') . '\d{3})+$/', $integer) !== 1)) {
+            return $number;
+        }
+        return $parts[1] . str_replace($group, $decimal === ',' ? '.' : ',', $integer) . $decimal . $parts[4];
+    }
+
+    /** @param array<string, mixed> $blueprint */
+    private static function allowsNoBreak(array $blueprint): bool
+    {
+        return ($blueprint['type'] ?? null) === 'writer'
+            && is_array($blueprint['marks'] ?? null)
+            && in_array('nobreak', $blueprint['marks'], true);
     }
 
     /**
@@ -870,17 +949,18 @@ final class Proofreader
     /**
      * Applies typography fixes to text nodes inside an HTML string.
      *
-     * Tags are passed through unchanged. Text nodes outside code-like
-     * protected elements are fixed with fix().
+     * Tags are preserved. With $noBreak, the currencies rule may add the
+     * Writer nobreak mark. Plain HTML callers must explicitly opt into it.
      *
      * @param list<string>|null $rules
      */
     public static function fixHtml(
         string $html,
         ?array $rules = null,
-        ?string $language = null
+        ?string $language = null,
+        bool $noBreak = false
     ): string {
-        return self::withTypographyProfiles(static function () use ($html, $rules, $language): string {
+        return self::withTypographyProfiles(static function () use ($html, $rules, $language, $noBreak): string {
             foreach (self::normaliseRules($rules) as $rule) {
                 $custom = self::configuredRuleDefinitions()[$rule]['callback'] !== null;
 
@@ -894,7 +974,7 @@ final class Proofreader
                     array $nodes,
                     bool $blockStart,
                     bool $blockEnd
-                ) use ($rule, $custom): array {
+                ) use ($rule, $custom, $noBreak): array {
                     if ($rule === 'quotes' && !$custom) {
                         return self::quotePairChanges($text, $nodes);
                     }
@@ -903,8 +983,8 @@ final class Proofreader
                         return self::primeChanges($text);
                     }
 
-                    if (!$custom && in_array($rule, ['dashes', 'dimensions'], true)) {
-                        return self::inlineTypographyChanges($text, $nodes, $rule);
+                    if (!$custom && in_array($rule, ['dashes', 'dimensions', 'currencies'], true)) {
+                        return self::inlineTypographyChanges($text, $nodes, $rule, $noBreak);
                     }
 
                     $changes = [];
@@ -945,10 +1025,10 @@ final class Proofreader
     }
 
     /**
-     * @param list<array{offset:int, length:int, language:?string}> $nodes
+     * @param list<array{offset:int, length:int, language:?string, noBreak?:bool}> $nodes
      * @return list<array{offset:int, length:int, value:string, anchor?:int}>
      */
-    private static function inlineTypographyChanges(string $text, array $nodes, string $rule): array
+    private static function inlineTypographyChanges(string $text, array $nodes, string $rule, bool $noBreak = false): array
     {
         /** @var list<array{offset:int, length:int, language:?string}> $groups */
         $groups = [];
@@ -974,6 +1054,10 @@ final class Proofreader
                 $edits = match ($rule) {
                     'dashes' => self::dashChanges($value, $group['language'], true),
                     'dimensions' => self::dimensionChanges($value, $group['language']),
+                    'currencies' => self::currencyChanges($value, $group['language'], array_map(
+                        static fn (array $node): array => array_replace($node, ['offset' => $node['offset'] - $start]),
+                        $nodes
+                    ), $noBreak),
                     default => self::dashChanges($value, $group['language'], false),
                 };
                 foreach ($edits as $edit) {
@@ -2034,7 +2118,7 @@ final class Proofreader
     ): mixed {
         return match ($format) {
             'plain'     => is_string($value) ? self::fix($value, $rules, $language) : $value,
-            'html'      => is_string($value) ? self::fixHtml($value, $rules, $language) : $value,
+            'html'      => is_string($value) ? self::fixHtml($value, $rules, $language, self::allowsNoBreak($fieldBlueprint)) : $value,
             'structure' => self::fixStructureValue($value, $fieldBlueprint, $rules, $language),
             'entries'   => self::fixEntriesValue($value, $fieldBlueprint, $rules, $language),
             'blocks'    => self::fixBlocksValue($value, $fieldBlueprint, $rules, $language),
@@ -2068,7 +2152,8 @@ final class Proofreader
                 $path,
                 $pathLabel,
                 $rules,
-                $language
+                $language,
+                self::allowsNoBreak($fieldBlueprint)
             );
         }
 
@@ -2129,14 +2214,15 @@ final class Proofreader
         string $path,
         string $pathLabel,
         array $rules,
-        ?string $language
+        ?string $language,
+        bool $noBreak = false
     ): array {
         $suggestions = [];
         $current = $value;
 
         foreach ($rules as $rule) {
             $next = $format === 'html'
-                ? self::fixHtml($current, [$rule], $language)
+                ? self::fixHtml($current, [$rule], $language, $noBreak)
                 : self::fix($current, [$rule], $language);
 
             if ($next !== $current) {
