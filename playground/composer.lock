@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "72a584107345d30c647aec7b97cf7d30",
+    "content-hash": "234a813c34ace785a6dfcd00de6f25db",
     "packages": [
         {
             "name": "christian-riesen/base32",
@@ -607,7 +607,7 @@
             "dist": {
                 "type": "path",
                 "url": "..",
-                "reference": "ad0442ff43336b881c2c5c85d15f430dedd5a235"
+                "reference": "6570796a309cd984f697fa62f9c6149edfb108b1"
             },
             "require": {
                 "getkirby/composer-installer": "^1.2",
