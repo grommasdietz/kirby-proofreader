@@ -1,3 +1,10 @@
+## [1.14.3](https://github.com/grommasdietz/kirby-proofreader/compare/v1.14.2...v1.14.3) (2026-11-19)
+
+
+### Bug Fixes
+
+* **proofreader:** normalize content language and input types ([db6f3dd](https://github.com/grommasdietz/kirby-proofreader/commit/db6f3dd0a99ab69b9ab97df7a5dfbd8ae4eec9f5))
+
 ## [1.14.2](https://github.com/grommasdietz/kirby-proofreader/compare/v1.13.0...v1.14.2) (2026-11-17)
 
 Replaces the withdrawn 1.14.0 and 1.14.1 releases. Packagist keeps stable version
