@@ -23,14 +23,14 @@ The public configuration keeps scalar SmartyPants keys:
 These values describe a house style. Select each client's quotation marks,
 dash length and regional punctuation in their language files. Kirby documents
 the native options in its [SmartyPants reference](https://getkirby.com/docs/reference/system/options/smartypants).
-`space.range` and `space.multiplication` are Proofreader extensions; Kirby's
+`space.range` and `space.multiplication` are Proofreader extensions. Kirby's
 native renderer does not interpret those additional keys.
 
 Resolution uses built-in fallbacks, then project SmartyPants options, then the
 matching language's explicit values. An exact language code or declared locale
 is matched before a base-language fallback. `de-CH` and `de_CH` are equivalent
-identifiers. An inline HTML `lang` attribute selects the corresponding profile;
-it does not create an independent set of options.
+identifiers. An inline HTML `lang` attribute selects the corresponding profile.
+It does not create an independent set of options.
 
 An empty string is an explicit unspaced choice. Unicode strings and HTML
 entities are accepted. Missing or invalid values use the fallback. For legacy
@@ -67,7 +67,7 @@ $colonSpace = $profile->option('space.colon'); // decoded string or null
 Supported roles are `range`, `word`, `thought`, `dimension` and `unit`.
 The `word` role describes an existing word en dash. If the configured thought
 dash uses that same character, nonnumeric occurrences use the `thought` role's
-spacing; numeric endpoints still use `range` spacing. Arbitrary word pairs are
+spacing. Numeric endpoints still use `range` spacing. Arbitrary word pairs are
 not inferred to be semantic ranges.
 
 Definitions keep before and after spacing separate internally. There is no
@@ -153,7 +153,7 @@ Proofreader does not activate this example in any client project.
 
 The scalar configuration keys remain compatible. Review these behavior fixes:
 
-- Configured en thought dashes now use `space.emdash`; use matching values for
+- Configured en thought dashes now use `space.emdash`. Use matching values for
   both word and thought spacing when that is the intended style.
 - Complete dimension chains are corrected in one pass.
 - Inline formatting no longer hides numeric ranges or dimension separators.
@@ -173,7 +173,7 @@ Return to [usage](index.md#language-definitions).
 
 Enable the optional `currencies` rule to normalize explicit currency amounts.
 German uses a decimal comma and English a decimal point. `12.50 €` becomes
-`12,50 €` in German; `1.234,56 EUR` becomes `1,234.56 EUR` in English.
+`12,50 €` in German. `1.234,56 EUR` becomes `1,234.56 EUR` in English.
 Other languages retain their numeric spelling unless `decimal.currency` is
 configured in their `smartypants` profile (`','` or `'.'`). Regional definitions
 can override this choice, for example `de-CH` with `decimal.currency => '.'`.
@@ -181,13 +181,13 @@ can override this choice, for example `de-CH` with `decimal.currency => '.'`.
 The rule recognizes currency symbols (including HTML entities) and the codes
 EUR, USD, GBP, CHF, JPY, CAD and AUD. It preserves prefix/suffix order, compact
 prefixes such as `$12.50`, authored precision and whole amounts. Only clear
-one- or two-digit fractions are converted; a lone three-digit group is kept
+one- or two-digit fractions are converted. A lone three-digit group is kept
 because its meaning is ambiguous. Bare numbers, dates and numeric fields are
 not localized by this rule. Use structured values for calculations.
 
 Amount and currency are joined by U+202F, a narrow no-break space, in plain text
 and HTML alike. `space.currency` (or the legacy `space.unit`) may choose
-U+00A0 or an empty gap; breakable spaces fall back to U+202F so a price never
+U+00A0 or an empty gap. Breakable spaces fall back to U+202F so a price never
 wraps. Split inline prices such as `<em>12.50</em> €` retain their markup.
 Existing wrappers, code elements, attributes, language boundaries and configured
 protected spans remain untouched.

@@ -33,7 +33,7 @@ buttons:
 See [usage](docs/usage/index.md) for rule configuration, language-aware corrections, protected spans and CLI review/fix commands.
 
 Numeric ranges, word dashes and dimensions can use separate language-owned
-spacing settings; see the [language configuration and upgrade notes](docs/usage/index.md#language-definitions).
+spacing settings. See the [language configuration and upgrade notes](docs/usage/index.md#language-definitions).
 
 Integrations can use the shared [typography profile API](docs/usage/typography.md).
 
@@ -43,21 +43,11 @@ Full reference for [usage](docs/usage/index.md), [contributions](docs/contribut
 
 ---
 
-## Changelog
+## Project information
 
-See [CHANGELOG.md](CHANGELOG.md) for version history and changes.
-
----
-
-## Security
-
-See [SECURITY.md](SECURITY.md) for security policies and reporting vulnerabilities.
-
----
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidance and expectations.
+- [Changelog](CHANGELOG.md)
+- [Security policy and reporting](SECURITY.md)
+- [Contributing](CONTRIBUTING.md)
 
 ---
 

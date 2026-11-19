@@ -14,7 +14,7 @@ composer run verify
 pnpm run verify
 ```
 
-The command prints one concise status per check, stops at the first failure, and shows the captured output only for that failed check. Browser tests use the compact dot reporter; open the full HTML report with `pnpm run test:browser:report`, or expose the verbose list reporter and raw PHP server logs with `pnpm run test:browser:debug`.
+The command prints one concise status per check, stops at the first failure, and shows the captured output only for that failed check. Browser tests use the compact dot reporter. Open the full HTML report with `pnpm run test:browser:report`, or expose the verbose list reporter and raw PHP server logs with `pnpm run test:browser:debug`.
 
 Do not enable `set -e` in an interactive shell.
 
@@ -36,7 +36,7 @@ composer run test:coverage
 composer run release:check
 ```
 
-Use the shared `tests/TestCase.php` base class to boot Kirby with the playground roots. Some integration tests execute `playground/vendor/bin/kirby` to exercise the real Kirby CLI parser; the CLI remains a playground development dependency and is not required by the plugin at runtime.
+Use the shared `tests/TestCase.php` base class to boot Kirby with the playground roots. Some integration tests execute `playground/vendor/bin/kirby` to exercise the real Kirby CLI parser. The CLI remains a playground development dependency and is not required by the plugin at runtime.
 
 The PHP test environment uses `tests/.plugins` for isolated plugin registration and can load Blueprint Areas as an optional sibling dependency. It restores PHPUnit's error and exception handlers after every Kirby bootstrap.
 

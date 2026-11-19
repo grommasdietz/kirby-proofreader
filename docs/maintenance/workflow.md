@@ -4,11 +4,11 @@ Versions are not changed manually during normal development. Conventional Commit
 
 The release transaction:
 
-1. calculates the next semantic version;
-2. writes it to `composer.json` and `package.json`;
-3. refreshes `composer.lock` metadata;
-4. runs `composer release:check`;
-5. updates `CHANGELOG.md`;
+1. calculates the next semantic version.
+2. writes it to `composer.json` and `package.json`.
+3. refreshes `composer.lock` metadata.
+4. runs `composer release:check`.
+5. updates `CHANGELOG.md`.
 6. commits the synchronized release files and creates the GitHub tag/release.
 
 Before pushing a release-triggering commit, run:
@@ -22,7 +22,7 @@ composer release:check
 pnpm verify
 ```
 
-The manual installation download is GitHub's automatic archive for the immutable release tag. `.gitattributes` filters development files from that archive; no custom ZIP artifact is built or uploaded.
+The manual installation download is GitHub's automatic archive for the immutable release tag. `.gitattributes` filters development files from that archive. No custom ZIP artifact is built or uploaded.
 
 Published stable versions must never be reused or re-tagged. Packagist locks their
 source and distribution references, even after a maintainer soft-deletes a version.

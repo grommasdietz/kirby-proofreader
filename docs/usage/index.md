@@ -45,7 +45,7 @@ draft changes.
 
 Applying fixes reloads the native Panel view immediately after the save request.
 The button remains busy until that reload finishes and then reports success.
-Writer content and supported marks arrive together; there is no delayed DOM
+Writer content and supported marks arrive together. There is no delayed DOM
 injection or post-save timer. The preview scan keeps its short minimum loading
 indicator, which does not delay applying saved changes.
 
@@ -69,7 +69,7 @@ The default rule order is:
 ```
 
 Optional built-in rules are listed below. Enable them in the same ordered rule
-list; they are disabled by default.
+list. They are disabled by default.
 
 You can override the enabled rules and their order with one option in
 `site/config/config.php`. String entries and keyed `true` entries use the
@@ -201,7 +201,7 @@ native SmartyPants options. In multi-language installations, language-level
 `smartypants` options win over global options. Exact language codes and declared
 locales are matched before the base language, treating `de-CH` and `de_CH` as
 equivalent identifiers. Regional quotation styles are configured in Kirby's
-language definitions; Proofreader does not maintain a regional style catalog.
+language definitions. Proofreader does not maintain a regional style catalog.
 In single-language installations, quote fixes are skipped unless global `smartypants` quote marks
 are configured. The `apostrophes` rule normalizes straight apostrophes in words
 to `’`, including recognized omissions such as `'tis`, German `'nen`, abbreviated
@@ -227,14 +227,14 @@ return [
 
 `space.range` controls recognized numeric endpoints independently of word en
 dashes (`space.endash`). Without `space.range`, an explicitly configured legacy
-`space.endash` still controls both; without either, numeric ranges use U+202F
+`space.endash` still controls both, without either, numeric ranges use U+202F
 and word en dashes use U+2009. `space.multiplication` controls the optional
 `dimensions` rule and defaults to U+202F. These two keys are Proofreader
 extensions to the language's SmartyPants settings. Empty space values are
 supported, for example `'space.range' => ''` for unspaced number ranges.
 
 Detection covers numeric endpoints, including decimals and times. It does not
-infer semantic ranges from place names or arbitrary word pairs; those retain
+infer semantic ranges from place names or arbitrary word pairs. Those retain
 breakable word-dash spacing. Keep identifier and phone protection enabled where
 needed. The defaults describe a house style, not universal German, English or
 French publishing rules. Choose German thought dashes with `'emdash' => '&ndash;'`
@@ -246,12 +246,12 @@ suggestions before applying them: fallback numeric and multiplication spacing
 changed from U+2006 to U+202F, and fallback word-en-dash spacing from U+2006 to
 U+2009. Existing stored content is not rewritten on upgrade.
 
-Only the Proofreader's configured rules are applied; this does not enable
+Only the Proofreader's configured rules are applied. This does not enable
 Kirby's full SmartyPants parser for content.
 
 In HTML, explicit `lang` attributes are inherited by nested elements and override
 the content language. An empty `lang` resets that inheritance. Quotation pairs
-can span inline elements such as `<em>` and `<a>`; their opening language selects
+can span inline elements such as `<em>` and `<a>`. Their opening language selects
 the quotation style. Unpaired marks and pairs separated by paragraph or
 protected-code boundaries remain unchanged. Tags, attributes and links retain
 their authored markup.
@@ -367,7 +367,7 @@ return [
 
 Use `--users` to include all stored user profiles, or `--user=<id-or-email>`
 to target one account. `--all --users` combines pages and profiles. These flags
-only process blueprint content fields; account names, roles, passwords and other
+only process blueprint content fields. Account names, roles, passwords and other
 account settings are untouched. Missing user language files are skipped rather
 than filled from the default-language fallback. Review each language separately.
 
@@ -389,7 +389,7 @@ Applies typography fixes to a page, the site model, or a batch of pages. By
 default fixes are saved as unpublished changes (same as the Panel button). Use
 `--publish` to write directly to the published version.
 
-Batch scopes process stored pages only; virtual pages are skipped because they
+Batch scopes process stored pages only. Virtual pages are skipped because they
 cannot be written back to content files.
 
 Use `--field=<name>` to limit either review or fix to one top-level content
