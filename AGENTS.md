@@ -5,7 +5,7 @@ Repository guide for the Kirby Proofreader plugin.
 ## Kirby Proofreader rules
 
 - **Keep it ready-to-install.** Composer and GitHub tag-archive installs must work without running `composer` or `npm`. Keep committed build outputs and the PHP dependencies those installs need.
-- Plugin entry: `index.php` registers `App::plugin('grommasdietz/proofreader', ...)`; PHP code lives under `lib/` (`GrommasDietz\\Proofreader\\`).
+- Plugin entry: `index.php` registers `App::plugin('grommasdietz/proofreader', ...)`. PHP code lives under `lib/` (`GrommasDietz\\Proofreader\\`).
 - Panel source: `src/` (including `src/components/**`) builds with `kirbyup` into `index.js`/`index.css`.
 - Playground: `playground/` is the self-contained Kirby site for integration and browser tests. Add the smallest useful fixtures under `playground/site/**`.
 - Never wrap imports in `try/catch`.
