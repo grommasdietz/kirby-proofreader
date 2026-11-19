@@ -1946,7 +1946,7 @@ final class Proofreader
      * through unless included by name.
      *
      * @param  array<string, mixed>                $fields          Content key-value pairs
-     * @param  array<string, array<string, mixed>> $blueprintFields Blueprint field definitions indexed by field name
+     * @param  array<array-key, mixed>             $blueprintFields Blueprint field definitions indexed by field name
      * @param  list<string>|null                   $rules           Enabled rule names
      * @param  list<string>|null                   $onlyFields      Top-level field names to process
      * @return array<string, mixed>
@@ -1991,7 +1991,7 @@ final class Proofreader
      * Builds editor-facing suggestions and the resulting fixed content.
      *
      * @param  array<string, mixed>                $fields
-     * @param  array<string, array<string, mixed>> $blueprintFields
+     * @param  array<array-key, mixed>             $blueprintFields
      * @param  list<string>|null                   $rules
      * @param  list<string>|null                   $onlyFields
      * @return array{rules:list<string>, suggestions:list<array<string, string>>, fixed:array<string, mixed>}
@@ -2028,7 +2028,7 @@ final class Proofreader
 
     /**
      * @param  array<string, mixed>                $fields
-     * @param  array<string, array<string, mixed>> $blueprintFields
+     * @param  array<array-key, mixed>             $blueprintFields
      * @param  list<string>                        $rules
      * @param  list<string>|null                   $onlyFields
      * @return list<array<string, string>>
@@ -2903,10 +2903,11 @@ final class Proofreader
      * This is the pure array-based implementation; encode/decode is handled
      * by the caller (or fixStructureField at runtime where Kirby is available).
      *
-     * @param  list<array<string, mixed>>          $rows
+     * @template TKey of array-key
+     * @param  array<TKey, mixed>                  $rows
      * @param  array<string, array<string, mixed>> $subFields
      * @param  list<string>|null                   $rules
-     * @return list<array<string, mixed>>
+     * @return array<TKey, array<string, mixed>>
      */
     public static function processStructureRows(
         array $rows,

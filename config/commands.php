@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use GrommasDietz\Proofreader\Proofreader;
 use Kirby\Cms\App;
+use Kirby\Cms\Language;
 use Kirby\Cms\Page;
 use Kirby\Cms\Site;
 use Kirby\Cms\User;
@@ -11,30 +12,27 @@ use Kirby\Cms\User;
 /**
  * Resolves the language/ruleLanguage pair from a CLI language flag value.
  *
- * @return array{string|object, string|null, string|null}
+ * @return array{Language|'default', string|null, string|null}
  */
 $resolveCliLanguage = static function (App $kirby, ?string $langCode): array {
+    $language = null;
+
     if ($kirby->multilang() === true) {
-        $language = $langCode !== null && $langCode !== ''
-            ? $kirby->language($langCode) ?? $kirby->defaultLanguage()
-            : $kirby->defaultLanguage();
-        $ruleLanguage = is_object($language) ? $language->code() : null;
-    } else {
-        $language     = 'default';
-        $ruleLanguage = null;
+        $language = $langCode !== null && $langCode !== '' ? $kirby->language($langCode) : null;
+        $language ??= $kirby->defaultLanguage();
     }
 
-    $languageCode = is_object($language) ? $language->code() : null;
-    $languageCode = is_string($languageCode) && $languageCode !== '' ? $languageCode : null;
+    $ruleLanguage = $language?->code();
+    $languageCode = $ruleLanguage !== '' ? $ruleLanguage : null;
 
-    return [$language, $languageCode, $ruleLanguage];
+    return [$language ?? 'default', $languageCode, $ruleLanguage];
 };
 
 /**
  * Applies typography fixes or dry-runs them for a single model.
  *
  * @param  Page|Site|User             $model
- * @param  array{string|object, string|null, string|null} $languageTuple
+ * @param  array{Language|'default', string|null, string|null} $languageTuple
  * @param  list<string>|null     $rules
  * @param  list<string>|null     $onlyFields
  * @param  bool                  $dryRun
@@ -121,14 +119,14 @@ $processModel = static function (
 /**
  * Filters pages to persisted content that can be reviewed and fixed by the CLI.
  *
- * @param  list<Page> $pages
+ * @param  array<array-key, mixed> $pages
  * @return list<Page>
  */
 $filterPersistedPages = static function (array $pages): array {
     return array_values(
         array_filter(
             $pages,
-            static fn (Page $page): bool => $page->exists() === true
+            static fn (mixed $page): bool => $page instanceof Page && $page->exists() === true
         )
     );
 };

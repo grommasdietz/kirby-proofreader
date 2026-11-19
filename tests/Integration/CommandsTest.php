@@ -310,6 +310,18 @@ final class CommandsTest extends TestCase
         self::assertStringContainsString('suggestion(s) found.', $result['output']);
     }
 
+    public function testKirbyCliReviewFallsBackToDefaultForUnknownLanguage(): void
+    {
+        $args = ['proofreader:review', 'editorial-review', '--rules=ellipsis'];
+        $default = $this->runKirbyCli($args);
+        $unknown = $this->runKirbyCli([...$args, '--language=zz']);
+
+        self::assertSame(0, $default['exitCode'], $default['output']);
+        self::assertSame(0, $unknown['exitCode'], $unknown['output']);
+        self::assertStringContainsString('[ellipsis]', $default['output']);
+        self::assertSame($default['output'], $unknown['output']);
+    }
+
     public function testKirbyCliReviewCanLimitSuggestionsToSingleField(): void
     {
         $result = $this->runKirbyCli([

@@ -14,18 +14,13 @@ use Kirby\Http\Response;
 $resolveLanguage = static function (App $kirby): array {
     $langCode = $kirby->request()->header('x-language');
 
-    if ($kirby->multilang() === true && $langCode !== null && $langCode !== '') {
-        $language = $kirby->language($langCode) ?? $kirby->defaultLanguage();
-        $ruleLanguage = is_string($language) ? null : $language->code();
-    } else {
-        $language = 'default';
-        $ruleLanguage = null;
-    }
+    $language = $kirby->multilang() === true && $langCode !== null && $langCode !== ''
+        ? $kirby->language($langCode) ?? $kirby->defaultLanguage()
+        : null;
+    $ruleLanguage = $language?->code();
+    $languageCode = $ruleLanguage !== '' ? $ruleLanguage : null;
 
-    $languageCode = is_string($language) ? null : $language->code();
-    $languageCode = is_string($languageCode) && $languageCode !== '' ? $languageCode : null;
-
-    return [$language, $languageCode, $ruleLanguage];
+    return [$language ?? 'default', $languageCode, $ruleLanguage];
 };
 
 /**
