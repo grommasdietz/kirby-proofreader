@@ -391,16 +391,16 @@
         },
         {
             "name": "getkirby/cms",
-            "version": "6.0.0-rc.1",
+            "version": "6.0.0-rc.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/getkirby/kirby.git",
-                "reference": "1695b6515af9b441267136bcb4ccc416572e768e"
+                "reference": "d194f65a102614a00d622ef688aafc1997b86cbd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/getkirby/kirby/zipball/1695b6515af9b441267136bcb4ccc416572e768e",
-                "reference": "1695b6515af9b441267136bcb4ccc416572e768e",
+                "url": "https://api.github.com/repos/getkirby/kirby/zipball/d194f65a102614a00d622ef688aafc1997b86cbd",
+                "reference": "d194f65a102614a00d622ef688aafc1997b86cbd",
                 "shasum": ""
             },
             "require": {
@@ -487,8 +487,8 @@
                     "type": "custom"
                 }
             ],
-            "time": "2026-11-18T09:02:03+00:00",
-            "published-time": "2026-11-18T09:19:06+00:00"
+            "time": "2026-11-20T15:47:57+00:00",
+            "published-time": "2026-11-20T16:00:49+00:00"
         },
         {
             "name": "getkirby/composer-installer",
@@ -607,7 +607,7 @@
             "dist": {
                 "type": "path",
                 "url": "..",
-                "reference": "0c0559120a1a165238cfd21e8f86eab3a88a193c"
+                "reference": "2dce8eba0e55b5eb16a5c1a82a8fe7b998867949"
             },
             "require": {
                 "getkirby/composer-installer": "^1.2",
@@ -675,15 +675,14 @@
                     "php tools/seed-playground.php"
                 ],
                 "release:check": [
-                    "php tools/release-readiness.php"
+                    "node tools/verify-release-archive.mjs"
                 ],
                 "verify": [
                     "@verify:composer",
                     "@lint",
                     "@psalm",
                     "@test",
-                    "@notices:check",
-                    "@release:check"
+                    "@notices:check"
                 ],
                 "notices:generate": [
                     "php tools/generate-third-party-notices.php"
