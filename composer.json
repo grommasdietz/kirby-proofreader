@@ -1,7 +1,7 @@
 {
   "name": "grommasdietz/kirby-proofreader",
   "description": "Typographic suggestions for Kirby CMS",
-  "version": "1.14.2",
+  "version": "1.14.3",
   "type": "kirby-plugin",
   "license": "MIT",
   "authors": [

@@ -1,6 +1,6 @@
 {
   "name": "kirby-proofreader",
-  "version": "1.14.2",
+  "version": "1.14.3",
   "description": "Typographic suggestions for Kirby CMS",
   "license": "MIT",
   "packageManager": "pnpm@12.21.0",
