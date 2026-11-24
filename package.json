@@ -7,7 +7,7 @@
   "scripts": {
     "setup": "pnpm install --frozen-lockfile && pnpm exec playwright install chromium",
     "update:dev": "pnpm update --dev",
-    "dev": "kirbyup serve src/index.js",
+    "dev": "kirbyup dev src/index.js",
     "build": "kirbyup src/index.js",
     "build:check": "node tools/check-generated-assets.mjs index.js index.css",
     "lint": "eslint src tests && pnpm run lint:github",
@@ -47,8 +47,8 @@
     "eslint": "^10.15.0",
     "globals": "^17.14.0",
     "husky": "^9.1.7",
-    "kirbyup": "^3.5.0",
-    "kirbyuse": "^1.4.2",
+    "kirbyup": "^4.0.0-beta.1",
+    "kirbyuse": "^2.0.0-beta.5",
     "markdownlint-cli": "^0.50.0",
     "prettier": "^3.10.1",
     "semantic-release": "^25.0.9",
@@ -57,7 +57,7 @@
   },
   "private": true,
   "engines": {
-    "node": ">=22.22.2 <23",
+    "node": ">=24 <25",
     "pnpm": ">=12.21.0 <13"
   }
 }

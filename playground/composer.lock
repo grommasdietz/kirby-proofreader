@@ -4,34 +4,34 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e00a049252b2c4f79c9d25b00167bc36",
+    "content-hash": "3ec2ebf49731936fe63ffed6b0721284",
     "packages": [
         {
             "name": "christian-riesen/base32",
-            "version": "1.6.1",
+            "version": "2.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ChristianRiesen/base32.git",
-                "reference": "03082b946c111eb6ab41a98626fee33360c5232c"
+                "reference": "be07b4a4a2d6056975934d71e111c64e7d8babf9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ChristianRiesen/base32/zipball/03082b946c111eb6ab41a98626fee33360c5232c",
-                "reference": "03082b946c111eb6ab41a98626fee33360c5232c",
+                "url": "https://api.github.com/repos/ChristianRiesen/base32/zipball/be07b4a4a2d6056975934d71e111c64e7d8babf9",
+                "reference": "be07b4a4a2d6056975934d71e111c64e7d8babf9",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.2 || ^8.0"
+                "php": "^8.1"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^2.17",
-                "phpstan/phpstan": "^0.12",
-                "phpunit/phpunit": "^8.5.13 || ^9.5"
+                "friendsofphp/php-cs-fixer": "^3.64",
+                "phpstan/phpstan": "^2.0",
+                "phpunit/phpunit": "^10.5"
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "1.x-dev"
+                    "dev-master": "2.x-dev"
                 }
             },
             "autoload": {
@@ -61,10 +61,10 @@
             ],
             "support": {
                 "issues": "https://github.com/ChristianRiesen/base32/issues",
-                "source": "https://github.com/ChristianRiesen/base32/tree/1.6.1"
+                "source": "https://github.com/ChristianRiesen/base32/tree/2.0.1"
             },
-            "time": "2026-07-11T19:29:43+00:00",
-            "published-time": "2026-07-11T19:32:52+00:00"
+            "time": "2026-07-11T21:00:30+00:00",
+            "published-time": "2026-07-11T21:10:14+00:00"
         },
         {
             "name": "claviska/simpleimage",
@@ -391,20 +391,20 @@
         },
         {
             "name": "getkirby/cms",
-            "version": "5.6.4",
+            "version": "6.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/getkirby/kirby.git",
-                "reference": "40593aeb8c9a5894bad2440403536d0c7a38f487"
+                "reference": "1bf6e1e1ecc2c399a1804918687ce062002edd74"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/getkirby/kirby/zipball/40593aeb8c9a5894bad2440403536d0c7a38f487",
-                "reference": "40593aeb8c9a5894bad2440403536d0c7a38f487",
+                "url": "https://api.github.com/repos/getkirby/kirby/zipball/1bf6e1e1ecc2c399a1804918687ce062002edd74",
+                "reference": "1bf6e1e1ecc2c399a1804918687ce062002edd74",
                 "shasum": ""
             },
             "require": {
-                "christian-riesen/base32": "^1.6.1",
+                "christian-riesen/base32": "^2.0.1",
                 "claviska/simpleimage": "^4.4.2",
                 "composer/semver": "^3.6.0",
                 "erusev/parsedown": "^1.8.0",
@@ -422,16 +422,14 @@
                 "ext-simplexml": "*",
                 "filp/whoops": "^2.19.3",
                 "getkirby/composer-installer": "^1.2.1",
-                "laminas/laminas-escaper": "~2.18.0",
+                "laminas/laminas-escaper": "^2.19.0",
+                "lbuchs/webauthn": "^2.2",
                 "michelf/php-smartypants": "^1.8.1",
-                "php": "~8.2.0 || ~8.3.0 || ~8.4.0 || ~8.5.0",
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0 || ~8.6.0",
                 "phpmailer/phpmailer": "^7.2.0",
                 "symfony/polyfill-intl-idn": "^1.43.0",
                 "symfony/polyfill-mbstring": "^1.43.3",
                 "symfony/yaml": "^7.4.23"
-            },
-            "replace": {
-                "symfony/polyfill-php72": "*"
             },
             "suggest": {
                 "ext-apcu": "Support for the Apcu cache driver",
@@ -489,8 +487,8 @@
                     "type": "custom"
                 }
             ],
-            "time": "2026-11-18T09:10:31+00:00",
-            "published-time": "2026-11-18T09:18:44+00:00"
+            "time": "2026-11-24T08:21:22+00:00",
+            "published-time": "2026-11-24T08:26:54+00:00"
         },
         {
             "name": "getkirby/composer-installer",
@@ -542,29 +540,37 @@
         },
         {
             "name": "grommasdietz/kirby-hidden-characters",
-            "version": "2.2.2",
+            "version": "3.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/grommasdietz/kirby-hidden-characters.git",
-                "reference": "1abd96665bc1233341ff9ee071cabcad64cefc56"
+                "reference": "9f246914881a906b60dfead8ad7f9c38dcebdae2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/grommasdietz/kirby-hidden-characters/zipball/1abd96665bc1233341ff9ee071cabcad64cefc56",
-                "reference": "1abd96665bc1233341ff9ee071cabcad64cefc56",
+                "url": "https://api.github.com/repos/grommasdietz/kirby-hidden-characters/zipball/9f246914881a906b60dfead8ad7f9c38dcebdae2",
+                "reference": "9f246914881a906b60dfead8ad7f9c38dcebdae2",
                 "shasum": ""
             },
             "require": {
                 "getkirby/composer-installer": "^1.2",
-                "php": "^8.2"
+                "php": "^8.3"
+            },
+            "conflict": {
+                "getkirby/cms": "<6.0 || >=7.0"
             },
             "require-dev": {
                 "friendsofphp/php-cs-fixer": "^3.93",
-                "getkirby/cms": "^5.2",
+                "getkirby/cms": "^6.0",
                 "phpunit/phpunit": "^12.5",
-                "vimeo/psalm": "^6.19.1"
+                "vimeo/psalm": "^7.3.2"
             },
             "type": "kirby-plugin",
+            "extra": {
+                "kirby": {
+                    "compatible": "^6.0"
+                }
+            },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
@@ -583,7 +589,7 @@
                 "kirby",
                 "kirby-cms",
                 "kirby-plugin",
-                "kirby5",
+                "kirby6",
                 "panel"
             ],
             "support": {
@@ -591,7 +597,8 @@
                 "issues": "https://github.com/grommasdietz/kirby-hidden-characters/issues",
                 "source": "https://github.com/grommasdietz/kirby-hidden-characters"
             },
-            "time": "2026-11-04T18:54:52+00:00"
+            "time": "2026-11-24T10:52:29+00:00",
+            "published-time": "2026-11-24T10:52:34+00:00"
         },
         {
             "name": "grommasdietz/kirby-proofreader",
@@ -599,19 +606,27 @@
             "dist": {
                 "type": "path",
                 "url": "..",
-                "reference": "480b113af6ba421beaf32c645da91a05566173a9"
+                "reference": "59ff32960fe9bd61ec08d2452ea135db19aaf79f"
             },
             "require": {
                 "getkirby/composer-installer": "^1.2",
-                "php": "^8.2"
+                "php": "^8.3"
+            },
+            "conflict": {
+                "getkirby/cms": "<6.0 || >=7.0"
             },
             "require-dev": {
                 "friendsofphp/php-cs-fixer": "^3.93",
-                "getkirby/cms": "^5.2",
+                "getkirby/cms": "^6.0",
                 "phpunit/phpunit": "^12.5",
                 "vimeo/psalm": "^7.5.0"
             },
             "type": "kirby-plugin",
+            "extra": {
+                "kirby": {
+                    "compatible": "^6.0"
+                }
+            },
             "autoload": {
                 "psr-4": {
                     "GrommasDietz\\Proofreader\\": "lib/"
@@ -659,15 +674,14 @@
                     "php tools/seed-playground.php"
                 ],
                 "release:check": [
-                    "php tools/release-readiness.php"
+                    "node tools/verify-release-archive.mjs"
                 ],
                 "verify": [
                     "@verify:composer",
                     "@lint",
                     "@psalm",
                     "@test",
-                    "@notices:check",
-                    "@release:check"
+                    "@notices:check"
                 ],
                 "notices:generate": [
                     "php tools/generate-third-party-notices.php"
@@ -719,28 +733,28 @@
         },
         {
             "name": "laminas/laminas-escaper",
-            "version": "2.18.0",
+            "version": "2.19.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laminas/laminas-escaper.git",
-                "reference": "06f211dfffff18d91844c1f55250d5d13c007e18"
+                "reference": "766b8583bbf64be9d3330e7a075197f54c46f642"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laminas/laminas-escaper/zipball/06f211dfffff18d91844c1f55250d5d13c007e18",
-                "reference": "06f211dfffff18d91844c1f55250d5d13c007e18",
+                "url": "https://api.github.com/repos/laminas/laminas-escaper/zipball/766b8583bbf64be9d3330e7a075197f54c46f642",
+                "reference": "766b8583bbf64be9d3330e7a075197f54c46f642",
                 "shasum": ""
             },
             "require": {
                 "ext-ctype": "*",
                 "ext-mbstring": "*",
-                "php": "~8.2.0 || ~8.3.0 || ~8.4.0 || ~8.5.0"
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0 || ~8.6.0"
             },
             "conflict": {
                 "zendframework/zend-escaper": "*"
             },
             "require-dev": {
-                "infection/infection": "^0.31.0",
+                "infection/infection": "^0.32.0",
                 "laminas/laminas-coding-standard": "~3.1.0",
                 "phpunit/phpunit": "^11.5.42",
                 "psalm/plugin-phpunit": "^0.19.5",
@@ -772,12 +786,58 @@
             },
             "funding": [
                 {
-                    "url": "https://funding.communitybridge.org/projects/laminas-project",
-                    "type": "community_bridge"
+                    "url": "https://crowdfunding.linuxfoundation.org/initiatives/laminas-project",
+                    "type": "custom"
                 }
             ],
-            "time": "2025-10-14T18:31:13+00:00",
-            "published-time": "2025-10-14T19:13:23+00:00"
+            "time": "2026-11-10T12:33:38+00:00",
+            "published-time": "2026-11-10T12:34:26+00:00"
+        },
+        {
+            "name": "lbuchs/webauthn",
+            "version": "v2.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/lbuchs/WebAuthn.git",
+                "reference": "20adb4a240c3997bd8cac7dc4dde38ab0bea0ed1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/lbuchs/WebAuthn/zipball/20adb4a240c3997bd8cac7dc4dde38ab0bea0ed1",
+                "reference": "20adb4a240c3997bd8cac7dc4dde38ab0bea0ed1",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "lbuchs\\WebAuthn\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Lukas Buchs",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A simple PHP WebAuthn (FIDO2) server library",
+            "homepage": "https://github.com/lbuchs/webauthn",
+            "keywords": [
+                "Authentication",
+                "webauthn"
+            ],
+            "support": {
+                "issues": "https://github.com/lbuchs/WebAuthn/issues",
+                "source": "https://github.com/lbuchs/WebAuthn/tree/v2.2.0"
+            },
+            "time": "2024-07-04T07:17:40+00:00",
+            "published-time": "2024-07-04T11:09:04+00:00"
         },
         {
             "name": "league/color-extractor",
@@ -1589,20 +1649,21 @@
                     "type": "custom"
                 }
             ],
-            "time": "2026-11-04T12:44:42+00:00"
+            "time": "2026-11-04T12:44:42+00:00",
+            "published-time": "2026-11-04T12:46:26+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
-            "version": "8.5.0",
+            "version": "8.5.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/guzzle.git",
-                "reference": "f8aca40edffeae0ec508b92f4594766083c6e203"
+                "reference": "8e893188e1ac92b457eca35ddf2b574024b66280"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/f8aca40edffeae0ec508b92f4594766083c6e203",
-                "reference": "f8aca40edffeae0ec508b92f4594766083c6e203",
+                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/8e893188e1ac92b457eca35ddf2b574024b66280",
+                "reference": "8e893188e1ac92b457eca35ddf2b574024b66280",
                 "shasum": ""
             },
             "require": {
@@ -1700,7 +1761,7 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/guzzle/issues",
-                "source": "https://github.com/guzzle/guzzle/tree/8.5.0"
+                "source": "https://github.com/guzzle/guzzle/tree/8.5.2"
             },
             "funding": [
                 {
@@ -1716,7 +1777,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-11-13T03:12:32+00:00"
+            "time": "2026-11-17T16:24:00+00:00",
+            "published-time": "2026-11-17T16:24:22+00:00"
         },
         {
             "name": "guzzlehttp/promises",
@@ -1800,7 +1862,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-10-18T12:48:16+00:00"
+            "time": "2026-10-18T12:48:16+00:00",
+            "published-time": "2026-10-18T12:48:47+00:00"
         },
         {
             "name": "guzzlehttp/psr7",
@@ -1920,7 +1983,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-11-13T03:03:24+00:00"
+            "time": "2026-11-13T03:03:24+00:00",
+            "published-time": "2026-11-13T03:06:05+00:00"
         },
         {
             "name": "league/climate",
@@ -1986,7 +2050,8 @@
                 "issues": "https://github.com/thephpleague/climate/issues",
                 "source": "https://github.com/thephpleague/climate/tree/3.12.0"
             },
-            "time": "2026-08-27T08:24:22+00:00"
+            "time": "2026-08-27T08:24:22+00:00",
+            "published-time": "2026-08-27T08:25:39+00:00"
         },
         {
             "name": "psr/http-client",
@@ -2038,7 +2103,8 @@
             "support": {
                 "source": "https://github.com/php-fig/http-client"
             },
-            "time": "2023-09-23T14:17:50+00:00"
+            "time": "2023-09-23T14:17:50+00:00",
+            "published-time": "2023-09-23T14:18:12+00:00"
         },
         {
             "name": "psr/http-factory",
@@ -2093,7 +2159,8 @@
             "support": {
                 "source": "https://github.com/php-fig/http-factory"
             },
-            "time": "2024-04-15T12:06:14+00:00"
+            "time": "2024-04-15T12:06:14+00:00",
+            "published-time": "2024-05-10T07:32:19+00:00"
         },
         {
             "name": "psr/http-message",
@@ -2146,7 +2213,8 @@
             "support": {
                 "source": "https://github.com/php-fig/http-message/tree/2.0"
             },
-            "time": "2023-04-04T09:54:51+00:00"
+            "time": "2023-04-04T09:54:51+00:00",
+            "published-time": "2023-04-04T09:55:35+00:00"
         },
         {
             "name": "seld/cli-prompt",
@@ -2201,7 +2269,8 @@
                 "issues": "https://github.com/Seldaek/cli-prompt/issues",
                 "source": "https://github.com/Seldaek/cli-prompt/tree/1.0.4"
             },
-            "time": "2020-12-15T21:32:01+00:00"
+            "time": "2020-12-15T21:32:01+00:00",
+            "published-time": "2020-12-15T21:34:21+00:00"
         },
         {
             "name": "symfony/polyfill-php80",
@@ -2285,7 +2354,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-09-25T15:50:05+00:00"
+            "time": "2026-09-25T15:50:05+00:00",
+            "published-time": "2026-09-30T10:23:35+00:00"
         },
         {
             "name": "symfony/polyfill-php82",
@@ -2365,7 +2435,8 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-09-25T15:50:05+00:00"
+            "time": "2026-09-25T15:50:05+00:00",
+            "published-time": "2026-09-30T10:23:32+00:00"
         }
     ],
     "aliases": [],
@@ -2376,11 +2447,11 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.2"
+        "php": "^8.3"
     },
     "platform-dev": {},
     "platform-overrides": {
-        "php": "8.2.0"
+        "php": "8.3.16"
     },
     "plugin-api-version": "2.11.0"
 }

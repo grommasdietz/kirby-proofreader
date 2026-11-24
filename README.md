@@ -6,8 +6,10 @@ Kirby Proofreader adds a Panel button on Kirby CMS for reviewing typographic co
 
 ## Requirements
 
-- Kirby 5.2+
-- PHP 8.2+
+- Kirby 6
+- PHP 8.3+
+
+For Kirby 5, use version 1.x.
 
 ## Installation
 

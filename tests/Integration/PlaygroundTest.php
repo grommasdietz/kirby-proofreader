@@ -519,8 +519,8 @@ TXT);
         self::assertContains('Milestones -> Entry 1', array_column($data['suggestions'], 'pathLabel'));
         self::assertContains('Milestones -> Entry 2', array_column($data['suggestions'], 'pathLabel'));
         self::assertSame(['milestones'], $data['changedFields']);
-        self::assertStringContainsString('- Review kickoff…', $data['diffs']['milestones']['to']);
-        self::assertStringContainsString('- Range 2020 – 2021', $data['diffs']['milestones']['to']);
+        self::assertContains('Review kickoff…', \Kirby\Data\Yaml::decode($data['diffs']['milestones']['to']));
+        self::assertContains('Range 2020 – 2021', \Kirby\Data\Yaml::decode($data['diffs']['milestones']['to']));
     }
 
     public function testUsersCanBeCreatedAndDeleted(): void
