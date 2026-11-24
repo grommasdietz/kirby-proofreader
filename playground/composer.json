@@ -17,8 +17,8 @@
   "require": {
     "php": "^8.3",
     "grommasdietz/kirby-proofreader": "dev-main",
-    "grommasdietz/kirby-hidden-characters": "dev-kirby-6",
-    "getkirby/cms": "^6.0@beta"
+    "grommasdietz/kirby-hidden-characters": "^3.0",
+    "getkirby/cms": "^6.0"
   },
   "require-dev": {
     "getkirby/cli": "^2.0"
