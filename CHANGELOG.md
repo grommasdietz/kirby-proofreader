@@ -1,3 +1,19 @@
+# [2.0.0](https://github.com/grommasdietz/kirby-proofreader/compare/v1.14.3...v2.0.0) (2026-11-24)
+
+
+* feat!: migrate Proofreader to Kirby 6 ([3f54de3](https://github.com/grommasdietz/kirby-proofreader/commit/3f54de314ae2b374e91eb250a05a0efb3f8f8aad))
+
+
+### Bug Fixes
+
+* **proofreader:** normalize content language and input types ([b31b605](https://github.com/grommasdietz/kirby-proofreader/commit/b31b605d739bf0a4b7ecdfa7b69f042ee7d8827f))
+
+
+### BREAKING CHANGES
+
+* Requires Kirby 6 and PHP 8.3.
+Panel assets use Vue 3 and Blueprint Areas integration reads native field layouts.
+
 ## [1.14.3](https://github.com/grommasdietz/kirby-proofreader/compare/v1.14.2...v1.14.3) (2026-11-19)
 
 
