@@ -86,6 +86,20 @@ if ($hasNodeProductionDependencies) {
     }
 }
 
+$manualStart = '<!-- BEGIN MANUAL NOTICES -->';
+$manualEnd = '<!-- END MANUAL NOTICES -->';
+$manual = '<!-- Add notices for bundled runtime assets that cannot be derived from lock files. -->';
+
+if (is_file($outFile)) {
+    $existing = (string) file_get_contents($outFile);
+    $start = strpos($existing, $manualStart);
+    $end = strpos($existing, $manualEnd);
+    if ($start !== false && $end !== false && $end > $start) {
+        $start += strlen($manualStart);
+        $manual = trim(substr($existing, $start, $end - $start));
+    }
+}
+
 $hasSections = count($sections) > 0;
 $intro = $hasSections
     ? 'Kirby Proofreader uses following third-party dependencies:'
@@ -101,9 +115,16 @@ $header = <<<MD
 
 MD;
 
-file_put_contents(
-    $outFile,
-    $header . ($hasSections ? implode("\n\n", $sections) . "\n" : '')
-);
+$generated = $hasSections ? implode("\n\n", $sections) . "\n\n" : '';
+$manualSection = <<<MD
+## Manually curated notices
+
+{$manualStart}
+{$manual}
+{$manualEnd}
+
+MD;
+
+file_put_contents($outFile, $header . $generated . $manualSection);
 
 fwrite(STDOUT, "Wrote {$outFile}\n");
